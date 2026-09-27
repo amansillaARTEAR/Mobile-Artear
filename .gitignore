@@ -8,3 +8,5 @@ __pycache__/
 
 appium-native-app-qa/apks/*.apk
 appium-native-app-qa/ipas/*.ipa
+
+appium-mobile-web-qa/Mobile/
