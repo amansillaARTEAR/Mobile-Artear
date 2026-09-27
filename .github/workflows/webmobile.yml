@@ -25,7 +25,7 @@ jobs:
       - name: Crear entorno virtual e instalar dependencias
         shell: powershell
         run: |
-          python -m venv .venv
+          py -m venv .venv
           .\.venv\Scripts\pip install -r requirements.txt
 
       - name: Detectar dispositivo Android conectado
