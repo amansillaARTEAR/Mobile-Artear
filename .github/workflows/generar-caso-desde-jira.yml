@@ -1,0 +1,72 @@
+name: Generar caso de prueba desde ticket de Jira
+run-name: "Generar caso desde Jira por @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ticket:
+        description: "Pegá acá el texto/descripción del ticket de Jira (resumen + criterios de aceptación)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: appium-mobile-web-qa
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install anthropic
+
+      - name: Guardar el ticket en un archivo
+        shell: bash
+        env:
+          TICKET: ${{ inputs.ticket }}
+        run: printf '%s' "$TICKET" > /tmp/ticket.txt
+
+      - name: Generar el caso con Claude
+        id: generar
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/generar_caso.py --ticket-file /tmp/ticket.txt | tee /tmp/salida.txt
+
+      - name: Crear rama, commitear y abrir Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TICKET: ${{ inputs.ticket }}
+        run: |
+          NOMBRE_CASO=$(grep '^NOMBRE_CASO=' /tmp/salida.txt | cut -d= -f2)
+          RAMA="caso-generado/${NOMBRE_CASO}-${{ github.run_id }}"
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git checkout -b "$RAMA"
+          git add tests/generados/
+          git commit -m "Proponer caso de prueba generado: ${NOMBRE_CASO}"
+          git push origin "$RAMA"
+
+          {
+            echo "Generado automáticamente a partir de este ticket. **Revisar antes de mergear** — puede tener selectores o suposiciones a corregir."
+            echo
+            echo "<details><summary>Ticket original</summary>"
+            echo
+            echo '```'
+            printf '%s\n' "$TICKET"
+            echo '```'
+            echo "</details>"
+          } > /tmp/pr_body.txt
+
+          gh pr create \
+            --title "Caso de prueba propuesto: ${NOMBRE_CASO} (generado desde Jira)" \
+            --body-file /tmp/pr_body.txt \
+            --base main --head "$RAMA"
