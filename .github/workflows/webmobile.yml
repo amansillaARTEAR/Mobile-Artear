@@ -75,6 +75,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: resultados-webmobile-${{ github.run_id }}
-          path: appium-mobile-web-qa/resultados/
+          name: resultados-webmobile-android-${{ github.run_id }}
+          # Solo la carpeta de Android: "resultados/" también tiene corridas viejas de iOS
+          # (de pruebas locales), y este workflow no debe mezclarlas en su artifact.
+          path: appium-mobile-web-qa/resultados/android/
           retention-days: 30
+          if-no-files-found: error
