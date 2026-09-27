@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">TNARC-4366 · Suite Appium · Ios</title>
+      <link href="assets\style.css" rel="stylesheet" type="text/css"/>
+  </head>
+  <body>
+    <h1 id="title">TNARC-4366 · Suite Appium · Ios</h1>
+    <p>Report generated on 25-Sep-2026 at 16:49:27 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.2.0</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</td>
+        </tr>
+      </tbody>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left">&lt;</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">&gt;</div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+          <p style='color:#333'><b>Versión:</b> 4743 · <b>Dispositivo:</b> iPhone · <b>Sistema:</b> iOS 26.0 · <b>URL:</b> https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/</p>
+        </div>
+        <p class="run-count">14 tests took 00:06:45.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" >
+            <span class="failed">2 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" >
+            <span class="passed">12 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled>
+            <span class="rerun">0 Reruns</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="retried" disabled>
+            <span class="retried">0 Retried,</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.13.5&#34;, &#34;Platform&#34;: &#34;Windows-11-10.0.26200-SP0&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;9.1.1&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;html&#34;: &#34;4.2.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;}, &#34;JAVA_HOME&#34;: &#34;C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot\\&#34;}, &#34;tests&#34;: {&#34;tests/test_tnarc4366.py::test_00_version&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;Precondici\u00f3n: la versi\u00f3n promovida en DEV es la esperada.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;version_cargada&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;4743&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;version_esperada&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;4743&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;dispositivo&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;iPhone&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;sistema&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;iOS 26.0&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;url&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA00_version.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA00_version.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Versi\u00f3n cargada 4743&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_00_version&#34;, &#34;duration&#34;: &#34;00:00:09&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_00_version&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:09&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca01_colecciones&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA1: el componente recupera los videos de las colecciones configuradas en PageBuilder.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;id_importante&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;TM4WUDMEHBFODAPHAOHF6TO5YI&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;videos_importante&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;id_ultimo&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;C3XNZ57OWJFZ3MGWYEZTY4YZB4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;videos_ultimo&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;36&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;video_inicial&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;videolab-collection-8&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA01_carga_inicial.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA01_carga_inicial.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;CA1 \u00b7 Lo importante=8 videos \u00b7 Lo \u00faltimo=36 videos \u00b7 reproduciendo: videolab-collection-8&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca01_colecciones&#34;, &#34;duration&#34;: &#34;00:00:07&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca01_colecciones&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:07&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca02_lo_importante_orden&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA2: \u00abLo importante\u00bb muestra los videos de id_importante respetando el orden de la colecci\u00f3n.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;video_de_entrada&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;videolab-collection-8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;secuencia_mostrada&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  &amp;quot;videolab-collection-1&amp;quot;,\n  &amp;quot;videolab-collection-2&amp;quot;,\n  &amp;quot;videolab-collection-3&amp;quot;,\n  &amp;quot;videolab-collection-4&amp;quot;,\n  &amp;quot;videolab-collection-5&amp;quot;,\n  &amp;quot;videolab-collection-6&amp;quot;,\n  &amp;quot;videolab-collection-7&amp;quot;\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;orden_coleccion&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  &amp;quot;videolab-collection-1&amp;quot;,\n  &amp;quot;videolab-collection-2&amp;quot;,\n  &amp;quot;videolab-collection-3&amp;quot;,\n  &amp;quot;videolab-collection-4&amp;quot;,\n  &amp;quot;videolab-collection-5&amp;quot;,\n  &amp;quot;videolab-collection-6&amp;quot;,\n  &amp;quot;videolab-collection-7&amp;quot;,\n  &amp;quot;videolab-collection-8&amp;quot;\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;respeta_orden&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;True&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;fuera_de_coleccion&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;no_mostrados&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;llego_al_fin&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;True&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA02_1_inicio.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA02_1_inicio.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Inicio de \u00abLo importante\u00bb: videolab-collection-8&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA02_2_fin.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA02_2_fin.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Fin del feed \u00b7 8 videos \u00b7 orden correcto=True \u00b7 faltantes=0&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca02_lo_importante_orden&#34;, &#34;duration&#34;: &#34;00:00:55&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca02_lo_importante_orden&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:55&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca03_lo_ultimo_cronologico&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA3: \u00abLo \u00faltimo\u00bb muestra los videos de id_ultimo del m\u00e1s reciente al m\u00e1s antiguo.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;video_de_entrada&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;videolab-collection-8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;secuencia&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  &amp;quot;tnarc-4366-video-vertical-sin-preview&amp;quot;,\n  &amp;quot;las-cuatro-claves-del-partido-entre-argentina-e-inglaterra&amp;quot;,\n  &amp;quot;el-jugador-argentino-mas-buscado-en-el-mundo-de-la-moda&amp;quot;,\n  &amp;quot;un-avion-turco-bien-argentino&amp;quot;,\n  &amp;quot;las-claves-del-triunfo-de-la-seleccion-argentina-vs-suiza&amp;quot;,\n  &amp;quot;billetera-recuperada-gracias-a-la-hinchada&amp;quot;,\n  &amp;quot;el-mensaje-misterioso-que-inquieta-a-trump&amp;quot;,\n  &amp;quot;impactante-incendio-en-utah&amp;quot;\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;fechas&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  &amp;quot;2026-09-24T18:32:29.318Z&amp;quot;,\n  &amp;quot;2026-07-14T08:37:00Z&amp;quot;,\n  &amp;quot;2026-07-13T15:00:00Z&amp;quot;,\n  &amp;quot;2026-07-12T16:44:00Z&amp;quot;,\n  &amp;quot;2026-07-12T04:58:00Z&amp;quot;,\n  &amp;quot;2026-06-28T16:42:00Z&amp;quot;,\n  &amp;quot;2026-06-22T21:54:17.978Z&amp;quot;,\n  &amp;quot;2026-06-22T21:31:18.216Z&amp;quot;\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;cronologico&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;True&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;fuera_de_coleccion&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;omitidos_de_la_coleccion&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  &amp;quot;video-vertical-con-preview-clone-tnarc-4366&amp;quot;\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA03_recorrido.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA03_recorrido.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;\u00abLo \u00faltimo\u00bb \u00b7 8 videos \u00b7 m\u00e1s reciente a m\u00e1s antiguo=True \u00b7 omitidos=1&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca03_lo_ultimo_cronologico&#34;, &#34;duration&#34;: &#34;00:00:58&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca03_lo_ultimo_cronologico&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:58&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca04_videos_9_16&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA4: solo se renderizan videos verticales con relaci\u00f3n de aspecto 9:16.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;mediciones&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;25&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;ratio_min&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;0.5625&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;ratio_max&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;0.5625&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;videos_horizontales&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA04_relacion.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA04_relacion.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Relaci\u00f3n del video 0.5625 (9:16 = 0.5625) \u00b7 25 mediciones&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca04_videos_9_16&#34;, &#34;duration&#34;: &#34;00:00:07&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca04_videos_9_16&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:07&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca05_autoplay_play_pause&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA5: los videos se reproducen autom\u00e1ticamente y permiten play/pause.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;autoplay&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;True&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;autoplay_muteado&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;True&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;pausa&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;True&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;reanuda&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;True&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA05_1_autoplay.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA05_1_autoplay.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Sin interacci\u00f3n \u00b7 reproduciendo=True \u00b7 muteado=True&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA05_2_pausa.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA05_2_pausa.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Toque 1 \u00b7 pausado=True&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA05_3_reanuda.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA05_3_reanuda.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Toque 2 \u00b7 reproduciendo=True \u00b7 t 5.6s \u2192 9.6s&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca05_autoplay_play_pause&#34;, &#34;duration&#34;: &#34;00:00:25&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca05_autoplay_play_pause&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:25&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca06_siguiente_automatico&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA6: al finalizar un video comienza autom\u00e1ticamente el siguiente.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;antes&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;videolab-collection-8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;despues&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;videolab-collection-1&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;posicion&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;1 \u2192 2&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA06_siguiente.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA06_siguiente.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Termin\u00f3 videolab-collection-8 \u2192 arranc\u00f3 videolab-collection-1 \u00b7 reproduciendo=True&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca06_siguiente_automatico&#34;, &#34;duration&#34;: &#34;00:00:10&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca06_siguiente_automatico&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:10&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca07_scroll_intenso&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA7: el scroll avanza de a un video, independientemente de la intensidad del gesto.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;saltos&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  {\n    &amp;quot;de&amp;quot;: 1,\n    &amp;quot;a&amp;quot;: 2,\n    &amp;quot;salto&amp;quot;: 1\n  },\n  {\n    &amp;quot;de&amp;quot;: 2,\n    &amp;quot;a&amp;quot;: 3,\n    &amp;quot;salto&amp;quot;: 1\n  },\n  {\n    &amp;quot;de&amp;quot;: 3,\n    &amp;quot;a&amp;quot;: 4,\n    &amp;quot;salto&amp;quot;: 1\n  }\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;grabacion&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;None&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA07_fling_1.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA07_fling_1.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Swipe intenso 1: posici\u00f3n 1 \u2192 2 (salto 1)&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA07_fling_2.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA07_fling_2.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Swipe intenso 2: posici\u00f3n 2 \u2192 3 (salto 1)&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA07_fling_3.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA07_fling_3.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Swipe intenso 3: posici\u00f3n 3 \u2192 4 (salto 1)&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca07_scroll_intenso&#34;, &#34;duration&#34;: &#34;00:00:40&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca07_scroll_intenso&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:40&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca08_paginacion&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA8: al acercarse al final se cargan m\u00e1s videos y la navegaci\u00f3n contin\u00faa sin cortes.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;slides_iniciales&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;6&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;cargas&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  {\n    &amp;quot;posicion&amp;quot;: 3,\n    &amp;quot;slides&amp;quot;: &amp;quot;6 \u2192 11&amp;quot;,\n    &amp;quot;avanzo&amp;quot;: true\n  },\n  {\n    &amp;quot;posicion&amp;quot;: 8,\n    &amp;quot;slides&amp;quot;: &amp;quot;11 \u2192 16&amp;quot;,\n    &amp;quot;avanzo&amp;quot;: true\n  }\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;gestos_perdidos&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;reinicios_de_video&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;duplicados&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;videos_vistos&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;8&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA08_carga_1.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA08_carga_1.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Carga de m\u00e1s videos: 6 \u2192 11 slides \u00b7 avanz\u00f3=True&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA08_carga_2.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA08_carga_2.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Carga de m\u00e1s videos: 11 \u2192 16 slides \u00b7 avanz\u00f3=True&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca08_paginacion&#34;, &#34;duration&#34;: &#34;00:01:06&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca08_paginacion&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:01:06&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca09_conserva_video_por_pestana&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA9: al cambiar de pesta\u00f1a, cada feed conserva el \u00faltimo video visualizado.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;lo_importante&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;{\n  &amp;quot;esperado&amp;quot;: &amp;quot;videolab-collection-2&amp;quot;,\n  &amp;quot;obtenido&amp;quot;: &amp;quot;videolab-collection-2&amp;quot;\n}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;lo_ultimo&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;{\n  &amp;quot;esperado&amp;quot;: &amp;quot;el-jugador-argentino-mas-buscado-en-el-mundo-de-la-moda&amp;quot;,\n  &amp;quot;obtenido&amp;quot;: &amp;quot;el-jugador-argentino-mas-buscado-en-el-mundo-de-la-moda&amp;quot;\n}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;videos_sonando_a_la_vez&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;1&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA09_1_vuelta_importante.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA09_1_vuelta_importante.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Vuelta a \u00abLo importante\u00bb: posici\u00f3n 3 (esperada 3) \u00b7 videos sonando=1&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA09_2_vuelta_ultimo.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA09_2_vuelta_ultimo.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Vuelta a \u00abLo \u00faltimo\u00bb: posici\u00f3n 4 (esperada 4) \u00b7 videos sonando=1&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca09_conserva_video_por_pestana&#34;, &#34;duration&#34;: &#34;00:00:53&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca09_conserva_video_por_pestana&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:53&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca10_barra_progreso&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA10: la barra de progreso representa correctamente el avance del video.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;muestras&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[\n  {\n    &amp;quot;barra&amp;quot;: 1.78,\n    &amp;quot;real&amp;quot;: 1.94\n  },\n  {\n    &amp;quot;barra&amp;quot;: 4.8,\n    &amp;quot;real&amp;quot;: 4.96\n  },\n  {\n    &amp;quot;barra&amp;quot;: 7.84,\n    &amp;quot;real&amp;quot;: 7.99\n  },\n  {\n    &amp;quot;barra&amp;quot;: 10.89,\n    &amp;quot;real&amp;quot;: 11.11\n  },\n  {\n    &amp;quot;barra&amp;quot;: 13.93,\n    &amp;quot;real&amp;quot;: 14.12\n  },\n  {\n    &amp;quot;barra&amp;quot;: 16.98,\n    &amp;quot;real&amp;quot;: 17.16\n  }\n]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;diferencia_max_pct&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;0.22&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA10_barra.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA10_barra.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Barra vs avance real: 1.78% vs 1.94% | 4.8% vs 4.96% | 7.84% vs 7.99%&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca10_barra_progreso&#34;, &#34;duration&#34;: &#34;00:00:20&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca10_barra_progreso&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:20&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca11_controles&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA11: siguen disponibles cerrar, mostrar/ocultar controles, compartir y activar/desactivar sonido.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA11_1_ocultos.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA11_1_ocultos.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Controles ocultos \u00b7 visibles: Cerrar, Ocultar controles, Lo importante, Lo \u00faltimo, Compartir, Activar sonido&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca11_controles&#34;, &#34;duration&#34;: &#34;00:00:13&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca11_controles&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:13&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;player = &amp;lt;helpers.player.Player object at 0x0000000004F716A0&amp;gt;\nregistro = {&amp;#x27;detalle&amp;#x27;: {}, &amp;#x27;evidencias&amp;#x27;: [{&amp;#x27;archivo&amp;#x27;: &amp;#x27;CA11_1_ocultos.png&amp;#x27;, &amp;#x27;descripcion&amp;#x27;: &amp;#x27;Controles ocultos \u00b7 visibles: Cerrar, Ocultar controles, Lo importante, Lo \u00faltimo, Compartir, Activar sonido&amp;#x27;}]}\n\n    def test_ca11_controles(player, registro):\n        &amp;quot;&amp;quot;&amp;quot;CA11: siguen disponibles cerrar, mostrar/ocultar controles, compartir y activar/desactivar sonido.&amp;quot;&amp;quot;&amp;quot;\n        player.abrir()\n        iniciales = player.controles_visibles()\n        player.tocar(&amp;#x27;button[aria-label=&amp;quot;Ocultar controles&amp;quot;]&amp;#x27;)\n        ocultos = player.controles_visibles()\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA11&amp;quot;, &amp;quot;1_ocultos&amp;quot;, f&amp;quot;Controles ocultos \u00b7 visibles: {&amp;#x27;, &amp;#x27;.join(ocultos)}&amp;quot;))\n&amp;gt;       player.tocar(&amp;#x27;button[aria-label=&amp;quot;Mostrar controles&amp;quot;]&amp;#x27;)\n\ntests\\test_tnarc4366.py:283: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nhelpers\\player.py:157: in tocar\n    self.d.find_element(By.CSS_SELECTOR, css).click()\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\selenium\\webdriver\\remote\\webdriver.py:913: in find_element\n    return self.execute(Command.FIND_ELEMENT, {&amp;quot;using&amp;quot;: by, &amp;quot;value&amp;quot;: value})[&amp;quot;value&amp;quot;]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\selenium\\webdriver\\remote\\webdriver.py:506: in execute\n    self.error_handler.check_response(response)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = &amp;lt;appium.webdriver.errorhandler.MobileErrorHandler object at 0x0000000004F72660&amp;gt;\nresponse = {&amp;#x27;status&amp;#x27;: 404, &amp;#x27;value&amp;#x27;: &amp;#x27;{&amp;quot;value&amp;quot;: {&amp;quot;error&amp;quot;: &amp;quot;no such element&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;An element could not be located on the pa.../private/var/devicefarm/runtime/appium_2_x/node_modules/@appium/base-driver/lib/basedriver/commands/find.ts:75:12)&amp;quot;}}&amp;#x27;}\n\n    def check_response(self, response: dict[str, Any]) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;\n        https://www.w3.org/TR/webdriver/#errors\n        &amp;quot;&amp;quot;&amp;quot;\n        payload = response.get(&amp;#x27;value&amp;#x27;, &amp;#x27;&amp;#x27;)\n        if isinstance(payload, dict):\n            payload_dict = payload\n        else:\n            try:\n                payload_dict = json.loads(payload)\n            except (json.JSONDecodeError, TypeError):\n                return\n            if not isinstance(payload_dict, dict):\n                return\n        value = payload_dict.get(&amp;#x27;value&amp;#x27;)\n        if not isinstance(value, dict):\n            return\n        error = value.get(&amp;#x27;error&amp;#x27;)\n        if not error:\n            return\n    \n        message = value.get(&amp;#x27;message&amp;#x27;, error)\n        stacktrace = value.get(&amp;#x27;stacktrace&amp;#x27;, &amp;#x27;&amp;#x27;)\n        # In theory, we should also be checking HTTP status codes.\n        # Java client, for example, prints a warning if the actual `error`\n        # value does not match to the response&amp;#x27;s HTTP status code.\n        exception_class: type[sel_exceptions.WebDriverException] = ERROR_TO_EXC_MAPPING.get(\n            error, sel_exceptions.WebDriverException\n        )\n        if exception_class is sel_exceptions.WebDriverException and message:\n            if message == &amp;#x27;No such context found.&amp;#x27;:\n                exception_class = appium_exceptions.NoSuchContextException\n            elif message == &amp;#x27;That command could not be executed in the current context.&amp;#x27;:\n                exception_class = appium_exceptions.InvalidSwitchToTargetException\n    \n        if exception_class is sel_exceptions.UnexpectedAlertPresentException:\n            raise sel_exceptions.UnexpectedAlertPresentException(\n                msg=message,\n                stacktrace=format_stacktrace(stacktrace),\n                alert_text=value.get(&amp;#x27;data&amp;#x27;),\n            )\n&amp;gt;       raise exception_class(msg=message, stacktrace=format_stacktrace(stacktrace))\nE       selenium.common.exceptions.NoSuchElementException: Message: An element could not be located on the page using the given search parameters.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception\nE       Stacktrace:\nE       NoSuchElementError: An element could not be located on the page using the given search parameters.\nE           at XCUITestDriver.findWebElementOrElements (/private/var/devicefarm/runtime/appium_2_x/node_modules/appium-xcuitest-driver/lib/commands/web.js:444:13)\nE           at XCUITestDriver.findElOrEls (/private/var/devicefarm/runtime/appium_2_x/node_modules/appium-xcuitest-driver/lib/commands/find.js:22:14)\nE           at XCUITestDriver.findElOrElsWithProcessing (/private/var/devicefarm/runtime/appium_2_x/node_modules/@appium/base-driver/lib/basedriver/commands/find.ts:60:12)\nE           at XCUITestDriver.findElement (/private/var/devicefarm/runtime/appium_2_x/node_modules/@appium/base-driver/lib/basedriver/commands/find.ts:75:12)\n\n.venv\\Lib\\site-packages\\appium\\webdriver\\errorhandler.py:126: NoSuchElementException\n&#34;}], &#34;tests/test_tnarc4366.py::test_ca13_sin_placeholders&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA13: no se muestran los videos placeholder del skeleton.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;slides_revisados&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;88&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;placeholders_max&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;0&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;slides_sin_video&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;&lt;pre style=&#39;margin:0;white-space:pre-wrap&#39;&gt;[]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA13_sin_placeholders.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA13_sin_placeholders.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;88 estados revisados \u00b7 placeholders m\u00e1x=0 \u00b7 slides sin video=0&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca13_sin_placeholders&#34;, &#34;duration&#34;: &#34;00:00:08&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca13_sin_placeholders&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:08&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_tnarc4366.py::test_ca12_cerrar_redirige_home&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;p style=&#39;color:#333;font-size:13px;margin:6px 0&#39;&gt;&lt;b&gt;CA12: al cerrar el player el usuario es redirigido a la portada principal.&lt;/b&gt;&lt;/p&gt;&lt;table style=&#39;border-collapse:collapse;margin-bottom:8px;font-size:12px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333&#39;&gt;url_final&lt;/td&gt;&lt;td style=&#39;padding:4px 8px;border:1px solid #ddd;color:#333&#39;&gt;https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA12_home.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA12_home.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Despu\u00e9s de cerrar: https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;tests/test_tnarc4366.py::test_ca12_cerrar_redirige_home&#34;, &#34;duration&#34;: &#34;00:00:34&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_tnarc4366.py::test_ca12_cerrar_redirige_home&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:34&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;player = &amp;lt;helpers.player.Player object at 0x0000000004F716A0&amp;gt;\nregistro = {&amp;#x27;detalle&amp;#x27;: {&amp;#x27;url_final&amp;#x27;: &amp;#x27;https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/vi...ar: https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&amp;#x27;}]}\n\n    def test_ca12_cerrar_redirige_home(player, registro):\n        &amp;quot;&amp;quot;&amp;quot;CA12: al cerrar el player el usuario es redirigido a la portada principal.&amp;quot;&amp;quot;&amp;quot;\n        player.abrir()\n        player.tocar(&amp;#x27;a[aria-label=&amp;quot;Cerrar&amp;quot;]&amp;#x27;, espera=1)\n        limite, url = time.time() + 20, &amp;quot;&amp;quot;\n        while time.time() &amp;lt; limite:\n            try:\n                url = player.url_actual()\n            except Exception:\n                url = &amp;quot;&amp;quot;\n            if url and urlparse(url).path in (&amp;quot;&amp;quot;, &amp;quot;/&amp;quot;):\n                break\n            time.sleep(1)\n        time.sleep(2)\n        registro[&amp;quot;detalle&amp;quot;][&amp;quot;url_final&amp;quot;] = url\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA12&amp;quot;, &amp;quot;home&amp;quot;, f&amp;quot;Despu\u00e9s de cerrar: {url}&amp;quot;))\n&amp;gt;       assert urlparse(url).path in (&amp;quot;&amp;quot;, &amp;quot;/&amp;quot;), f&amp;quot;No redirigi\u00f3 a la portada: {url}&amp;quot;\nE       AssertionError: No redirigi\u00f3 a la portada: https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/\nE       assert &amp;#x27;/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&amp;#x27; in (&amp;#x27;&amp;#x27;, &amp;#x27;/&amp;#x27;)\nE        +  where &amp;#x27;/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&amp;#x27; = ParseResult(scheme=&amp;#x27;https&amp;#x27;, netloc=&amp;#x27;artear-tn-dev.cdn.arcpublishing.com&amp;#x27;, path=&amp;#x27;/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&amp;#x27;, params=&amp;#x27;&amp;#x27;, query=&amp;#x27;&amp;#x27;, fragment=&amp;#x27;&amp;#x27;).path\nE        +    where ParseResult(scheme=&amp;#x27;https&amp;#x27;, netloc=&amp;#x27;artear-tn-dev.cdn.arcpublishing.com&amp;#x27;, path=&amp;#x27;/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&amp;#x27;, params=&amp;#x27;&amp;#x27;, query=&amp;#x27;&amp;#x27;, fragment=&amp;#x27;&amp;#x27;) = urlparse(&amp;#x27;https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/&amp;#x27;)\n\ntests\\test_tnarc4366.py:342: AssertionError\n--------------------------- Captured stdout teardown ---------------------------\n\nResultados, evidencias y reporte en: D:\\Artear\\appium-mobile-web-qa\\resultados\\ios\\corridas\\20260925-164242\n&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;TNARC-4366 \u00b7 Suite Appium \u00b7 Ios&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+  </body>
+</html>

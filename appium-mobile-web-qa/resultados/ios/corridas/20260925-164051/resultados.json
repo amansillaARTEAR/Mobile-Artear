@@ -1,0 +1,19 @@
+{
+  "test_ca01_colecciones": {
+    "detalle": {
+      "id_importante": "TM4WUDMEHBFODAPHAOHF6TO5YI",
+      "videos_importante": 8,
+      "id_ultimo": "C3XNZ57OWJFZ3MGWYEZTY4YZB4",
+      "videos_ultimo": 36,
+      "video_inicial": "videolab-collection-8"
+    },
+    "evidencias": [
+      {
+        "archivo": "CA01_carga_inicial.png",
+        "descripcion": "CA1 · Lo importante=8 videos · Lo último=36 videos · reproduciendo: videolab-collection-8"
+      }
+    ],
+    "caso": "CA1: el componente recupera los videos de las colecciones configuradas en PageBuilder.",
+    "estado": "APROBADO"
+  }
+}

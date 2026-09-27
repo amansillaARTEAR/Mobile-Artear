@@ -1,0 +1,9 @@
+{
+  "test_ca01_colecciones": {
+    "detalle": {},
+    "evidencias": [],
+    "caso": "CA1: el componente recupera los videos de las colecciones configuradas en PageBuilder.",
+    "estado": "FALLIDO",
+    "error": "player = <helpers.player.Player object at 0x0000000004F316A0>\nregistro = {'detalle': {}, 'evidencias': []}\n\n    def test_ca01_colecciones(player, registro):\n        \"\"\"CA1: el componente recupera los videos de las colecciones configuradas en PageBuilder.\"\"\"\n>       s = player.abrir()\n            ^^^^^^^^^^^^^^\n\ntests\\test_tnarc4366.py:44: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nhelpers\\player.py:153: in abrir\n    return self.esperar(lambda s: s[\"reproduciendo\"] and (s[\"t\"] or 0) > 0.5, timeout=30)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nhelpers\\player.py:120: in esperar\n    if s and condicion(s):\n             ^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ns = {'error': {'code': -32601, 'message': \"'Runtime' domain was not found\", 'data': [{'code': -32601, 'message': \"'Runtime' domain was not found\"}]}, 'id': 66, 'tab': ''}\n\n>   return self.esperar(lambda s: s[\"reproduciendo\"] and (s[\"t\"] or 0) > 0.5, timeout=30)\n                                  ^^^^^^^^^^^^^^^^^^\nE   KeyError: 'reproduciendo'\n\nhelpers\\player.py:153: KeyError"
+  }
+}

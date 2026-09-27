@@ -1,0 +1,55 @@
+{
+  "test_ca11_controles": {
+    "detalle": {
+      "controles_iniciales": [
+        "Cerrar",
+        "Ocultar controles",
+        "Lo importante",
+        "Lo último",
+        "Compartir",
+        "Activar sonido"
+      ],
+      "controles_ocultos": [
+        "Cerrar",
+        "Mostrar controles"
+      ],
+      "controles_visibles": [
+        "Cerrar",
+        "Ocultar controles",
+        "Lo importante",
+        "Lo último",
+        "Compartir",
+        "Activar sonido"
+      ],
+      "sonido_activado": false,
+      "sigue_reproduciendo_con_sonido": true,
+      "sonido_se_mantiene_en_siguiente": false,
+      "hoja_compartir_abierta": true
+    },
+    "evidencias": [
+      {
+        "archivo": "CA11_1_ocultos.png",
+        "descripcion": "Controles ocultos · visibles: Cerrar, Mostrar controles"
+      },
+      {
+        "archivo": "CA11_2_visibles.png",
+        "descripcion": "Controles visibles: Cerrar, Ocultar controles, Lo importante, Lo último, Compartir, Activar sonido"
+      },
+      {
+        "archivo": "CA11_3_sonido.png",
+        "descripcion": "Sonido activado · muteado=True · reproduciendo=True"
+      },
+      {
+        "archivo": "CA11_4_sonido_siguiente.png",
+        "descripcion": "Siguiente video · muteado=True · reproduciendo=True"
+      },
+      {
+        "archivo": "CA11_5_compartir.png",
+        "descripcion": "Hoja de compartir del sistema"
+      }
+    ],
+    "caso": "CA11: siguen disponibles cerrar, mostrar/ocultar controles, compartir y activar/desactivar sonido.",
+    "estado": "FALLIDO",
+    "error": ", \"3_sonido\", f\"Sonido activado · muteado={con_sonido['muteado']} · reproduciendo={con_sonido['reproduciendo']}\"))\n        siguiente = player.swipe()\n        registro[\"evidencias\"].append(player.captura(\n            \"CA11\", \"4_sonido_siguiente\", f\"Siguiente video · muteado={siguiente['muteado']} · reproduciendo={siguiente['reproduciendo']}\"))\n    \n        player.tocar('button[aria-label=\"Compartir\"]', espera=2)\n        registro[\"evidencias\"].append(player.captura(\"CA11\", \"5_compartir\", \"Hoja de compartir del sistema\"))\n        hoja = player.cerrar_hoja_compartir()\n        registro[\"detalle\"].update({\n            \"controles_iniciales\": iniciales, \"controles_ocultos\": ocultos, \"controles_visibles\": visibles,\n            \"sonido_activado\": con_sonido[\"muteado\"] is False, \"sigue_reproduciendo_con_sonido\": con_sonido[\"reproduciendo\"],\n            \"sonido_se_mantiene_en_siguiente\": siguiente[\"muteado\"] is False, \"hoja_compartir_abierta\": hoja,\n        })\n        assert set(ocultos) <= {\"Cerrar\", \"Mostrar controles\"}, f\"Al ocultar quedan visibles: {ocultos}\"\n        for c in (\"Cerrar\", \"Ocultar controles\", \"Compartir\"):\n            assert c in visibles, f\"Falta el control «{c}» al mostrar controles\"\n>       assert con_sonido[\"muteado\"] is False and con_sonido[\"reproduciendo\"], \"Al activar el sonido el video quedó muteado o pausado\"\nE       AssertionError: Al activar el sonido el video quedó muteado o pausado\nE       assert (True is False)\n\ntests\\test_tnarc4366.py:309: AssertionError"
+  }
+}

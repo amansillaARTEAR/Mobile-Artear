@@ -1,0 +1,385 @@
+{
+  "test_00_version": {
+    "detalle": {
+      "version_cargada": "4743",
+      "version_esperada": "4743",
+      "dispositivo": "iPhone",
+      "sistema": "iOS 26.0",
+      "url": "https://artear-tn-dev.cdn.arcpublishing.com/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/"
+    },
+    "evidencias": [
+      {
+        "archivo": "CA00_version.png",
+        "descripcion": "Versión cargada 4743"
+      }
+    ],
+    "caso": "Precondición: la versión promovida en DEV es la esperada.",
+    "estado": "APROBADO"
+  },
+  "test_ca01_colecciones": {
+    "detalle": {
+      "id_importante": "TM4WUDMEHBFODAPHAOHF6TO5YI",
+      "videos_importante": 8,
+      "id_ultimo": "C3XNZ57OWJFZ3MGWYEZTY4YZB4",
+      "videos_ultimo": 36,
+      "video_inicial": "videolab-collection-8"
+    },
+    "evidencias": [
+      {
+        "archivo": "CA01_carga_inicial.png",
+        "descripcion": "CA1 · Lo importante=8 videos · Lo último=36 videos · reproduciendo: videolab-collection-8"
+      }
+    ],
+    "caso": "CA1: el componente recupera los videos de las colecciones configuradas en PageBuilder.",
+    "estado": "APROBADO"
+  },
+  "test_ca02_lo_importante_orden": {
+    "detalle": {
+      "video_de_entrada": "videolab-collection-8",
+      "secuencia_mostrada": [
+        "videolab-collection-1",
+        "videolab-collection-2",
+        "videolab-collection-3",
+        "videolab-collection-4",
+        "videolab-collection-5",
+        "videolab-collection-6",
+        "videolab-collection-7"
+      ],
+      "orden_coleccion": [
+        "videolab-collection-1",
+        "videolab-collection-2",
+        "videolab-collection-3",
+        "videolab-collection-4",
+        "videolab-collection-5",
+        "videolab-collection-6",
+        "videolab-collection-7",
+        "videolab-collection-8"
+      ],
+      "respeta_orden": true,
+      "fuera_de_coleccion": [],
+      "no_mostrados": [],
+      "llego_al_fin": true
+    },
+    "evidencias": [
+      {
+        "archivo": "CA02_1_inicio.png",
+        "descripcion": "Inicio de «Lo importante»: videolab-collection-8"
+      },
+      {
+        "archivo": "CA02_2_fin.png",
+        "descripcion": "Fin del feed · 8 videos · orden correcto=True · faltantes=0"
+      }
+    ],
+    "caso": "CA2: «Lo importante» muestra los videos de id_importante respetando el orden de la colección.",
+    "estado": "APROBADO"
+  },
+  "test_ca03_lo_ultimo_cronologico": {
+    "detalle": {
+      "video_de_entrada": "videolab-collection-8",
+      "secuencia": [
+        "tnarc-4366-video-vertical-sin-preview",
+        "las-cuatro-claves-del-partido-entre-argentina-e-inglaterra",
+        "el-jugador-argentino-mas-buscado-en-el-mundo-de-la-moda",
+        "un-avion-turco-bien-argentino",
+        "las-claves-del-triunfo-de-la-seleccion-argentina-vs-suiza",
+        "billetera-recuperada-gracias-a-la-hinchada",
+        "el-mensaje-misterioso-que-inquieta-a-trump",
+        "impactante-incendio-en-utah"
+      ],
+      "fechas": [
+        "2026-09-24T18:32:29.318Z",
+        "2026-07-14T08:37:00Z",
+        "2026-07-13T15:00:00Z",
+        "2026-07-12T16:44:00Z",
+        "2026-07-12T04:58:00Z",
+        "2026-06-28T16:42:00Z",
+        "2026-06-22T21:54:17.978Z",
+        "2026-06-22T21:31:18.216Z"
+      ],
+      "cronologico": true,
+      "fuera_de_coleccion": [],
+      "omitidos_de_la_coleccion": [
+        "video-vertical-con-preview-clone-tnarc-4366"
+      ]
+    },
+    "evidencias": [
+      {
+        "archivo": "CA03_recorrido.png",
+        "descripcion": "«Lo último» · 8 videos · más reciente a más antiguo=True · omitidos=1"
+      }
+    ],
+    "caso": "CA3: «Lo último» muestra los videos de id_ultimo del más reciente al más antiguo.",
+    "estado": "APROBADO"
+  },
+  "test_ca04_videos_9_16": {
+    "detalle": {
+      "mediciones": 25,
+      "ratio_min": 0.5625,
+      "ratio_max": 0.5625,
+      "videos_horizontales": []
+    },
+    "evidencias": [
+      {
+        "archivo": "CA04_relacion.png",
+        "descripcion": "Relación del video 0.5625 (9:16 = 0.5625) · 25 mediciones"
+      }
+    ],
+    "caso": "CA4: solo se renderizan videos verticales con relación de aspecto 9:16.",
+    "estado": "APROBADO"
+  },
+  "test_ca05_autoplay_play_pause": {
+    "detalle": {
+      "autoplay": true,
+      "autoplay_muteado": true,
+      "pausa": true,
+      "reanuda": true
+    },
+    "evidencias": [
+      {
+        "archivo": "CA05_1_autoplay.png",
+        "descripcion": "Sin interacción · reproduciendo=True · muteado=True"
+      },
+      {
+        "archivo": "CA05_2_pausa.png",
+        "descripcion": "Toque 1 · pausado=True"
+      },
+      {
+        "archivo": "CA05_3_reanuda.png",
+        "descripcion": "Toque 2 · reproduciendo=True · t 5.4s → 9.3s"
+      }
+    ],
+    "caso": "CA5: los videos se reproducen automáticamente y permiten play/pause.",
+    "estado": "APROBADO"
+  },
+  "test_ca06_siguiente_automatico": {
+    "detalle": {
+      "antes": "videolab-collection-8",
+      "despues": "videolab-collection-1",
+      "posicion": "1 → 2"
+    },
+    "evidencias": [
+      {
+        "archivo": "CA06_siguiente.png",
+        "descripcion": "Terminó videolab-collection-8 → arrancó videolab-collection-1 · reproduciendo=True"
+      }
+    ],
+    "caso": "CA6: al finalizar un video comienza automáticamente el siguiente.",
+    "estado": "APROBADO"
+  },
+  "test_ca07_scroll_intenso": {
+    "detalle": {
+      "saltos": [
+        {
+          "de": 1,
+          "a": 2,
+          "salto": 1
+        },
+        {
+          "de": 2,
+          "a": 3,
+          "salto": 1
+        },
+        {
+          "de": 3,
+          "a": 4,
+          "salto": 1
+        }
+      ],
+      "grabacion": null
+    },
+    "evidencias": [
+      {
+        "archivo": "CA07_fling_1.png",
+        "descripcion": "Swipe intenso 1: posición 1 → 2 (salto 1)"
+      },
+      {
+        "archivo": "CA07_fling_2.png",
+        "descripcion": "Swipe intenso 2: posición 2 → 3 (salto 1)"
+      },
+      {
+        "archivo": "CA07_fling_3.png",
+        "descripcion": "Swipe intenso 3: posición 3 → 4 (salto 1)"
+      }
+    ],
+    "caso": "CA7: el scroll avanza de a un video, independientemente de la intensidad del gesto.",
+    "estado": "APROBADO"
+  },
+  "test_ca08_paginacion": {
+    "detalle": {
+      "slides_iniciales": 6,
+      "cargas": [
+        {
+          "posicion": 3,
+          "slides": "6 → 11",
+          "avanzo": true
+        },
+        {
+          "posicion": 8,
+          "slides": "11 → 16",
+          "avanzo": true
+        }
+      ],
+      "gestos_perdidos": [],
+      "reinicios_de_video": [],
+      "duplicados": [],
+      "videos_vistos": 8
+    },
+    "evidencias": [
+      {
+        "archivo": "CA08_carga_1.png",
+        "descripcion": "Carga de más videos: 6 → 11 slides · avanzó=True"
+      },
+      {
+        "archivo": "CA08_carga_2.png",
+        "descripcion": "Carga de más videos: 11 → 16 slides · avanzó=True"
+      }
+    ],
+    "caso": "CA8: al acercarse al final se cargan más videos y la navegación continúa sin cortes.",
+    "estado": "APROBADO"
+  },
+  "test_ca09_conserva_video_por_pestana": {
+    "detalle": {
+      "lo_importante": {
+        "esperado": "videolab-collection-2",
+        "obtenido": "videolab-collection-2"
+      },
+      "lo_ultimo": {
+        "esperado": "el-jugador-argentino-mas-buscado-en-el-mundo-de-la-moda",
+        "obtenido": "el-jugador-argentino-mas-buscado-en-el-mundo-de-la-moda"
+      },
+      "videos_sonando_a_la_vez": 1
+    },
+    "evidencias": [
+      {
+        "archivo": "CA09_1_vuelta_importante.png",
+        "descripcion": "Vuelta a «Lo importante»: posición 3 (esperada 3) · videos sonando=1"
+      },
+      {
+        "archivo": "CA09_2_vuelta_ultimo.png",
+        "descripcion": "Vuelta a «Lo último»: posición 4 (esperada 4) · videos sonando=1"
+      }
+    ],
+    "caso": "CA9: al cambiar de pestaña, cada feed conserva el último video visualizado.",
+    "estado": "APROBADO"
+  },
+  "test_ca10_barra_progreso": {
+    "detalle": {
+      "muestras": [
+        {
+          "barra": 2.13,
+          "real": 2.28
+        },
+        {
+          "barra": 5.18,
+          "real": 5.3
+        },
+        {
+          "barra": 8.22,
+          "real": 8.4
+        },
+        {
+          "barra": 11.27,
+          "real": 11.49
+        },
+        {
+          "barra": 14.32,
+          "real": 14.51
+        },
+        {
+          "barra": 17.37,
+          "real": 17.56
+        }
+      ],
+      "diferencia_max_pct": 0.22
+    },
+    "evidencias": [
+      {
+        "archivo": "CA10_barra.png",
+        "descripcion": "Barra vs avance real: 2.13% vs 2.28% | 5.18% vs 5.3% | 8.22% vs 8.4%"
+      }
+    ],
+    "caso": "CA10: la barra de progreso representa correctamente el avance del video.",
+    "estado": "APROBADO"
+  },
+  "test_ca11_controles": {
+    "detalle": {
+      "controles_iniciales": [
+        "Cerrar",
+        "Ocultar controles",
+        "Lo importante",
+        "Lo último",
+        "Compartir",
+        "Activar sonido"
+      ],
+      "controles_ocultos": [
+        "Cerrar",
+        "Mostrar controles"
+      ],
+      "controles_visibles": [
+        "Cerrar",
+        "Ocultar controles",
+        "Lo importante",
+        "Lo último",
+        "Compartir",
+        "Activar sonido"
+      ],
+      "sonido_activado": false,
+      "sigue_reproduciendo_con_sonido": true,
+      "sonido_se_mantiene_en_siguiente": false,
+      "hoja_compartir_abierta": true
+    },
+    "evidencias": [
+      {
+        "archivo": "CA11_1_ocultos.png",
+        "descripcion": "Controles ocultos · visibles: Cerrar, Mostrar controles"
+      },
+      {
+        "archivo": "CA11_2_visibles.png",
+        "descripcion": "Controles visibles: Cerrar, Ocultar controles, Lo importante, Lo último, Compartir, Activar sonido"
+      },
+      {
+        "archivo": "CA11_3_sonido.png",
+        "descripcion": "Sonido activado · muteado=True · reproduciendo=True"
+      },
+      {
+        "archivo": "CA11_4_sonido_siguiente.png",
+        "descripcion": "Siguiente video · muteado=True · reproduciendo=True"
+      },
+      {
+        "archivo": "CA11_5_compartir.png",
+        "descripcion": "Hoja de compartir del sistema"
+      }
+    ],
+    "caso": "CA11: siguen disponibles cerrar, mostrar/ocultar controles, compartir y activar/desactivar sonido.",
+    "estado": "FALLIDO",
+    "error": ", \"3_sonido\", f\"Sonido activado · muteado={con_sonido['muteado']} · reproduciendo={con_sonido['reproduciendo']}\"))\n        siguiente = player.swipe()\n        registro[\"evidencias\"].append(player.captura(\n            \"CA11\", \"4_sonido_siguiente\", f\"Siguiente video · muteado={siguiente['muteado']} · reproduciendo={siguiente['reproduciendo']}\"))\n    \n        player.tocar('button[aria-label=\"Compartir\"]', espera=2)\n        registro[\"evidencias\"].append(player.captura(\"CA11\", \"5_compartir\", \"Hoja de compartir del sistema\"))\n        hoja = player.cerrar_hoja_compartir()\n        registro[\"detalle\"].update({\n            \"controles_iniciales\": iniciales, \"controles_ocultos\": ocultos, \"controles_visibles\": visibles,\n            \"sonido_activado\": con_sonido[\"muteado\"] is False, \"sigue_reproduciendo_con_sonido\": con_sonido[\"reproduciendo\"],\n            \"sonido_se_mantiene_en_siguiente\": siguiente[\"muteado\"] is False, \"hoja_compartir_abierta\": hoja,\n        })\n        assert set(ocultos) <= {\"Cerrar\", \"Mostrar controles\"}, f\"Al ocultar quedan visibles: {ocultos}\"\n        for c in (\"Cerrar\", \"Ocultar controles\", \"Compartir\"):\n            assert c in visibles, f\"Falta el control «{c}» al mostrar controles\"\n>       assert con_sonido[\"muteado\"] is False and con_sonido[\"reproduciendo\"], \"Al activar el sonido el video quedó muteado o pausado\"\nE       AssertionError: Al activar el sonido el video quedó muteado o pausado\nE       assert (True is False)\n\ntests\\test_tnarc4366.py:309: AssertionError"
+  },
+  "test_ca13_sin_placeholders": {
+    "detalle": {
+      "slides_revisados": 99,
+      "placeholders_max": 0,
+      "slides_sin_video": []
+    },
+    "evidencias": [
+      {
+        "archivo": "CA13_sin_placeholders.png",
+        "descripcion": "99 estados revisados · placeholders máx=0 · slides sin video=0"
+      }
+    ],
+    "caso": "CA13: no se muestran los videos placeholder del skeleton.",
+    "estado": "APROBADO"
+  },
+  "test_ca12_cerrar_redirige_home": {
+    "detalle": {
+      "url_final": "https://artear-tn-dev.cdn.arcpublishing.com/"
+    },
+    "evidencias": [
+      {
+        "archivo": "CA12_home.png",
+        "descripcion": "Después de cerrar: https://artear-tn-dev.cdn.arcpublishing.com/"
+      }
+    ],
+    "caso": "CA12: al cerrar el player el usuario es redirigido a la portada principal.",
+    "estado": "APROBADO"
+  }
+}
