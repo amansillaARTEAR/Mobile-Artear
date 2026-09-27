@@ -1,0 +1,80 @@
+name: WebMobile (Appium Android)
+run-name: "WebMobile Android — ${{ inputs.filtro != '' && inputs.filtro || 'suite completa' }} por @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      filtro:
+        description: "Opcional: expresión -k de pytest para correr solo algunos casos (ej: ca03 or ca07)"
+        required: false
+        type: string
+        default: ""
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  correr-suite:
+    runs-on: [self-hosted, windows]
+    defaults:
+      run:
+        working-directory: appium-mobile-web-qa
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Crear entorno virtual e instalar dependencias
+        shell: powershell
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\pip install -r requirements.txt
+
+      - name: Detectar dispositivo Android conectado
+        shell: powershell
+        run: |
+          $linea = adb devices | Select-String "`tdevice$" | Select-Object -First 1
+          if (-not $linea) {
+            Write-Host "No hay ningún Android conectado. Revisá el cable y la depuración USB." -ForegroundColor Red
+            exit 1
+          }
+          $udid = ($linea.ToString() -split "`t")[0]
+          Write-Host "Dispositivo detectado: $udid"
+          echo "ANDROID_UDID=$udid" >> $env:GITHUB_ENV
+
+      - name: Iniciar Appium
+        shell: powershell
+        run: |
+          $npmBin = Join-Path $env:APPDATA "npm"
+          if ($env:Path -notlike "*$npmBin*") { $env:Path += ";$npmBin" }
+          Start-Process appium.cmd -ArgumentList "--allow-insecure=uiautomator2:chromedriver_autodownload", "--log", "appium.log" -WindowStyle Hidden
+          $limite = (Get-Date).AddSeconds(40)
+          $listo = $false
+          while (-not $listo) {
+            try {
+              $c = [Net.Sockets.TcpClient]::new(); $c.Connect("127.0.0.1", 4723); $c.Close(); $listo = $true
+            } catch {
+              if ((Get-Date) -gt $limite) { Write-Host "Appium no arrancó a tiempo" -ForegroundColor Red; exit 1 }
+              Start-Sleep -Seconds 1
+            }
+          }
+
+      - name: Correr suite
+        shell: powershell
+        run: |
+          $pyArgs = @("-m", "pytest", "--plataforma", "android")
+          if ("${{ inputs.filtro }}") { $pyArgs += @("-k", "${{ inputs.filtro }}") }
+          & .\.venv\Scripts\python.exe @pyArgs
+
+      - name: Detener Appium
+        if: always()
+        shell: powershell
+        run: |
+          Get-Process appium -ErrorAction SilentlyContinue | Stop-Process -Force
+          Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*appium*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+
+      - name: Subir resultados como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-webmobile-${{ github.run_id }}
+          path: appium-mobile-web-qa/resultados/
+          retention-days: 30
