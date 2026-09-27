@@ -1,0 +1,52 @@
+name: WebMobile (Appium iOS - AWS Device Farm)
+run-name: "WebMobile iOS — ${{ inputs.filtro != '' && inputs.filtro || 'suite completa' }} por @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      appium_endpoint:
+        description: "URL del endpoint de Appium de la sesión de AWS Device Farm (creada a mano en la consola de AWS)"
+        required: true
+        type: string
+      filtro:
+        description: "Opcional: expresión -k de pytest para correr solo algunos casos (ej: ca03 or ca07)"
+        required: false
+        type: string
+        default: ""
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  correr-suite:
+    runs-on: [self-hosted, windows]
+    defaults:
+      run:
+        working-directory: appium-mobile-web-qa
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Crear entorno virtual e instalar dependencias
+        shell: powershell
+        run: |
+          py -m venv .venv
+          .\.venv\Scripts\pip install -r requirements.txt
+
+      - name: Correr suite contra el endpoint de AWS Device Farm
+        shell: powershell
+        env:
+          APPIUM_URL: ${{ inputs.appium_endpoint }}
+        run: |
+          $pyArgs = @("-m", "pytest", "--plataforma", "ios")
+          if ("${{ inputs.filtro }}") { $pyArgs += @("-k", "${{ inputs.filtro }}") }
+          & .\.venv\Scripts\python.exe @pyArgs
+
+      - name: Subir resultados como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-webmobile-ios-${{ github.run_id }}
+          # Solo la carpeta de iOS: no mezclar con corridas viejas de Android u otras plataformas.
+          path: appium-mobile-web-qa/resultados/ios/
+          retention-days: 30
+          if-no-files-found: error
