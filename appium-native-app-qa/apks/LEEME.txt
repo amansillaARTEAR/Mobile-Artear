@@ -1,0 +1,1 @@
+Copiá acá el APK a probar. Si hay varios, se usa el más reciente (o indicalo con -Apk en correr.ps1).

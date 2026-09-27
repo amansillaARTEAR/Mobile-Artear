@@ -5,3 +5,6 @@ __pycache__/
 .pytest_cache/
 **/.pytest_cache/
 *.pyc
+
+appium-native-app-qa/apks/*.apk
+appium-native-app-qa/ipas/*.ipa

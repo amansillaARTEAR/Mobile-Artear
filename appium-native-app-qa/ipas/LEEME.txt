@@ -1,0 +1,5 @@
+Copiá acá el .ipa a probar (build de iOS para AWS Device Farm). Si hay varios,
+se usa el más reciente (o indicalo con -App en correr.ps1).
+
+Antes de correr con -Plataforma ios, además necesitás:
+  $env:APPIUM_URL = "https://<endpoint-de-la-sesion-de-device-farm>/wd/hub"

@@ -1,0 +1,149 @@
+{
+  "_sesion": {
+    "detalle": {
+      "apk": "AMR-2080-prd.apk",
+      "paquete": "com.tn",
+      "actividad_inicial": ".MainActivity",
+      "dispositivo": "SM-S901E",
+      "sistema": "Android 16"
+    },
+    "evidencias": []
+  },
+  "test_01_instala_y_abre": {
+    "detalle": {
+      "paquete": "com.tn",
+      "actividad_inicial": ".MainActivity",
+      "en_primer_plano": true,
+      "muestra_contenido": true
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK01_apertura.png",
+        "descripcion": "Pantalla inicial"
+      }
+    ],
+    "caso": "SMK-01: el APK se instala y la app abre en primer plano.",
+    "estado": "APROBADO"
+  },
+  "test_02_estable_al_iniciar": {
+    "detalle": {
+      "sigue_abierta": true,
+      "crashes_o_anr": []
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK02_estable.png",
+        "descripcion": "15 s después de iniciar"
+      }
+    ],
+    "caso": "SMK-02: la app sigue abierta 15 segundos después de iniciar, sin crash ni ANR.",
+    "estado": "APROBADO"
+  },
+  "test_03_arranque_en_frio": {
+    "detalle": {
+      "segundos_por_intento": [
+        1.98,
+        1.9
+      ],
+      "maximo_aceptable": 10.0
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK03_arranque.png",
+        "descripcion": "Arranque en frío: [1.98, 1.9] s"
+      }
+    ],
+    "caso": "SMK-03: la app arranca en frío dentro del tiempo aceptable.",
+    "estado": "APROBADO"
+  },
+  "test_04_segundo_plano_y_regreso": {
+    "detalle": {
+      "volvio_a_primer_plano": true,
+      "muestra_contenido": true,
+      "crashes_o_anr": []
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK04_regreso.png",
+        "descripcion": "Después de volver del segundo plano"
+      }
+    ],
+    "caso": "SMK-04: la app vuelve bien después de pasar 5 segundos en segundo plano.",
+    "estado": "APROBADO"
+  },
+  "test_05_rotacion": {
+    "detalle": {
+      "orientaciones": {
+        "LANDSCAPE": "LANDSCAPE",
+        "PORTRAIT": "PORTRAIT"
+      },
+      "crashes_o_anr": []
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK05_landscape.png",
+        "descripcion": "Orientación landscape"
+      },
+      {
+        "archivo": "SMK05_portrait.png",
+        "descripcion": "Orientación portrait"
+      }
+    ],
+    "caso": "SMK-05: girar la pantalla no cierra la app (si la app bloquea la orientación, igual debe seguir viva).",
+    "estado": "APROBADO"
+  },
+  "test_06_exploracion_basica": {
+    "detalle": {
+      "recorrido": [
+        {
+          "elemento": "Campana Notificaciones",
+          "actividad": ".MainActivity",
+          "sigue_abierta": true,
+          "crashes_o_anr": []
+        },
+        {
+          "elemento": "Atrás",
+          "actividad": ".MainActivity",
+          "sigue_abierta": true,
+          "crashes_o_anr": []
+        },
+        {
+          "elemento": "Abrir nota: Milei se reunió con Netanyahu en Nueva York: acordaron profundizar la cooperación entre Israel y América Latina",
+          "actividad": ".MainActivity",
+          "sigue_abierta": true,
+          "crashes_o_anr": []
+        },
+        {
+          "elemento": "null",
+          "actividad": ".MainActivity",
+          "sigue_abierta": true,
+          "crashes_o_anr": []
+        }
+      ]
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK06_1.png",
+        "descripcion": "Después de tocar «Campana Notificaciones»"
+      },
+      {
+        "archivo": "SMK06_2.png",
+        "descripcion": "Después de tocar «Atrás»"
+      },
+      {
+        "archivo": "SMK06_3.png",
+        "descripcion": "Después de tocar «Abrir nota: Milei se reunió con Netanyahu en Nueva York: acordaron profundizar la cooperación entre Israel y América Latina»"
+      },
+      {
+        "archivo": "SMK06_4.png",
+        "descripcion": "Después de tocar «null»"
+      },
+      {
+        "archivo": "SMK06_grabacion.mp4",
+        "descripcion": "Grabación de la exploración"
+      }
+    ],
+    "caso": "SMK-06: tocar los primeros elementos de la pantalla inicial no produce crashes.",
+    "estado": "APROBADO"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "_sesion": {
+    "detalle": {
+      "apk": "AMR-2080-prd.apk",
+      "paquete": "com.tn",
+      "actividad_inicial": ".MainActivity",
+      "dispositivo": "SM-S901E",
+      "sistema": "Android 16"
+    },
+    "evidencias": []
+  },
+  "test_01_instala_y_abre": {
+    "detalle": {
+      "paquete": "com.tn",
+      "actividad_inicial": ".MainActivity",
+      "en_primer_plano": true,
+      "muestra_contenido": true
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK01_apertura.png",
+        "descripcion": "Pantalla inicial"
+      }
+    ],
+    "caso": "SMK-01: el APK se instala y la app abre en primer plano.",
+    "estado": "APROBADO"
+  },
+  "test_06_exploracion_basica": {
+    "detalle": {
+      "recorrido": [
+        {
+          "elemento": "Campana Notificaciones",
+          "sigue_abierta": true,
+          "volvio_al_inicio": true,
+          "crashes_o_anr": []
+        },
+        {
+          "elemento": "En vivo. Transmisión en tiempo real",
+          "sigue_abierta": true,
+          "volvio_al_inicio": true,
+          "crashes_o_anr": []
+        },
+        {
+          "elemento": "Abrir nota: Milei se reunió con Netanyahu en Nueva York: acordaron profundizar la cooperación entre Israel y América Latina",
+          "sigue_abierta": true,
+          "volvio_al_inicio": true,
+          "crashes_o_anr": []
+        },
+        {
+          "elemento": "Inicio",
+          "sigue_abierta": true,
+          "volvio_al_inicio": true,
+          "crashes_o_anr": []
+        },
+        {
+          "elemento": "Secciones",
+          "sigue_abierta": true,
+          "volvio_al_inicio": true,
+          "crashes_o_anr": []
+        }
+      ]
+    },
+    "evidencias": [
+      {
+        "archivo": "SMK06_1.png",
+        "descripcion": "Después de tocar «Campana Notificaciones»"
+      },
+      {
+        "archivo": "SMK06_2.png",
+        "descripcion": "Después de tocar «En vivo. Transmisión en tiempo real»"
+      },
+      {
+        "archivo": "SMK06_3.png",
+        "descripcion": "Después de tocar «Abrir nota: Milei se reunió con Netanyahu en Nueva York: acordaron profundizar la cooperación entre Israel y América Latina»"
+      },
+      {
+        "archivo": "SMK06_4.png",
+        "descripcion": "Después de tocar «Inicio»"
+      },
+      {
+        "archivo": "SMK06_5.png",
+        "descripcion": "Después de tocar «Secciones»"
+      },
+      {
+        "archivo": "SMK06_grabacion.mp4",
+        "descripcion": "Grabación de la exploración"
+      }
+    ],
+    "caso": "SMK-06: tocar los primeros elementos de la pantalla inicial no produce crashes.",
+    "estado": "APROBADO"
+  }
+}
