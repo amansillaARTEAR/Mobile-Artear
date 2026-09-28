@@ -1,5 +1,19 @@
-# Componente: Sin clasificar
-"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""
+# Componente: Navbar
+"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR.
+
+Corregido a mano tras la revisión del PR: usaba player.esperar(1) para simplemente esperar
+un segundo, pero player.esperar(condicion, ...) espera una FUNCIÓN de condición y llama
+condicion(snap) -- con 1 como argumento tira TypeError: 'int' object is not callable en la
+primera línea del primer test, antes de sacar ninguna captura. Se reemplaza por time.sleep(1)
+(y se agrega el import correspondiente, a diferencia de pytest/fixtures que sí vienen de
+conftest.py).
+
+OJO al correrlo: player.tocar("navbar") es una aproximación de Claude para "tocar la X del
+tooltip" -- "navbar" casi seguro no es un selector CSS real (buscaría una etiqueta <navbar>
+literal). Es esperable que falle ahí con "no such element"; cuando corra contra el dispositivo
+real vamos a poder ver en la captura previa dónde está la X real y armar el selector correcto."""
+
+import time
 
 # Escenario: Positivo
 # Dado que el usuario ingresa por primera vez a la app
@@ -8,7 +22,7 @@
 def test_ca17_positivo(player, registro):
     """POSITIVO: el tooltip de la nueva sección se muestra al iniciar por primera vez y se cierra al tocar la X."""
     s = player.abrir()
-    player.esperar(1)  # Dar tiempo a la animación del tooltip
+    time.sleep(1)  # Dar tiempo a la animación del tooltip
     registro["evidencias"].append(player.captura("CA17", "1_tooltip_inicial", "Tooltip visible al cargar el player"))
     
     controles = player.controles_visibles()
@@ -33,7 +47,7 @@ def test_ca17_positivo(player, registro):
     
     # Intentar cerrar el tooltip tocando en la zona superior donde debería estar la X
     player.tocar("navbar")  # Aproximación: tocar en el área del navbar/topbar
-    player.esperar(1)  # Esperar el efecto de cierre
+    time.sleep(1)  # Esperar el efecto de cierre
     
     controles_despues = player.controles_visibles()
     tooltip_cerrado = not any("NUEVO" in str(c) and "videos verticales" in str(c) for c in controles_despues)
@@ -52,7 +66,7 @@ def test_ca17_negativo(player, registro):
     """NEGATIVO: el tooltip no aparece si el usuario ya accedió a la sección en visitas anteriores."""
     # Primera visita: abrir y simular acceso a la sección
     s = player.abrir()
-    player.esperar(1)
+    time.sleep(1)
     
     controles_primera = player.controles_visibles()
     tiene_tooltip_primera = any("NUEVO" in str(c) and "videos verticales" in str(c) for c in controles_primera)
@@ -62,14 +76,14 @@ def test_ca17_negativo(player, registro):
     # Simular navegación a la pestaña (si hay pestañas disponibles)
     # TODO revisar: se asume que tocar en el navbar o cambiar de pestaña cuenta como "acceder a la sección"
     player.tocar("navbar")
-    player.esperar(1)
+    time.sleep(1)
     
     # Cambiar de pestaña para simular que accedió a la sección
     tabs = ["Lo importante", "Lo último"]
     for tab in tabs:
         try:
             player.pestana(tab)
-            player.esperar(1)
+            time.sleep(1)
             break
         except:
             continue
@@ -81,7 +95,7 @@ def test_ca17_negativo(player, registro):
     # TODO revisar: esta aproximación puede no reflejar el comportamiento real de persistencia entre sesiones
     # que requeriría cookies/localStorage o reinicio completo de la app
     s = player.abrir()
-    player.esperar(1)
+    time.sleep(1)
     
     controles_segunda = player.controles_visibles()
     tiene_tooltip_segunda = any("NUEVO" in str(c) and "videos verticales" in str(c) for c in controles_segunda)
@@ -106,7 +120,7 @@ def test_ca17_negativo(player, registro):
 def test_ca17_borde(player, registro):
     """BORDE: el tooltip reaparece si el usuario lo cerró sin acceder a la sección de videos."""
     s = player.abrir()
-    player.esperar(1)
+    time.sleep(1)
     
     controles_inicial = player.controles_visibles()
     tiene_tooltip_inicial = any("NUEVO" in str(c) and "videos verticales" in str(c) for c in controles_inicial)
@@ -117,7 +131,7 @@ def test_ca17_borde(player, registro):
     
     # Cerrar el tooltip sin acceder a la sección (solo tocar X)
     player.tocar("navbar")
-    player.esperar(1)
+    time.sleep(1)
     
     controles_cerrado = player.controles_visibles()
     tooltip_cerrado = not any("NUEVO" in str(c) and "videos verticales" in str(c) for c in controles_cerrado)
@@ -131,7 +145,7 @@ def test_ca17_borde(player, registro):
     # En ausencia de un método para resetear/recargar respetando el estado de "no accedió",
     # esta aproximación puede no ser suficiente
     s = player.abrir()
-    player.esperar(1)
+    time.sleep(1)
     
     controles_reaparicion = player.controles_visibles()
     tiene_tooltip_reaparicion = any("NUEVO" in str(c) and "videos verticales" in str(c) for c in controles_reaparicion)
