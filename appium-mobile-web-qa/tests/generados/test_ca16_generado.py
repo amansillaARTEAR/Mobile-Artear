@@ -1,4 +1,11 @@
-"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""
+"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR.
+
+Corregido a mano tras la revisión del PR: la versión generada por Claude usaba
+s.get("tiene_cierre", ...) -- que no existe en lo que devuelve player.abrir(), por lo
+que el assert siempre pasaba sin verificar nada -- y controles.get("tiene_share", ...)
+sobre una lista (player.controles_visibles() no es un diccionario), lo que tiraba
+AttributeError. Se reemplazó por player.iconos_visibles(), agregado a Player
+específicamente para poder verificar estos íconos puntuales."""
 
 # Escenario: Positivo
 # Dado que el usuario abre el reproductor de videos verticales desde la sección
@@ -11,29 +18,25 @@ def test_ca16_positivo(player, registro):
     registro["evidencias"].append(player.captura(
         "CA16", "1_carga_portada",
         f"CA16 · Carga como portada · reproduciendo: {s['video']}"))
-    
-    # Verificar que se abre como portada (no modal): no debe haber icono de cierre
-    assert not s.get("tiene_cierre", False), "El reproductor muestra icono de cierre cuando debería ser portada"
-    
-    # Verificar que tiene topbar y navbar
-    # TODO revisar: Player no expone métodos para verificar topbar/navbar directamente. Se asume que si no hay cierre y se carga correctamente, es portada.
-    
-    # Verificar controles visibles (share y sonido)
-    controles = player.controles_visibles()
+
+    # TODO revisar: Player no expone métodos para verificar topbar/navbar específicos.
+    # Se usa iconos_visibles() (compartir/sonido/cierre) como mejor aproximación disponible.
+    iconos = player.iconos_visibles()
     registro["detalle"].update({
-        "tiene_cierre": s.get("tiene_cierre", False),
-        "tiene_share": controles.get("tiene_share", False),
-        "tiene_sonido": controles.get("tiene_sonido", False),
+        "tiene_cierre": iconos["tiene_cierre"],
+        "tiene_share": iconos["tiene_share"],
+        "tiene_sonido": iconos["tiene_sonido"],
         "video_inicial": s["video"],
         "tab_inicial": s.get("tab", ""),
     })
-    
+
     registro["evidencias"].append(player.captura(
         "CA16", "2_controles",
-        f"Controles visibles · share={controles.get('tiene_share')} · sonido={controles.get('tiene_sonido')}"))
-    
-    assert controles.get("tiene_share", False), "No se muestra el icono de share"
-    assert controles.get("tiene_sonido", False), "No se muestra el icono de sonido/volumen"
+        f"Íconos · share={iconos['tiene_share']} · sonido={iconos['tiene_sonido']} · cierre={iconos['tiene_cierre']}"))
+
+    assert not iconos["tiene_cierre"], "El reproductor muestra ícono de cierre cuando debería ser portada (no modal)"
+    assert iconos["tiene_share"], "No se muestra el ícono de compartir"
+    assert iconos["tiene_sonido"], "No se muestra el ícono de sonido/volumen"
     assert s["tiene_video"] and s["reproduciendo"], "El reproductor no está reproduciendo un video"
 
 
@@ -44,21 +47,20 @@ def test_ca16_positivo(player, registro):
 
 def test_ca16_negativo(player, registro):
     """NEGATIVO: CA16 - El reproductor NO muestra icono de cierre al ser portada en lugar de modal."""
-    s = player.abrir()
-    
-    # Verificar que NO hay icono de cierre
-    tiene_cierre = s.get("tiene_cierre", False)
-    
+    player.abrir()
+
+    iconos = player.iconos_visibles()
+
     registro["detalle"].update({
-        "tiene_cierre": tiene_cierre,
+        "tiene_cierre": iconos["tiene_cierre"],
         "tipo_apertura": "portada_esperada",
     })
-    
+
     registro["evidencias"].append(player.captura(
         "CA16", "negativo_sin_cierre",
-        f"CA16 Negativo · Sin icono de cierre · tiene_cierre={tiene_cierre}"))
-    
-    assert not tiene_cierre, "ERROR: El reproductor muestra icono de cierre cuando debería ser una portada sin posibilidad de cierre"
+        f"CA16 Negativo · Sin ícono de cierre · tiene_cierre={iconos['tiene_cierre']}"))
+
+    assert not iconos["tiene_cierre"], "ERROR: El reproductor muestra ícono de cierre cuando debería ser una portada sin posibilidad de cierre"
 
 
 # Escenario: Borde
@@ -70,47 +72,43 @@ def test_ca16_borde(player, registro):
     """BORDE: CA16 - Al cambiar entre pestañas, se mantiene la estructura de portada y los iconos visibles."""
     s = player.abrir()
     tab_inicial = s.get("tab", "")
-    
+
     registro["evidencias"].append(player.captura(
         "CA16", "borde_1_tab_inicial",
         f"Pestaña inicial: {tab_inicial}"))
-    
-    # Verificar controles en la pestaña inicial
-    controles_inicial = player.controles_visibles()
-    tiene_cierre_inicial = s.get("tiene_cierre", False)
-    
+
+    iconos_inicial = player.iconos_visibles()
+
     # Cambiar de pestaña
     if tab_inicial == "Lo importante":
         s = player.pestana("Tenés que ver")
     else:
         s = player.pestana("Lo importante")
-    
+
     tab_nueva = s.get("tab", "")
-    
+
     registro["evidencias"].append(player.captura(
         "CA16", "borde_2_tab_cambiada",
         f"Después de cambiar a: {tab_nueva}"))
-    
-    # Verificar controles en la nueva pestaña
-    controles_nueva = player.controles_visibles()
-    tiene_cierre_nueva = s.get("tiene_cierre", False)
-    
+
+    iconos_nueva = player.iconos_visibles()
+
     registro["detalle"].update({
         "tab_inicial": tab_inicial,
         "tab_nueva": tab_nueva,
-        "tiene_cierre_inicial": tiene_cierre_inicial,
-        "tiene_cierre_nueva": tiene_cierre_nueva,
-        "share_inicial": controles_inicial.get("tiene_share", False),
-        "share_nueva": controles_nueva.get("tiene_share", False),
-        "sonido_inicial": controles_inicial.get("tiene_sonido", False),
-        "sonido_nueva": controles_nueva.get("tiene_sonido", False),
+        "tiene_cierre_inicial": iconos_inicial["tiene_cierre"],
+        "tiene_cierre_nueva": iconos_nueva["tiene_cierre"],
+        "share_inicial": iconos_inicial["tiene_share"],
+        "share_nueva": iconos_nueva["tiene_share"],
+        "sonido_inicial": iconos_inicial["tiene_sonido"],
+        "sonido_nueva": iconos_nueva["tiene_sonido"],
     })
-    
+
     registro["evidencias"].append(player.captura(
         "CA16", "borde_3_comparacion",
         f"Comparación · tabs={tab_inicial}→{tab_nueva} · controles persistentes"))
-    
-    assert not tiene_cierre_inicial and not tiene_cierre_nueva, "El icono de cierre apareció en alguna de las pestañas"
-    assert controles_nueva.get("tiene_share", False), "El icono de share no se mantiene al cambiar de pestaña"
-    assert controles_nueva.get("tiene_sonido", False), "El icono de sonido no se mantiene al cambiar de pestaña"
+
+    assert not iconos_inicial["tiene_cierre"] and not iconos_nueva["tiene_cierre"], "El ícono de cierre apareció en alguna de las pestañas"
+    assert iconos_nueva["tiene_share"], "El ícono de compartir no se mantiene al cambiar de pestaña"
+    assert iconos_nueva["tiene_sonido"], "El ícono de sonido no se mantiene al cambiar de pestaña"
     assert tab_inicial != tab_nueva, "No se pudo cambiar de pestaña correctamente"

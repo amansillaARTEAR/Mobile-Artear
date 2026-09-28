@@ -56,6 +56,23 @@ return [...document.querySelectorAll('button,a')]
   .map(b => b.getAttribute('aria-label') || (b.innerText || '').trim()).filter(Boolean);
 """
 
+# Presencia de íconos puntuales (compartir / sonido / cerrar), a partir de los mismos
+# botones visibles que JS_CONTROLES, pero devuelto como flags booleanos en vez de una
+# lista cruda de textos -- para tickets que piden verificar un ícono específico.
+JS_ICONOS = r"""
+const botones = [...document.querySelectorAll('button,a')]
+  .filter(b => !b.closest('.video-js') && b.offsetParent)
+  .map(b => ((b.getAttribute('aria-label') || b.getAttribute('title') || b.innerText || '') + '').trim().toLowerCase())
+  .filter(Boolean);
+const hay = (regex) => botones.some(t => regex.test(t));
+return {
+  tiene_share: hay(/compart|share/),
+  tiene_sonido: hay(/sonid|volum|mute|silenci|unmute/),
+  tiene_cierre: hay(/cerrar|^close$|^x$|×/),
+  botones,
+};
+"""
+
 # Etiqueta amarilla con el caso y los valores medidos, visible en la captura
 JS_ETIQUETA = r"""
 let d = document.getElementById('__qa');
@@ -140,6 +157,12 @@ class Player:
     def controles_visibles(self):
         self._web()
         return self.d.execute_script(JS_CONTROLES)
+
+    def iconos_visibles(self):
+        """Devuelve {tiene_share, tiene_sonido, tiene_cierre, botones} para verificar íconos
+        puntuales del ticket (a diferencia de controles_visibles(), que da la lista cruda)."""
+        self._web()
+        return self.d.execute_script(JS_ICONOS)
 
     def url_actual(self):
         self._web()

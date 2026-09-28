@@ -65,6 +65,12 @@ Reglas estrictas para el código:
   hoy, escribí el test igual con la mejor aproximación posible, y agregá un comentario
   "# TODO revisar:" explicando qué falta o qué se asumió, en vez de inventar selectores
   CSS al azar.
+- Los diccionarios que devuelven los métodos de Player SOLO tienen las claves que se
+  documentan abajo en "Forma de los datos que devuelve Player" -- no inventes una clave
+  que no esté ahí (por ejemplo, no asumas "tiene_cierre" en lo que devuelve player.abrir()
+  si no aparece en esa lista: eso hace que el assert compare siempre contra un valor por
+  defecto y nunca falle, aunque el comportamiento real esté mal). Si necesitás verificar
+  algo para lo que no hay una clave, usá "# TODO revisar:" en vez de asumirla.
 - Seguí el mismo estilo que los casos existentes: uso de player.captura(...) para
   evidencias, asserts con mensaje descriptivo, y registro["evidencias"].append(...)
   para las capturas relevantes.
@@ -84,6 +90,25 @@ def leer_metodos_player():
             continue
         lineas.append(f"- player.{nombre}(...)" + (f"  # {doc.strip()}" if doc.strip() else ""))
     return "\n".join(lineas)
+
+
+# Forma exacta de los diccionarios que devuelven los métodos más usados de Player, para
+# que Claude no tenga que adivinar (ni inventar) qué claves existen. Mantenido a mano
+# porque estos dicts se arman en JS embebido, no en docstrings de Python.
+FORMA_DATOS_PLAYER = """Forma de los datos que devuelve Player (no existen otras claves además de éstas):
+
+- player.abrir() y player.tocar_video() devuelven un "snap" del slide activo:
+  {tab, idx, total, fin, video, reproduciendo, muteado, t, d, ancho_video, alto_video,
+  barra, ratio, tiene_video, placeholders, sonando, version, url}
+  (NO incluye nada sobre íconos de compartir/sonido/cierre ni sobre topbar/navbar).
+- player.controles_visibles() devuelve una LISTA de strings (texto/aria-label de cada
+  botón visible fuera del reproductor) -- no es un diccionario, no tiene .get(...).
+- player.iconos_visibles() devuelve un diccionario ya resuelto en booleanos, pensado
+  para tickets que piden verificar íconos puntuales:
+  {tiene_share, tiene_sonido, tiene_cierre, botones}
+  Preferí este método sobre controles_visibles() cuando el ticket pida comprobar la
+  presencia de un ícono específico (compartir, sonido/volumen, cerrar).
+"""
 
 
 def leer_ejemplos():
@@ -130,6 +155,8 @@ def main():
 
 Métodos disponibles en la clase Player:
 {leer_metodos_player()}
+
+{FORMA_DATOS_PLAYER}
 
 Ejemplos de casos existentes (para copiar el estilo):
 {leer_ejemplos()}
