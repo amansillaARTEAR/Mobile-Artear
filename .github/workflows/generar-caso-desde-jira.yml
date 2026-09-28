@@ -40,6 +40,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          set +e
           echo "Longitud de ANTHROPIC_API_KEY: ${#ANTHROPIC_API_KEY} caracteres"
           python scripts/generar_caso.py --ticket-file /tmp/ticket.txt > /tmp/salida.txt 2> /tmp/salida_err.txt
           ec=$?
