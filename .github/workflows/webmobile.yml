@@ -9,6 +9,17 @@ on:
         required: false
         type: string
         default: ""
+      ambiente:
+        description: "Ambiente de TN a probar. SBX no usa versión; DEV y VNP la necesitan en 'version'."
+        required: false
+        type: choice
+        options: ["sbx", "dev", "vnp"]
+        default: "sbx"
+      version:
+        description: "Número de versión promovida (ej: 721) -- requerido si ambiente es DEV o VNP, se ignora en SBX"
+        required: false
+        type: string
+        default: ""
 
 env:
   PYTHONUNBUFFERED: "1"
@@ -56,6 +67,31 @@ jobs:
               Start-Sleep -Seconds 1
             }
           }
+
+      - name: Armar URL del ambiente
+        shell: powershell
+        run: |
+          $ambiente = "${{ inputs.ambiente }}"
+          if (-not $ambiente) { $ambiente = "sbx" }
+          $version = "${{ inputs.version }}"
+          switch ($ambiente) {
+            "dev" { $dominio = "artear-tn-dev.cdn.arcpublishing.com" }
+            "sbx" { $dominio = "artear-tn-sandbox.cdn.arcpublishing.com" }
+            "vnp" { $dominio = "tn.com.ar" }
+            default { Write-Host "::error::Ambiente desconocido: $ambiente (esperaba dev/sbx/vnp)"; exit 1 }
+          }
+          $ruta = "/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/"
+          if ($ambiente -eq "sbx") {
+            $tnUrl = "https://$dominio$ruta"
+          } else {
+            if (-not $version) {
+              Write-Host "::error::El ambiente '$ambiente' necesita el input 'version' (ej: 721)"
+              exit 1
+            }
+            $tnUrl = "https://$dominio$ruta?d=$version"
+          }
+          Write-Host "Ambiente: $ambiente -> TN_URL: $tnUrl"
+          echo "TN_URL=$tnUrl" >> $env:GITHUB_ENV
 
       - name: Correr suite
         shell: powershell
