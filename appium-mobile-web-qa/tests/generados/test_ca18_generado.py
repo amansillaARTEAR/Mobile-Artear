@@ -14,7 +14,12 @@ snap y esperar el avance automático con player.esperar(lambda snap: ...) en vez
 Segunda corrida (ya con los fixes de arriba): positivo y negativo pasaron, pero borde falló
 por separado -- assert s["fin"] con fin=False todavía a los 3s de time.sleep tras saltar al
 final del último video (o no le alcanzaba el tiempo, o hacía falta más margen). Cambiado ese
-sleep fijo también por player.esperar(lambda snap: snap["fin"], timeout=15)."""
+sleep fijo también por player.esperar(lambda snap: snap["fin"], timeout=15).
+
+Tercera corrida: la pantalla de fin ya aparecía, pero el assert de que el video final coincide
+con "el último video" fallaba (comparaba contra un video un paso atrás) -- el loop guardaba
+ultimo_video/idx_ultimo ANTES de swipear, no después. Corregido para guardarlos del snap actual
+tras cada swipe."""
 
 import time
 
@@ -116,14 +121,16 @@ def test_ca18_borde(player, registro):
     registro["evidencias"].append(player.captura(
         "CA18", "1_inicio", f"Inicio: {s['video']} · total={s['total']}"))
     
-    # Navegar hasta el último video del feed
-    ultimo_video = None
+    # Navegar hasta el último video del feed. Guardamos ultimo_video/idx_ultimo del snap ACTUAL
+    # después de cada swipe (no antes) -- guardarlo antes dejaba estas variables un video atrás
+    # del que realmente terminábamos analizando (bug real encontrado en la corrida: terminaba
+    # en videolab-collection-7 pero ultimo_video decía videolab-collection-6).
+    ultimo_video, idx_ultimo = s["video"], s["idx"]
     for i in range(s["total"]):
         if s["fin"]:
             break
-        ultimo_video = s["video"]
-        idx_ultimo = s["idx"]
         s = player.swipe()
+        ultimo_video, idx_ultimo = s["video"], s["idx"]
     
     registro["detalle"].update({
         "total_videos": s["total"],
