@@ -39,7 +39,13 @@ jobs:
         run: |
           $pyArgs = @("-m", "pytest", "--plataforma", "ios")
           if ("${{ inputs.filtro }}") { $pyArgs += @("-k", "${{ inputs.filtro }}") }
-          & .\.venv\Scripts\python.exe @pyArgs
+          & .\.venv\Scripts\python.exe @pyArgs 2>&1 | Tee-Object -FilePath pytest_output.log
+          $ec = $LASTEXITCODE
+          if ($ec -ne 0) {
+            $tail = ((Get-Content pytest_output.log -Tail 60) -join " | ") -replace "%", "%25" -replace "`r", "" -replace "`n", " | "
+            Write-Host "::error::pytest fallo (exit $ec): $tail"
+          }
+          exit $ec
 
       - name: Subir resultados como artifact
         if: always()
