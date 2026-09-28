@@ -1,0 +1,136 @@
+# Componente: Sin clasificar
+"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""
+
+# Escenario: Positivo
+# Dado que el player está abierto y reproduce el primer video
+# Cuando el video llega al final
+# Entonces debe comenzar automáticamente la reproducción del siguiente video
+def test_ca18_positivo(player, registro):
+    """POSITIVO: al finalizar un video, debe comenzar automáticamente la reproducción del siguiente."""
+    s = player.abrir()
+    video_inicial = s["video"]
+    registro["evidencias"].append(player.captura(
+        "CA18", "1_inicio", f"Video inicial reproduciéndose: {video_inicial}"))
+    
+    # Avanzar hasta el final del video actual
+    s = player.ir_al_final_del_video()
+    registro["detalle"].update({
+        "video_inicial": video_inicial,
+        "duracion_inicial": s["d"],
+        "tiempo_al_final": s["t"],
+    })
+    
+    # Esperar a que comience el siguiente video automáticamente
+    player.esperar(2)
+    s = player.snap()
+    video_siguiente = s["video"]
+    
+    registro["detalle"].update({
+        "video_siguiente": video_siguiente,
+        "reproduciendo_siguiente": s["reproduciendo"],
+        "tiempo_siguiente": s["t"],
+        "idx_inicial": 0,
+        "idx_siguiente": s["idx"],
+    })
+    registro["evidencias"].append(player.captura(
+        "CA18", "2_siguiente", 
+        f"Siguiente video reproduciéndose: {video_siguiente} · t={s['t']}s · reproduciendo={s['reproduciendo']}"))
+    
+    assert video_siguiente != video_inicial, f"El video no cambió después de finalizar (sigue siendo {video_inicial})"
+    assert s["reproduciendo"], "El siguiente video no se reproduce automáticamente"
+    assert s["idx"] == 1, f"El índice debería ser 1 pero es {s['idx']}"
+    assert s["t"] >= 0 and s["t"] < 5, f"El siguiente video debería estar al inicio (t={s['t']}s)"
+
+
+# Escenario: Negativo
+# Dado que el player está reproduciendo un video
+# Cuando el usuario hace pausa manualmente antes de que finalice
+# Entonces el siguiente video NO debe comenzar automáticamente
+def test_ca18_negativo(player, registro):
+    """NEGATIVO: si el usuario pausa manualmente, el siguiente video NO debe comenzar automáticamente."""
+    s = player.abrir()
+    video_inicial = s["video"]
+    registro["evidencias"].append(player.captura(
+        "CA18", "1_reproduciendo", f"Video inicial: {video_inicial}"))
+    
+    # Pausar el video manualmente
+    player.tocar_video()
+    player.esperar(1)
+    s = player.snap()
+    
+    registro["detalle"].update({
+        "video_inicial": video_inicial,
+        "pausado": not s["reproduciendo"],
+        "tiempo_al_pausar": s["t"],
+    })
+    registro["evidencias"].append(player.captura(
+        "CA18", "2_pausado", f"Video pausado: {video_inicial} · t={s['t']}s"))
+    
+    # Avanzar hasta el final del video pausado
+    s = player.ir_al_final_del_video()
+    player.esperar(3)
+    s = player.snap()
+    video_actual = s["video"]
+    
+    registro["detalle"].update({
+        "video_tras_espera": video_actual,
+        "reproduciendo_tras_espera": s["reproduciendo"],
+        "idx_tras_espera": s["idx"],
+    })
+    registro["evidencias"].append(player.captura(
+        "CA18", "3_tras_espera", 
+        f"Después de esperar: {video_actual} · reproduciendo={s['reproduciendo']} · idx={s['idx']}"))
+    
+    assert video_actual == video_inicial, f"El video cambió a {video_actual} cuando debería mantenerse en {video_inicial}"
+    assert not s["reproduciendo"], "El video está reproduciéndose cuando debería estar pausado"
+    assert s["idx"] == 0, f"El índice cambió a {s['idx']} cuando debería mantenerse en 0"
+
+
+# Escenario: Borde
+# Dado que el player está en el último video disponible del feed
+# Cuando ese video llega al final
+# Entonces debe mostrar la pantalla de fin sin intentar reproducir un siguiente video
+def test_ca18_borde(player, registro):
+    """BORDE: al finalizar el último video disponible, debe mostrar la pantalla de fin sin reproducir otro."""
+    s = player.abrir()
+    registro["evidencias"].append(player.captura(
+        "CA18", "1_inicio", f"Inicio: {s['video']} · total={s['total']}"))
+    
+    # Navegar hasta el último video del feed
+    ultimo_video = None
+    for i in range(s["total"]):
+        if s["fin"]:
+            break
+        ultimo_video = s["video"]
+        idx_ultimo = s["idx"]
+        s = player.swipe()
+    
+    registro["detalle"].update({
+        "total_videos": s["total"],
+        "ultimo_video": ultimo_video,
+        "idx_ultimo": idx_ultimo,
+        "llego_al_fin": s["fin"],
+    })
+    
+    if not s["fin"]:
+        # Si no llegamos al fin con swipe, ir al final del último video
+        registro["evidencias"].append(player.captura(
+            "CA18", "2_ultimo_video", f"Último video: {ultimo_video} · idx={idx_ultimo}"))
+        
+        s = player.ir_al_final_del_video()
+        player.esperar(3)
+        s = player.snap()
+        
+        registro["detalle"].update({
+            "video_tras_finalizar": s["video"],
+            "reproduciendo_tras_finalizar": s["reproduciendo"],
+            "fin_tras_finalizar": s["fin"],
+            "idx_tras_finalizar": s["idx"],
+        })
+    
+    registro["evidencias"].append(player.captura(
+        "CA18", "3_pantalla_fin", 
+        f"Pantalla de fin · video={s['video']} · fin={s['fin']} · idx={s['idx']}"))
+    
+    assert s["fin"], "No se mostró la pantalla de fin después del último video"
+    assert s["video"] == ultimo_video, f"El video cambió de {ultimo_video} a {s['video']} después de finalizar el último"
