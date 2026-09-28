@@ -9,7 +9,12 @@ int tira TypeError: 'int' object is not callable. Reemplazado por time.sleep(N) 
 borde (se agrega el import). Además, en positivo, player.ir_al_final_del_video() devuelve la
 DURACIÓN del video (un float), no un snap -- no tiene claves como un dict, así que s["d"]/s["t"]
 tiraban TypeError: 'float' object is not subscriptable. Se reescribió para no tratarlo como
-snap y esperar el avance automático con player.esperar(lambda snap: ...) en vez de un sleep fijo."""
+snap y esperar el avance automático con player.esperar(lambda snap: ...) en vez de un sleep fijo.
+
+Segunda corrida (ya con los fixes de arriba): positivo y negativo pasaron, pero borde falló
+por separado -- assert s["fin"] con fin=False todavía a los 3s de time.sleep tras saltar al
+final del último video (o no le alcanzaba el tiempo, o hacía falta más margen). Cambiado ese
+sleep fijo también por player.esperar(lambda snap: snap["fin"], timeout=15)."""
 
 import time
 
@@ -133,9 +138,11 @@ def test_ca18_borde(player, registro):
             "CA18", "2_ultimo_video", f"Último video: {ultimo_video} · idx={idx_ultimo}"))
         
         player.ir_al_final_del_video()
-        time.sleep(3)
-        s = player.snap()
-        
+        # Esperar (con polling real, hasta 15s) a que aparezca la pantalla de fin, en vez de un
+        # sleep fijo de 3s que resultó insuficiente en la corrida real (assert s["fin"] falló
+        # con fin=False todavía a los 3s tras saltar al final del video).
+        s = player.esperar(lambda snap: snap["fin"], timeout=15) or player.snap()
+
         registro["detalle"].update({
             "video_tras_finalizar": s["video"],
             "reproduciendo_tras_finalizar": s["reproduciendo"],
