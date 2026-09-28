@@ -72,7 +72,8 @@ jobs:
           set +e
           NOMBRE_CASO=$(grep '^NOMBRE_CASO=' /tmp/salida.txt | cut -d= -f2)
           ESCENARIOS=$(grep '^ESCENARIOS=' /tmp/salida.txt | cut -d= -f2)
-          echo "NOMBRE_CASO leido: [$NOMBRE_CASO] / ESCENARIOS: [$ESCENARIOS]"
+          TICKET_KEY=$(grep '^TICKET_KEY=' /tmp/salida.txt | cut -d= -f2)
+          echo "NOMBRE_CASO leido: [$NOMBRE_CASO] / ESCENARIOS: [$ESCENARIOS] / TICKET_KEY: [$TICKET_KEY]"
           RAMA="caso-generado/${NOMBRE_CASO}-${{ github.run_id }}"
           git config user.email "actions@github.com"
           git config user.name "github-actions[bot]"
@@ -95,6 +96,7 @@ jobs:
             echo
             echo "**Componente:** ${COMPONENTE}"
             echo
+            if [ -n "$TICKET_KEY" ]; then echo "**Ticket:** ${TICKET_KEY}"; echo; fi
             echo "**Escenarios incluidos:** ${ESCENARIOS}"
             echo
             echo "<details><summary>Ticket original</summary>"
@@ -105,8 +107,10 @@ jobs:
             echo "</details>"
           } > /tmp/pr_body.txt
 
+          TITULO="Casos de prueba propuestos: ${NOMBRE_CASO} (generado desde Jira)"
+          if [ -n "$TICKET_KEY" ]; then TITULO="[$TICKET_KEY] $TITULO"; fi
           gh pr create \
-            --title "Casos de prueba propuestos: ${NOMBRE_CASO} (generado desde Jira)" \
+            --title "$TITULO" \
             --body-file /tmp/pr_body.txt \
             --base main --head "$RAMA" 2> /tmp/err.txt; ec=$?
           if [ $ec -ne 0 ]; then echo "::error::gh pr create fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi

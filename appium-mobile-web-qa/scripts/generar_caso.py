@@ -118,6 +118,19 @@ def leer_ejemplos():
     return "\n\n".join(partes[1:3]) if len(partes) > 2 else src[:4000]
 
 
+def extraer_ticket_key(ticket_texto):
+    """Busca el identificador del ticket (ej: TNARC-4381, AMR-2087) para poder
+    identificar cada caso generado en el dashboard. El XML exportado de Jira siempre
+    pone "Ticket: <key>" como primera línea (ver extraerTicketDeXml en docs/index.html);
+    si el usuario pegó el texto a mano puede no estar, así que como respaldo buscamos
+    cualquier patrón tipo PROYECTO-1234 en las primeras líneas."""
+    m = re.search(r"^Ticket:\s*(\S+)", ticket_texto, re.MULTILINE)
+    if m:
+        return m.group(1).strip()
+    m = re.search(r"\b([A-Z][A-Z0-9]{1,9}-\d+)\b", ticket_texto[:500])
+    return m.group(1) if m else ""
+
+
 def siguiente_nombre():
     existentes = set()
     for carpeta in (RAIZ / "tests", DIR_GENERADOS):
@@ -149,6 +162,7 @@ def main():
         print("El ticket está vacío", file=sys.stderr)
         return 1
 
+    ticket_key = extraer_ticket_key(ticket)
     caso_id = siguiente_nombre()
     nombres_posibles = [f"test_{caso_id}_positivo", f"test_{caso_id}_negativo", f"test_{caso_id}_borde"]
 
@@ -197,9 +211,12 @@ Generá entre 1 y 3 funciones, usando estos nombres exactos según el escenario
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"test_{caso_id}_generado.py"
+    encabezado = f"# Componente: {componente}\n"
+    if ticket_key:
+        encabezado += f"# Ticket: {ticket_key}\n"
     out_file.write_text(
-        f"# Componente: {componente}\n"
-        '"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño '
+        encabezado
+        + '"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño '
         'de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""\n\n'
         + codigo + "\n",
         encoding="utf-8",
@@ -207,6 +224,7 @@ Generá entre 1 y 3 funciones, usando estos nombres exactos según el escenario
     print(f"Generado: {out_file} ({len(funciones_generadas)} escenario(s): {', '.join(funciones_generadas)})")
     print(f"NOMBRE_CASO={caso_id}")
     print(f"ESCENARIOS={','.join(funciones_generadas)}")
+    print(f"TICKET_KEY={ticket_key}")
     return 0
 
 
