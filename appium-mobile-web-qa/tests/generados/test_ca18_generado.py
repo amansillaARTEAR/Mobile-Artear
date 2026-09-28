@@ -1,4 +1,5 @@
-# Componente: Sin clasificar
+# Componente: Videos Verticales
+# Ticket: TNARC-4366
 """Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""
 
 # Escenario: Positivo
