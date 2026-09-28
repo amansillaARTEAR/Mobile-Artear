@@ -1,3 +1,4 @@
+# Componente: Videos Verticales
 """Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR.
 
 Corregido a mano tras la revisión del PR: la versión generada por Claude usaba
