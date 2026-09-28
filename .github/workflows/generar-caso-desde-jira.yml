@@ -46,14 +46,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TICKET: ${{ inputs.ticket }}
         run: |
+          set +e
           NOMBRE_CASO=$(grep '^NOMBRE_CASO=' /tmp/salida.txt | cut -d= -f2)
+          echo "NOMBRE_CASO leido: [$NOMBRE_CASO]"
           RAMA="caso-generado/${NOMBRE_CASO}-${{ github.run_id }}"
           git config user.email "actions@github.com"
           git config user.name "github-actions[bot]"
-          git checkout -b "$RAMA"
-          git add tests/generados/
-          git commit -m "Proponer caso de prueba generado: ${NOMBRE_CASO}"
-          git push origin "$RAMA"
+
+          git checkout -b "$RAMA" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git checkout -b fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
+
+          git add tests/generados/ 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git add fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
+          echo "Estado tras git add:"; git status --porcelain
+
+          git commit -m "Proponer caso de prueba generado: ${NOMBRE_CASO}" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git commit fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
+
+          git push origin "$RAMA" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git push fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
 
           {
             echo "Generado automáticamente a partir de este ticket. **Revisar antes de mergear** — puede tener selectores o suposiciones a corregir."
@@ -69,4 +80,5 @@ jobs:
           gh pr create \
             --title "Caso de prueba propuesto: ${NOMBRE_CASO} (generado desde Jira)" \
             --body-file /tmp/pr_body.txt \
-            --base main --head "$RAMA"
+            --base main --head "$RAMA" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::gh pr create fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
