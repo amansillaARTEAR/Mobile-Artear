@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Genera un caso de prueba nuevo (función pytest) a partir del texto de un ticket
-de Jira, usando la API de Claude, y lo deja en tests/generados/ para revisión
-humana antes de mergear (no se mezcla con la suite oficial hasta que se aprueba
-el Pull Request).
+A partir del texto de un ticket de Jira, aplica técnicas de diseño de casos de
+QA (no solo "escribí un test") para derivar varios escenarios — camino feliz
+(positivo), caso negativo/alternativo y caso de borde, cuando el ticket da pie
+a cada uno — documentados en formato Given-When-Then, y genera el código
+pytest para cada uno usando la API de Claude. Todo queda en tests/generados/
+para revisión humana antes de mergear (no se mezcla con la suite oficial hasta
+que se aprueba el Pull Request).
 
 Uso:
     python scripts/generar_caso.py --ticket-file /tmp/ticket.txt
@@ -25,26 +28,50 @@ DIR_GENERADOS = RAIZ / "tests" / "generados"
 
 MODELO = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
 
-SYSTEM = """Sos un ingeniero de QA automation senior, experto en Appium + pytest.
-Tu tarea es escribir UNA sola función de test nueva para una suite existente de
-pruebas de un player de videos verticales (mobile web, Android/iOS, dispositivo real),
-a partir de la descripción de un ticket de Jira.
+SYSTEM = """Sos un ingeniero de QA automation senior, experto en diseño de casos de
+prueba y en Appium + pytest. Tu tarea es analizar un ticket de Jira aplicando técnicas
+estándar de diseño de casos (no simplemente "escribir un test cualquiera") y producir
+varias funciones de test nuevas para una suite existente de un player de videos
+verticales (mobile web, Android/iOS, dispositivo real).
 
-Reglas estrictas:
-- Devolvé ÚNICAMENTE código Python válido, sin explicaciones, sin markdown, sin ```.
-- La función debe llamarse exactamente como se te indique en el pedido (nombre exacto dado).
-- Firma: def test_caXX_algo(player, registro):  (misma firma que los casos existentes)
-- Usá SOLO los métodos que ya existen en la clase Player (los que se listan abajo). Si el
-  ticket pide una interacción que ningún método de Player permite hacer hoy, escribí el test
-  igual con la mejor aproximación posible, y agregá un comentario "# TODO revisar:" explicando
-  qué falta o qué se asumió, en vez de inventar selectores CSS al azar.
-- Seguí el mismo estilo que los casos existentes: docstring de una línea empezando con
-  "CAxx: ...", uso de player.captura(...) para evidencias, asserts con mensaje descriptivo,
-  y registro["evidencias"].append(...) para las capturas relevantes.
+Proceso de diseño (hacelo antes de escribir código, pero NO lo muestres como texto
+aparte — se refleja en los escenarios que elijas y en los comentarios Given/When/Then):
+1. Identificá el camino feliz / caso POSITIVO que el ticket describe.
+2. Si el ticket da pie a un caso NEGATIVO o alternativo razonable (algo que no debería
+   pasar, un estado distinto al esperado, una acción en orden distinto), incluilo.
+3. Si el ticket da pie a un caso de BORDE (un límite, una condición extrema, un estado
+   inicial atípico), incluilo.
+No inventes casos negativos/borde forzados si el ticket es demasiado simple para dar
+pie a ellos — en ese caso alcanza con el positivo. Nunca generes más de 3 funciones.
+
+Reglas estrictas para el código:
+- Devolvé ÚNICAMENTE código Python válido, sin explicaciones fuera de comentarios, sin
+  markdown, sin ```.
+- Generá una función por escenario, con estos nombres exactos y en este orden (usá
+  solo los que apliquen, salteando los que no correspondan): {nombres_funciones}
+- Firma de cada función: def test_caXX_tipo(player, registro):  (misma firma que los
+  casos existentes)
+- Inmediatamente arriba de cada función, un bloque de comentarios con el escenario en
+  formato Given-When-Then:
+    # Escenario: <Positivo|Negativo|Borde>
+    # Dado ...
+    # Cuando ...
+    # Entonces ...
+- El docstring de una línea debe empezar con "POSITIVO:", "NEGATIVO:" o "BORDE:" según
+  corresponda, seguido de la descripción (mismo estilo que los casos existentes que
+  usan "CAxx: ...").
+- Usá SOLO los métodos que ya existen en la clase Player (los que se listan abajo). Si
+  algún escenario necesita una interacción que ningún método de Player permite hacer
+  hoy, escribí el test igual con la mejor aproximación posible, y agregá un comentario
+  "# TODO revisar:" explicando qué falta o qué se asumió, en vez de inventar selectores
+  CSS al azar.
+- Seguí el mismo estilo que los casos existentes: uso de player.captura(...) para
+  evidencias, asserts con mensaje descriptivo, y registro["evidencias"].append(...)
+  para las capturas relevantes.
 - No repitas imports ni fixtures: asumí que pytest, config y las fixtures player/registro
   ya están disponibles vía conftest.py (no hace falta importarlos ni definirlos).
-- Si necesitás alguna constante o helper que no existe, no la inventes: resolvé el test con
-  lo que ya hay en Player, aunque sea de forma menos elegante.
+- Si necesitás alguna constante o helper que no existe, no la inventes: resolvé el test
+  con lo que ya hay en Player, aunque sea de forma menos elegante.
 """
 
 
@@ -94,8 +121,7 @@ def main():
         return 1
 
     caso_id = siguiente_nombre()
-    slug = re.sub(r"[^a-z0-9]+", "_", "generado").strip("_")
-    nombre_funcion = f"test_{caso_id}_{slug}"
+    nombres_posibles = [f"test_{caso_id}_positivo", f"test_{caso_id}_negativo", f"test_{caso_id}_borde"]
 
     prompt = f"""Ticket de Jira:
 ---
@@ -108,15 +134,17 @@ Métodos disponibles en la clase Player:
 Ejemplos de casos existentes (para copiar el estilo):
 {leer_ejemplos()}
 
-Escribí la función con este nombre exacto: {nombre_funcion}
+Generá entre 1 y 3 funciones, usando estos nombres exactos según el escenario
+(saltea los que no correspondan, no agregues otros): {", ".join(nombres_posibles)}
 """
+    system = SYSTEM.format(nombres_funciones=", ".join(nombres_posibles))
 
     client = anthropic.Anthropic(api_key=api_key)
     try:
         resp = client.messages.create(
             model=MODELO,
-            max_tokens=2000,
-            system=SYSTEM,
+            max_tokens=3000,
+            system=system,
             messages=[{"role": "user", "content": prompt}],
         )
     except anthropic.APIStatusError as e:
@@ -129,16 +157,24 @@ Escribí la función con este nombre exacto: {nombre_funcion}
     codigo = "".join(b.text for b in resp.content if b.type == "text").strip()
     codigo = re.sub(r"^```(?:python)?\n|\n```$", "", codigo).strip()
 
+    funciones_generadas = re.findall(r"^def (test_\w+)\(", codigo, re.MULTILINE)
+    if not funciones_generadas:
+        print("Claude no devolvió ninguna función de test reconocible. Salida cruda:", file=sys.stderr)
+        print(codigo, file=sys.stderr)
+        return 1
+
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"test_{caso_id}_generado.py"
     out_file.write_text(
-        '"""Caso generado automáticamente a partir de un ticket de Jira. REVISAR ANTES DE APROBAR EL PR."""\n\n'
+        '"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño '
+        'de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""\n\n'
         + codigo + "\n",
         encoding="utf-8",
     )
-    print(f"Generado: {out_file}")
-    print(f"NOMBRE_CASO={nombre_funcion}")
+    print(f"Generado: {out_file} ({len(funciones_generadas)} escenario(s): {', '.join(funciones_generadas)})")
+    print(f"NOMBRE_CASO={caso_id}")
+    print(f"ESCENARIOS={','.join(funciones_generadas)}")
     return 0
 
 

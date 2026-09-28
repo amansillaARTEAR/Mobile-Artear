@@ -64,7 +64,8 @@ jobs:
         run: |
           set +e
           NOMBRE_CASO=$(grep '^NOMBRE_CASO=' /tmp/salida.txt | cut -d= -f2)
-          echo "NOMBRE_CASO leido: [$NOMBRE_CASO]"
+          ESCENARIOS=$(grep '^ESCENARIOS=' /tmp/salida.txt | cut -d= -f2)
+          echo "NOMBRE_CASO leido: [$NOMBRE_CASO] / ESCENARIOS: [$ESCENARIOS]"
           RAMA="caso-generado/${NOMBRE_CASO}-${{ github.run_id }}"
           git config user.email "actions@github.com"
           git config user.name "github-actions[bot]"
@@ -83,7 +84,9 @@ jobs:
           if [ $ec -ne 0 ]; then echo "::error::git push fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
 
           {
-            echo "Generado automáticamente a partir de este ticket. **Revisar antes de mergear** — puede tener selectores o suposiciones a corregir."
+            echo "Generado automáticamente a partir de este ticket, aplicando diseño de casos (positivo/negativo/borde). **Revisar antes de mergear** — puede tener selectores o suposiciones a corregir."
+            echo
+            echo "**Escenarios incluidos:** ${ESCENARIOS}"
             echo
             echo "<details><summary>Ticket original</summary>"
             echo
@@ -94,7 +97,7 @@ jobs:
           } > /tmp/pr_body.txt
 
           gh pr create \
-            --title "Caso de prueba propuesto: ${NOMBRE_CASO} (generado desde Jira)" \
+            --title "Casos de prueba propuestos: ${NOMBRE_CASO} (generado desde Jira)" \
             --body-file /tmp/pr_body.txt \
             --base main --head "$RAMA" 2> /tmp/err.txt; ec=$?
           if [ $ec -ne 0 ]; then echo "::error::gh pr create fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
