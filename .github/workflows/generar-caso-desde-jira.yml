@@ -39,7 +39,19 @@ jobs:
         id: generar
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python scripts/generar_caso.py --ticket-file /tmp/ticket.txt | tee /tmp/salida.txt
+        run: |
+          echo "Longitud de ANTHROPIC_API_KEY: ${#ANTHROPIC_API_KEY} caracteres"
+          python scripts/generar_caso.py --ticket-file /tmp/ticket.txt | tee /tmp/salida.txt
+          ec=${PIPESTATUS[0]}
+          echo "Exit code real de generar_caso.py: $ec"
+          if [ "$ec" -ne 0 ]; then
+            echo "::error::generar_caso.py fallo con exit code $ec (ver salida arriba)"
+            exit 1
+          fi
+          if [ ! -d tests/generados ] || [ -z "$(ls -A tests/generados 2>/dev/null)" ]; then
+            echo "::error::generar_caso.py termino OK pero tests/generados/ quedo vacio o no existe"
+            exit 1
+          fi
 
       - name: Crear rama, commitear y abrir Pull Request
         env:

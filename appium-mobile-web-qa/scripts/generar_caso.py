@@ -112,12 +112,20 @@ Escribí la función con este nombre exacto: {nombre_funcion}
 """
 
     client = anthropic.Anthropic(api_key=api_key)
-    resp = client.messages.create(
-        model=MODELO,
-        max_tokens=2000,
-        system=SYSTEM,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    try:
+        resp = client.messages.create(
+            model=MODELO,
+            max_tokens=2000,
+            system=SYSTEM,
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except anthropic.APIStatusError as e:
+        print(f"La API de Anthropic devolvio error {e.status_code}: {e.message}", file=sys.stderr)
+        return 1
+    except anthropic.APIError as e:
+        print(f"Fallo la llamada a la API de Anthropic: {e}", file=sys.stderr)
+        return 1
+
     codigo = "".join(b.text for b in resp.content if b.type == "text").strip()
     codigo = re.sub(r"^```(?:python)?\n|\n```$", "", codigo).strip()
 
