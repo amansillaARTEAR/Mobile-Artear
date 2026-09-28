@@ -8,6 +8,11 @@ on:
         description: "Pegá acá el texto/descripción del ticket de Jira (resumen + criterios de aceptación)"
         required: true
         type: string
+      componente:
+        description: "Componente/elemento que toca el ticket (ej: Player, Portada) — agrupa los casos en el dashboard"
+        required: false
+        type: string
+        default: "Sin clasificar"
 
 permissions:
   contents: write
@@ -39,10 +44,11 @@ jobs:
         id: generar
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COMPONENTE: ${{ inputs.componente }}
         run: |
           set +e
           echo "Longitud de ANTHROPIC_API_KEY: ${#ANTHROPIC_API_KEY} caracteres"
-          python scripts/generar_caso.py --ticket-file /tmp/ticket.txt > /tmp/salida.txt 2> /tmp/salida_err.txt
+          python scripts/generar_caso.py --ticket-file /tmp/ticket.txt --componente "$COMPONENTE" > /tmp/salida.txt 2> /tmp/salida_err.txt
           ec=$?
           cat /tmp/salida.txt
           cat /tmp/salida_err.txt 1>&2
@@ -61,6 +67,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TICKET: ${{ inputs.ticket }}
+          COMPONENTE: ${{ inputs.componente }}
         run: |
           set +e
           NOMBRE_CASO=$(grep '^NOMBRE_CASO=' /tmp/salida.txt | cut -d= -f2)
@@ -85,6 +92,8 @@ jobs:
 
           {
             echo "Generado automáticamente a partir de este ticket, aplicando diseño de casos (positivo/negativo/borde). **Revisar antes de mergear** — puede tener selectores o suposiciones a corregir."
+            echo
+            echo "**Componente:** ${COMPONENTE}"
             echo
             echo "**Escenarios incluidos:** ${ESCENARIOS}"
             echo

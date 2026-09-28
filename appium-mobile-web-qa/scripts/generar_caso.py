@@ -133,7 +133,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ticket-file", required=True, help="Archivo de texto con el contenido del ticket de Jira")
     ap.add_argument("--out-dir", default=str(DIR_GENERADOS))
+    ap.add_argument("--componente", default="Sin clasificar",
+                     help="Componente/elemento que toca el ticket (ej: Player, Portada) -- se guarda como tag "
+                          "en el archivo generado para que el dashboard agrupe los casos por componente")
     args = ap.parse_args()
+    componente = (args.componente or "Sin clasificar").strip() or "Sin clasificar"
 
     api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
@@ -194,6 +198,7 @@ Generá entre 1 y 3 funciones, usando estos nombres exactos según el escenario
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"test_{caso_id}_generado.py"
     out_file.write_text(
+        f"# Componente: {componente}\n"
         '"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño '
         'de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""\n\n'
         + codigo + "\n",
