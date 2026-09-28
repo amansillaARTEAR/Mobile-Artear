@@ -41,11 +41,14 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           echo "Longitud de ANTHROPIC_API_KEY: ${#ANTHROPIC_API_KEY} caracteres"
-          python scripts/generar_caso.py --ticket-file /tmp/ticket.txt | tee /tmp/salida.txt
-          ec=${PIPESTATUS[0]}
+          python scripts/generar_caso.py --ticket-file /tmp/ticket.txt > /tmp/salida.txt 2> /tmp/salida_err.txt
+          ec=$?
+          cat /tmp/salida.txt
+          cat /tmp/salida_err.txt 1>&2
           echo "Exit code real de generar_caso.py: $ec"
           if [ "$ec" -ne 0 ]; then
-            echo "::error::generar_caso.py fallo con exit code $ec (ver salida arriba)"
+            MSG=$(tail -c 800 /tmp/salida_err.txt | tr '\n' ' ')
+            echo "::error::generar_caso.py fallo (exit $ec): $MSG"
             exit 1
           fi
           if [ ! -d tests/generados ] || [ -z "$(ls -A tests/generados 2>/dev/null)" ]; then
