@@ -1,0 +1,116 @@
+name: Generar caso de prueba (App Nativa) desde ticket de Jira
+run-name: "Generar caso App Nativa desde Jira por @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ticket:
+        description: "Pegá acá el texto/descripción del ticket de Jira (resumen + criterios de aceptación)"
+        required: true
+        type: string
+      componente:
+        description: "Componente/elemento que toca el ticket (ej: Navbar, Player) — agrupa los casos en el dashboard"
+        required: false
+        type: string
+        default: "Sin clasificar"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: appium-native-app-qa
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install anthropic
+
+      - name: Guardar el ticket en un archivo
+        shell: bash
+        env:
+          TICKET: ${{ inputs.ticket }}
+        run: printf '%s' "$TICKET" > /tmp/ticket.txt
+
+      - name: Generar el caso con Claude
+        id: generar
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COMPONENTE: ${{ inputs.componente }}
+        run: |
+          set +e
+          echo "Longitud de ANTHROPIC_API_KEY: ${#ANTHROPIC_API_KEY} caracteres"
+          python scripts/generar_caso.py --ticket-file /tmp/ticket.txt --componente "$COMPONENTE" > /tmp/salida.txt 2> /tmp/salida_err.txt
+          ec=$?
+          cat /tmp/salida.txt
+          cat /tmp/salida_err.txt 1>&2
+          echo "Exit code real de generar_caso.py: $ec"
+          if [ "$ec" -ne 0 ]; then
+            MSG=$(tail -c 800 /tmp/salida_err.txt | tr '\n' ' ')
+            echo "::error::generar_caso.py fallo (exit $ec): $MSG"
+            exit 1
+          fi
+          if [ ! -d tests/generados ] || [ -z "$(ls -A tests/generados 2>/dev/null)" ]; then
+            echo "::error::generar_caso.py termino OK pero tests/generados/ quedo vacio o no existe"
+            exit 1
+          fi
+
+      - name: Crear rama, commitear y abrir Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TICKET: ${{ inputs.ticket }}
+          COMPONENTE: ${{ inputs.componente }}
+        run: |
+          set +e
+          NOMBRE_CASO=$(grep '^NOMBRE_CASO=' /tmp/salida.txt | cut -d= -f2)
+          ESCENARIOS=$(grep '^ESCENARIOS=' /tmp/salida.txt | cut -d= -f2)
+          TICKET_KEY=$(grep '^TICKET_KEY=' /tmp/salida.txt | cut -d= -f2)
+          echo "NOMBRE_CASO leido: [$NOMBRE_CASO] / ESCENARIOS: [$ESCENARIOS] / TICKET_KEY: [$TICKET_KEY]"
+          RAMA="caso-generado-app/${NOMBRE_CASO}-${{ github.run_id }}"
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+
+          git checkout -b "$RAMA" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git checkout -b fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
+
+          git add tests/generados/ 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git add fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
+          echo "Estado tras git add:"; git status --porcelain
+
+          git commit -m "Proponer caso de prueba generado (App Nativa): ${NOMBRE_CASO}" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git commit fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
+
+          git push origin "$RAMA" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::git push fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
+
+          {
+            echo "Generado automáticamente a partir de este ticket, aplicando diseño de casos (positivo/negativo/borde). **Revisar antes de mergear** — puede tener asunciones a corregir."
+            echo
+            echo "**Componente:** ${COMPONENTE}"
+            echo
+            if [ -n "$TICKET_KEY" ]; then echo "**Ticket:** ${TICKET_KEY}"; echo; fi
+            echo "**Escenarios incluidos:** ${ESCENARIOS}"
+            echo
+            echo "<details><summary>Ticket original</summary>"
+            echo
+            echo '```'
+            printf '%s\n' "$TICKET"
+            echo '```'
+            echo "</details>"
+          } > /tmp/pr_body.txt
+
+          TITULO="[App Nativa] Casos de prueba propuestos: ${NOMBRE_CASO} (generado desde Jira)"
+          if [ -n "$TICKET_KEY" ]; then TITULO="[$TICKET_KEY] $TITULO"; fi
+          gh pr create \
+            --title "$TITULO" \
+            --body-file /tmp/pr_body.txt \
+            --base main --head "$RAMA" 2> /tmp/err.txt; ec=$?
+          if [ $ec -ne 0 ]; then echo "::error::gh pr create fallo (exit $ec): $(cat /tmp/err.txt)"; exit 1; fi
