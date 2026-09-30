@@ -1,6 +1,5 @@
 import html
 import json
-import re
 import time
 from pathlib import Path
 
@@ -45,10 +44,16 @@ def pytest_configure(config):
 
 
 def pytest_sessionstart(session):
-    # La sección "Environment" que arma pytest-metadata (versión de Python, plataforma,
-    # plugins instalados, etc.) es ruido técnico para quien lee el reporte sin ser QA/dev.
-    # Se limpia acá (no en pytest_configure, que corre antes de que pytest-metadata la
-    # complete) para que no aparezca en el reporte.
+    # La sección "Environment" (versión de Python, plataforma, plugins instalados, etc.)
+    # ya se oculta con CSS en pytest_html_results_summary -- esto además evita que esos
+    # datos técnicos queden embebidos en el HTML. pytest-metadata >= 3 los guarda en
+    # config.stash (metadata_key), no en config._metadata (eso quedó deprecado, se limpia
+    # igual por si hay una versión vieja instalada).
+    try:
+        from pytest_metadata.plugin import metadata_key
+        session.config.stash[metadata_key].clear()
+    except Exception:
+        pass
     if hasattr(session.config, "_metadata"):
         session.config._metadata.clear()
 
@@ -137,11 +142,40 @@ def pytest_html_report_title(report):
     report.title = f"TNARC-4366 · Suite Appium · {PLATAFORMA.capitalize() if PLATAFORMA else ''}"
 
 
-@pytest.hookimpl(trylast=True)  # corre después de que pytest-html arma su fila de checkboxes
+# "Environment" y la fila de checkboxes/contadores ("0 Failed, 6 Passed...") las arma
+# pytest-html directo en su template (index.jinja2), no a través de additional_summary --
+# no hay hook que las saque, así que se ocultan con CSS. "Passed" -> "OK" también se hace
+# en el navegador (cosmético, con un MutationObserver por si la tabla se vuelve a dibujar
+# al filtrar/ordenar) y NO tocando el texto de la celda en pytest_html_results_table_row:
+# pytest-html usa justo ese texto (_hydrate_data, en basereport.py) para clasificar cada
+# fila y decidir si el filtro la muestra -- cambiarlo ahí rompía el filtrado entero y el
+# reporte quedaba en blanco ("No results found. Check the filters.").
+_CSS_JS_REPORTE = """
+<style>
+  #environment-header, #environment { display: none !important; }
+  .summary .filter, .summary .controls .filters { display: none !important; }
+</style>
+<script>
+(function () {
+  function relabel(root) {
+    (root || document).querySelectorAll('td.col-result').forEach(function (td) {
+      if (td.textContent.trim() === 'Passed') { td.textContent = 'OK'; }
+    });
+  }
+  relabel();
+  var target = document.getElementById('results-table') || document.body;
+  new MutationObserver(function (mutations) {
+    mutations.forEach(function (m) {
+      m.addedNodes.forEach(function (n) { if (n.nodeType === 1) relabel(n); });
+    });
+  }).observe(target, { childList: true, subtree: true });
+})();
+</script>
+"""
+
+
 def pytest_html_results_summary(prefix, summary, postfix):
-    # "X Failed, Y Passed, Z Skipped..." con checkboxes para filtrar es para uso de QA/dev,
-    # no para quien solo necesita ver el resultado -- se saca y queda solo nuestro resumen.
-    summary.clear()
+    prefix.append(_CSS_JS_REPORTE)
     info = RESULTADOS.get("test_00_version", {}).get("detalle", {})
     if info:
         prefix.append(
@@ -164,5 +198,3 @@ def pytest_html_results_table_row(report, cells):
     nombre = report.nodeid.split("::")[-1]
     caso = RESULTADOS.get(nombre, {}).get("caso") or nombre
     cells[1] = f'<td class="col-name">{html.escape(caso)}</td>'
-    if getattr(report, "passed", False):
-        cells[0] = re.sub(r">\s*Passed\s*<", ">OK<", cells[0])
