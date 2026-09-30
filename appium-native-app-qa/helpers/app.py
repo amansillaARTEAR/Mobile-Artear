@@ -197,7 +197,14 @@ class App:
 
     # ---------- búsqueda por texto y zonas de pantalla ----------
     def buscar(self, texto) -> list:
-        """Elementos visibles cuyo texto o descripción de accesibilidad contiene `texto`."""
+        """Elementos visibles cuyo texto o descripción de accesibilidad contiene `texto`.
+
+        A diferencia de lo que decía el comentario de clickeables(), buscar() NO pasaba por
+        ahí -- arma su propio XPath directo contra el driver. Eso significa que el diálogo
+        de permisos de Android podía quedar tapando la pantalla y buscar() nunca lo
+        resolvía, haciendo fallar cualquier detección basada en buscar() (ej. el tooltip de
+        AMR-2087) aunque el elemento buscado sí estuviera ahí abajo del diálogo."""
+        self.cerrar_dialogo_permisos()
         xp = (f"//*[@displayed='true' and (contains(@text,{texto!r}) or contains(@content-desc,{texto!r}))]")
         try:
             return self.d.find_elements(AppiumBy.XPATH, xp)

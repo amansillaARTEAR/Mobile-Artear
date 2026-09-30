@@ -27,10 +27,13 @@ def _texto_tooltip(app):
 
 def _boton_cerrar_tooltip(app):
     """Busca el botón "X" del tooltip entre los elementos clickeables (a diferencia del
-    subtítulo, el botón de cerrar sí es clickeable)."""
+    subtítulo, el botón de cerrar sí es clickeable). El ícono puede no tener texto visible
+    y exponer su nombre solo vía resource-id (ej. "btn_tooltip_close" o "ic_close"), que
+    etiqueta() también devuelve -- por eso "close" se busca como substring, no solo como
+    match exacto."""
     for el in app.clickeables():
-        etiqueta = app.etiqueta(el)
-        if etiqueta.strip().lower() in ("x", "✕", "×", "close") or "cerrar" in etiqueta.lower() or "dismiss" in etiqueta.lower():
+        etiqueta = app.etiqueta(el).strip().lower()
+        if etiqueta in ("x", "✕", "×") or any(p in etiqueta for p in ("cerrar", "dismiss", "close")):
             return el
     return None
 
@@ -89,7 +92,7 @@ def test_ca02_ca3(app, registro):
     seccion_encontrada = False
 
     for item in navbar:
-        if "video" in item["etiqueta"].lower() or "vertical" in item["etiqueta"].lower():
+        if any(p in item["etiqueta"].lower() for p in ("shorts", "video", "vertical")):
             item["el"].click()
             seccion_encontrada = True
             time.sleep(2)
@@ -198,7 +201,7 @@ def test_ca02_ca6b(app, registro):
     seccion_accedida = False
 
     for item in navbar:
-        if "video" in item["etiqueta"].lower() or "vertical" in item["etiqueta"].lower():
+        if any(p in item["etiqueta"].lower() for p in ("shorts", "video", "vertical")):
             item["el"].click()
             seccion_accedida = True
             time.sleep(2)
