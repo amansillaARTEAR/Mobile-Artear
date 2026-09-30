@@ -195,18 +195,27 @@ class App:
             pass  # driver sin soporte para limpiar datos: seguimos con un reinicio normal
         return self.reiniciar()
 
-    def scroll(self, direccion="down", porcentaje=0.6) -> bool:
+    def scroll(self, direccion="down", porcentaje=0.6, zona_top=0.12, zona_alto=0.3) -> bool:
         """Desliza la pantalla con un gesto nativo (no depende de qué elemento haya debajo,
         a diferencia de arrastrar un elemento puntual). direccion="down" revela contenido
         más abajo (el dedo sube en pantalla); "up" al revés. Usa la extensión
         "mobile: swipeGesture" del driver (como "mobile: clearApp" en reiniciar_limpio(),
         no requiere --allow-insecure); si el driver no la soporta (ej. iOS todavía sin este
-        caso de uso) no hace nada y devuelve False."""
+        caso de uso) no hace nada y devuelve False.
+
+        zona_top/zona_alto acotan en qué franja de la pantalla (fracción 0 a 1 de la
+        altura) se hace el gesto. Por defecto es una franja angosta arriba de todo (12% a
+        42%): un rango más amplio (ej. 20%-80%, lo que tenía esto antes) puede pisar un
+        banner/tooltip/bottom-sheet que esté flotando sobre el contenido -- ahí el gesto
+        no scrollea la pantalla, lo que el sistema interpreta es un swipe-to-dismiss SOBRE
+        ese elemento (así se manda a llamar sin querer una interacción que el test no pidió).
+        Si hay que asegurarse de no tocar un elemento puntual (ej. un tooltip ya detectado),
+        pasale una zona angosta por arriba de su borde superior."""
         size = self.d.get_window_size()
         try:
             self.d.execute_script("mobile: swipeGesture", {
-                "left": int(size["width"] * 0.1), "top": int(size["height"] * 0.2),
-                "width": int(size["width"] * 0.8), "height": int(size["height"] * 0.6),
+                "left": int(size["width"] * 0.1), "top": int(size["height"] * zona_top),
+                "width": int(size["width"] * 0.8), "height": int(size["height"] * zona_alto),
                 "direction": direccion, "percent": porcentaje,
             })
             return True

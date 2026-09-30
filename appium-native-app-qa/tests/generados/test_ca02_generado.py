@@ -74,7 +74,15 @@ def test_ca02_ca2(app, registro):
     # después del gesto para dejarlo evidenciado (antes esta captura era la única del test,
     # y con una sola foto no se podía distinguir "sigue visible durante el scroll" de
     # "desaparece con efecto al interactuar": hacían falta las tres).
-    app.scroll("down")
+    # El gesto se hace en una franja bien arriba de todo, calculada para terminar antes de
+    # llegar al borde superior del tooltip (con margen): la primera versión de este test
+    # scrolleaba con la franja default de scroll() (20%-80% de la pantalla), que se pisaba
+    # con el tooltip -- el sistema lo tomó como un swipe-to-dismiss SOBRE el tooltip (no
+    # como un scroll de la pantalla) y lo cerraba solo, dando como "fallido" un CA que en
+    # realidad nunca se probó de verdad.
+    els_tooltip = app.buscar("videos verticales")
+    techo_tooltip = (els_tooltip[0].rect["y"] / app.d.get_window_size()["height"]) if els_tooltip else 0.42
+    app.scroll("down", zona_top=0.05, zona_alto=max(0.1, techo_tooltip - 0.10))
     time.sleep(1)
     tooltip_despues_del_scroll = _tooltip_presente(app)
     registro["evidencias"].append(app.captura("CA2", "2_despues_del_scroll", "Tooltip sigue visible después de scrollear"))

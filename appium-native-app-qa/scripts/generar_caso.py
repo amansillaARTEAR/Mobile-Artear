@@ -138,7 +138,16 @@ FORMA_DATOS_APP = """Forma de los datos que devuelve App (no existen otras clave
 - app.reiniciar() devuelve un float: los segundos que tardó en volver a mostrar
   contenido tras un arranque en frío.
 - app.en_primer_plano(), app.esperar_primer_plano(), app.esperar_contenido(),
-  app.en_inicio(), app.volver_al_inicio(), app.scroll(direccion="down"|"up") devuelven bool.
+  app.en_inicio(), app.volver_al_inicio(),
+  app.scroll(direccion="down"|"up", zona_top=0.12, zona_alto=0.3) devuelven bool.
+  OJO con app.scroll(): el gesto se hace dentro de una franja de la pantalla (zona_top a
+  zona_top+zona_alto, fracción 0 a 1 de la altura). Si esa franja se pisa con un
+  tooltip/banner/bottom-sheet que esté flotando en pantalla, el sistema lo toma como un
+  swipe-to-dismiss SOBRE ese elemento en vez de un scroll de la página (un bug real de
+  AMR-2087/CA2 vino de acá: la franja default se pisaba con el tooltip y lo cerraba solo).
+  Si el test tiene que probar un scroll mientras un elemento puntual está en pantalla,
+  buscá ese elemento primero (ej. con app.buscar(texto)) y pasale a zona_top/zona_alto una
+  franja que quede afuera de su rect (el WebElement tiene .rect con x/y/width/height).
 - app.captura(caso, paso, descripcion) devuelve {archivo, descripcion} -- lo que hay
   que appendear a registro["evidencias"].
 """
