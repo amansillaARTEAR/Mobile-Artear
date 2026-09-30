@@ -131,6 +131,20 @@ class App:
         self.esperar_contenido(timeout=30)
         return round(time.time() - inicio, 2)
 
+    def reiniciar_limpio(self) -> float:
+        """Como reiniciar(), pero antes borra los datos/preferencias de la app (equivalente a
+        `pm clear`), para simular de verdad una app recién instalada (onboarding, tooltips de
+        "primera vez", banners que dependen de un flag persistido, etc). El driver corre en el
+        mismo dispositivo físico entre corridas, así que sin este borrado un flag de "usuario ya
+        vio esto" queda pegado para siempre y esos escenarios dejan de poder probarse.
+        Usa la extensión "mobile: clearApp" del driver (no requiere --allow-insecure); en drivers
+        que no la soportan (ej. iOS todavía sin este caso de uso) hace un reinicio normal."""
+        try:
+            self.d.execute_script("mobile: clearApp", {"appId": self.paquete})
+        except WebDriverException:
+            pass  # driver sin soporte para limpiar datos: seguimos con un reinicio normal
+        return self.reiniciar()
+
     # ---------- búsqueda por texto y zonas de pantalla ----------
     def buscar(self, texto) -> list:
         """Elementos visibles cuyo texto o descripción de accesibilidad contiene `texto`."""

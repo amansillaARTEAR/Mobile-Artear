@@ -10,8 +10,11 @@ import time
 # Entonces debe mostrarse un tooltip con el texto "NUEVO - Informate con nuestros videos verticales" y debe poder cerrarse tocando la X
 def test_ca02_positivo(app, registro):
     """POSITIVO: AMR-2087 CA2 - El tooltip aparece al iniciar por primera vez y se cierra al tocar la X."""
+    # FIX (corrida 36760057869): el dispositivo es compartido entre corridas y no se reinstala
+    # la app, así que "primera vez" solo se puede simular borrando los datos persistidos.
+    tiempo_reinicio = app.reiniciar_limpio()
     time.sleep(2)
-    
+
     # Buscar el tooltip con el texto esperado
     elementos = app.clickeables()
     tooltip_encontrado = False
@@ -52,7 +55,8 @@ def test_ca02_positivo(app, registro):
         # TODO revisar: no se encontró botón de cerrar explícito, verificar selector correcto
         registro["detalle"].update({"tooltip_texto": tooltip_texto, "boton_cerrar_encontrado": False})
     
-    registro["detalle"].update({"tooltip_aparecio": tooltip_encontrado, "texto_correcto": True})
+    registro["detalle"].update({"tooltip_aparecio": tooltip_encontrado, "texto_correcto": True,
+                                 "tiempo_reinicio_limpio_s": tiempo_reinicio})
 
 
 # Escenario: Negativo
@@ -61,9 +65,14 @@ def test_ca02_positivo(app, registro):
 # Entonces el tooltip NO debe aparecer
 def test_ca02_negativo(app, registro):
     """NEGATIVO: AMR-2087 CA2 - El tooltip no reaparece si el usuario ya accedió a la sección."""
+    # FIX (corrida 36760057869): arrancamos desde estado limpio (no desde lo que dejó
+    # test_ca02_positivo) para que este resultado dependa solo de "accedió a la sección",
+    # no de un flag que ya haya quedado en true por otra corrida.
+    app.reiniciar_limpio()
+    time.sleep(2)
     # TODO revisar: este escenario requiere simular que el usuario ya accedió a la sección previamente
     # Asumimos que hay alguna forma de navegar a la sección de videos o que existe un estado persistido
-    
+
     # Buscar y acceder a la sección de videos verticales (si existe en navbar/clickeables)
     elementos = app.clickeables()
     seccion_videos = None
@@ -109,8 +118,12 @@ def test_ca02_negativo(app, registro):
 # Entonces el tooltip debe volver a mostrarse
 def test_ca02_borde(app, registro):
     """BORDE: AMR-2087 CA2 - El tooltip reaparece si el usuario lo cerró sin acceder a la sección."""
+    # FIX (corrida 36760057869): arrancamos desde estado limpio para garantizar que el tooltip
+    # esté visible al inicio (si no, "tooltip_inicial" queda en False por una corrida anterior
+    # y el test nunca llega a cerrarlo).
+    app.reiniciar_limpio()
     time.sleep(2)
-    
+
     # Buscar y cerrar el tooltip con la X
     elementos = app.clickeables()
     boton_cerrar = None
