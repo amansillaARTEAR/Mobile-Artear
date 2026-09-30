@@ -100,7 +100,15 @@ class App:
 
     # ---------- acciones ----------
     def clickeables(self, maximo=None) -> list:
-        """Elementos tocables visibles de la app, con texto o descripción."""
+        """Elementos tocables visibles de la app, con texto o descripción.
+
+        El diálogo de permisos de Android (ver cerrar_dialogo_permisos) puede aparecer con
+        cierto delay después del arranque, en cualquier momento de un test -- no solo justo
+        al reiniciar. Como clickeables() es el método que prácticamente todo lo demás usa
+        para "mirar la pantalla" (navbar, topbar, buscar, los tests generados), resolverlo
+        acá antes de leer la pantalla es lo que lo cubre de verdad, en vez de solo en el
+        momento del reinicio."""
+        self.cerrar_dialogo_permisos()
         try:
             els = self.d.find_elements(AppiumBy.XPATH, "//*[@clickable='true' and @displayed='true']")
         except WebDriverException:
