@@ -142,7 +142,14 @@ jobs:
           }
 
           $rama = "reportes-appnativa-android"
-          $destino = "reportes/appnativa/android"
+          $raizReportes = "reportes/appnativa/android"
+          $raizRuns = "$raizReportes/runs"
+          # Cada corrida queda en su propia carpeta (antes se pisaba siempre la misma
+          # reportes/appnativa/android/reporte.html, así que el dashboard solo podía
+          # mostrar la última) -- así se puede listar el reporte de cada corrida, no
+          # nada más el más reciente. Para que la rama no crezca sin límite (sobre todo
+          # por los videos de evidencia), nos quedamos solo con las últimas corridas.
+          $maxCorridasGuardadas = 10
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -155,7 +162,7 @@ jobs:
             git rm -rf . --quiet 2>$null
           }
 
-          Remove-Item $destino -Recurse -Force -ErrorAction SilentlyContinue
+          $destino = "$raizRuns/${{ github.run_id }}"
           New-Item -ItemType Directory -Path $destino -Force | Out-Null
           Copy-Item (Join-Path $ultimaCorrida.FullName "reporte.html") $destino
           $evidencias = Join-Path $ultimaCorrida.FullName "evidencias"
@@ -163,7 +170,25 @@ jobs:
             Copy-Item $evidencias (Join-Path $destino "evidencias") -Recurse
           }
 
-          git add $destino
+          # Reporte de antes de este cambio, publicado directo en $raizReportes sin
+          # carpeta por corrida -- se saca para no dejarlo mezclado y desactualizado.
+          if (Test-Path (Join-Path $raizReportes "reporte.html")) {
+            git rm -f --quiet -- "$raizReportes/reporte.html" 2>$null
+          }
+          if (Test-Path (Join-Path $raizReportes "evidencias")) {
+            git rm -rf --quiet -- "$raizReportes/evidencias" 2>$null
+          }
+
+          # Poda: nos quedamos con las $maxCorridasGuardadas carpetas de corrida más
+          # recientes (el nombre de cada carpeta es el run id, siempre creciente).
+          if (Test-Path $raizRuns) {
+            $carpetas = Get-ChildItem $raizRuns -Directory | Sort-Object { [int64]$_.Name } -Descending
+            $carpetas | Select-Object -Skip $maxCorridasGuardadas | ForEach-Object {
+              git rm -rf --quiet -- "$raizRuns/$($_.Name)" 2>$null
+            }
+          }
+
+          git add -A -- $raizReportes
           $huboCambios = (git status --porcelain) -ne $null
           if ($huboCambios) {
             git commit -m "Reporte App Nativa Android - run ${{ github.run_id }}" | Out-Null
