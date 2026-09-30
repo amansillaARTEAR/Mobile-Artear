@@ -170,6 +170,20 @@ jobs:
             Copy-Item $evidencias (Join-Path $destino "evidencias") -Recurse
           }
 
+          # meta.json con el .apk probado (lo guarda la fixture "app" en resultados.json,
+          # bajo _sesion.detalle.app) -- el dashboard lo usa para mostrar el ticket (ej.
+          # "AMR-2087") como nombre de cada reporte publicado, en vez del filtro -k crudo
+          # del run de Actions.
+          try {
+            $resultadosJson = Get-Content (Join-Path $ultimaCorrida.FullName "resultados.json") -Raw -ErrorAction Stop | ConvertFrom-Json
+            $apk = $resultadosJson._sesion.detalle.app
+            if ($apk) {
+              @{ apk = $apk } | ConvertTo-Json -Compress | Set-Content (Join-Path $destino "meta.json") -Encoding utf8
+            }
+          } catch {
+            Write-Host "No se pudo armar meta.json (no es grave, el dashboard tiene un fallback): $($_.Exception.Message)"
+          }
+
           # Reporte de antes de este cambio, publicado directo en $raizReportes sin
           # carpeta por corrida -- se saca para no dejarlo mezclado y desactualizado.
           if (Test-Path (Join-Path $raizReportes "reporte.html")) {
