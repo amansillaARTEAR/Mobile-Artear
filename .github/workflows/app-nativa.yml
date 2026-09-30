@@ -129,6 +129,11 @@ jobs:
         shell: powershell
         working-directory: ${{ github.workspace }}
         run: |
+          # git escribe mensajes normales (ej. "no existe esa rama todavía") a stderr, y con
+          # $ErrorActionPreference = Stop (default de este shell) PowerShell los toma como
+          # excepción fatal y corta el script. Lo evitamos con Continue para este step.
+          $ErrorActionPreference = "Continue"
+
           $ultimaCorrida = Get-ChildItem "appium-native-app-qa\resultados\android\corridas" -Directory -ErrorAction SilentlyContinue |
             Sort-Object LastWriteTime | Select-Object -Last 1
           if (-not $ultimaCorrida -or -not (Test-Path (Join-Path $ultimaCorrida.FullName "reporte.html"))) {
