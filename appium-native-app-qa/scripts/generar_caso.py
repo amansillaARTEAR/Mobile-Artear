@@ -85,6 +85,16 @@ Reglas estrictas para el código:
   evidencias, asserts con mensaje descriptivo, y registro["evidencias"].append(...)
   para las capturas relevantes, registro["detalle"].update({{...}}) para los datos
   medidos.
+- El reporte que genera registro["detalle"] lo lee una persona sin conocimientos
+  técnicos (no un QA ni un dev), así que ahí van SOLO datos que esa persona pueda
+  entender sobre el COMPORTAMIENTO observado (ej: "tooltip_visible": True,
+  "texto_mostrado": "...", cantidades, tiempos). NUNCA pongas ahí mecánica interna de
+  cómo se hizo la interacción: nada de WebElements, listas de diccionarios con el
+  detalle de cada click/paso (tipo [{{"elemento": ..., "sigue_abierta": ...}}, ...]),
+  nombres de excepciones de Python/Selenium, resource-ids, ni identificadores técnicos
+  de Android (paquete, nombre de Activity) -- esos datos técnicos, si los necesitás
+  para depurar, quedan en variables locales o en un comentario "# TODO revisar:", no en
+  registro["detalle"].
 - No repitas imports ni fixtures: asumí que pytest, config y las fixtures app/registro
   ya están disponibles vía conftest.py (no hace falta importarlos ni definirlos).
 - Si necesitás alguna constante o helper que no existe, no la inventes: resolvé el test

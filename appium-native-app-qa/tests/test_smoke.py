@@ -15,8 +15,9 @@ def test_01_instala_y_abre(app, registro):
     con_contenido = app.esperar_contenido(timeout=30)
     time.sleep(3)
     app.marcar_inicio()  # recuerda la pantalla inicial para volver a ella en la exploración
-    registro["detalle"].update({"paquete": app.paquete, "actividad_inicial": app.actividad_inicial,
-                                "en_primer_plano": en_primer_plano, "muestra_contenido": con_contenido})
+    # "paquete"/"actividad_inicial" (identificadores técnicos de Android) ya quedan en el
+    # encabezado del reporte (info de la app/dispositivo) -- no hace falta repetirlos por test.
+    registro["detalle"].update({"la app quedó abierta": en_primer_plano, "se ve contenido en pantalla": con_contenido})
     registro["evidencias"].append(app.captura("SMK01", "apertura", "Pantalla inicial"))
     assert en_primer_plano, "La app no quedó en primer plano después de instalarse"
     assert con_contenido, "La pantalla inicial no muestra ningún elemento tocable"
@@ -63,8 +64,8 @@ def test_05_rotacion(app, registro):
             app.d.orientation = orientacion
             time.sleep(2)
             resultados[orientacion] = app.d.orientation
-        except Exception as e:  # la app puede bloquear la orientación
-            resultados[orientacion] = f"no rota ({type(e).__name__})"
+        except Exception:  # la app puede bloquear la orientación -- no es un error
+            resultados[orientacion] = "la app no rotó (bloquea la orientación)"
         registro["evidencias"].append(app.captura("SMK05", orientacion.lower(), f"Orientación {orientacion.lower()}"))
     errores = app.errores_nuevos()
     registro["detalle"].update({"orientaciones": resultados, "crashes_o_anr": errores})
@@ -101,7 +102,9 @@ def test_06_exploracion_basica(app, registro):
     video = app.detener_grabacion("SMK06_grabacion") if grabando else None
     if video:
         registro["evidencias"].append({"archivo": video, "descripcion": "Grabación de la exploración"})
-    registro["detalle"]["recorrido"] = visitados
+    # Para el reporte solo importa QUÉ se tocó, no el detalle técnico de cómo se hizo cada
+    # click (eso queda igual en resultados.json para revisión de QA si hace falta).
+    registro["detalle"]["elementos_tocados"] = [v["elemento"] for v in visitados]
     fallas = [v for v in visitados if v["crashes_o_anr"] or not v["sigue_abierta"]]
     perdidos = [v["elemento"] for v in visitados if not v["volvio_al_inicio"]]
     assert visitados, "No se encontraron elementos tocables en la pantalla inicial"
