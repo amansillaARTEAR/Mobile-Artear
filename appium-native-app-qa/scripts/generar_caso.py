@@ -104,12 +104,23 @@ Reglas estrictas para el código:
 
 def leer_metodos_app():
     src = ARCHIVO_APP.read_text(encoding="utf-8")
-    metodos = re.findall(r"    def (\w+)\(self[^)]*\):(?:\n        \"\"\"(.*?)\"\"\")?", src)
+    # OJO: el "(?:\s*->\s*\w+)?" antes de los ":" es necesario -- sin él, cualquier método
+    # con anotación de tipo de retorno (ej. "def reiniciar(self) -> float:") no matcheaba
+    # nada en absoluto (el regex exigía "):" pegado) y quedaba afuera de esta lista sin
+    # ningún aviso. Eso hizo que este generador viera durante un tiempo solo 6 de los 23
+    # métodos reales de App (los únicos sin anotación de tipo), y terminara inventando
+    # llamadas/firmas que no existían para todo lo demás -- varios de los bugs que se
+    # arreglaron a mano en AMR-2087 venían de acá. re.DOTALL es necesario para que la
+    # docstring (puede ser de varias líneas) se capture completa.
+    metodos = re.findall(
+        r'    def (\w+)\(self[^)]*\)(?:\s*->\s*\w+)?:\n(?:        """(.*?)""")?',
+        src, re.DOTALL)
     lineas = []
     for nombre, doc in metodos:
         if nombre.startswith("_"):
             continue
-        lineas.append(f"- app.{nombre}(...)" + (f"  # {doc.strip()}" if doc.strip() else ""))
+        primera_linea = doc.strip().split("\n")[0] if doc.strip() else ""
+        lineas.append(f"- app.{nombre}(...)" + (f"  # {primera_linea}" if primera_linea else ""))
     return "\n".join(lineas)
 
 
@@ -127,7 +138,7 @@ FORMA_DATOS_APP = """Forma de los datos que devuelve App (no existen otras clave
 - app.reiniciar() devuelve un float: los segundos que tardó en volver a mostrar
   contenido tras un arranque en frío.
 - app.en_primer_plano(), app.esperar_primer_plano(), app.esperar_contenido(),
-  app.en_inicio(), app.volver_al_inicio() devuelven bool.
+  app.en_inicio(), app.volver_al_inicio(), app.scroll(direccion="down"|"up") devuelven bool.
 - app.captura(caso, paso, descripcion) devuelve {archivo, descripcion} -- lo que hay
   que appendear a registro["evidencias"].
 """

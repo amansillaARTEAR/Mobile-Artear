@@ -195,6 +195,24 @@ class App:
             pass  # driver sin soporte para limpiar datos: seguimos con un reinicio normal
         return self.reiniciar()
 
+    def scroll(self, direccion="down", porcentaje=0.6) -> bool:
+        """Desliza la pantalla con un gesto nativo (no depende de qué elemento haya debajo,
+        a diferencia de arrastrar un elemento puntual). direccion="down" revela contenido
+        más abajo (el dedo sube en pantalla); "up" al revés. Usa la extensión
+        "mobile: swipeGesture" del driver (como "mobile: clearApp" en reiniciar_limpio(),
+        no requiere --allow-insecure); si el driver no la soporta (ej. iOS todavía sin este
+        caso de uso) no hace nada y devuelve False."""
+        size = self.d.get_window_size()
+        try:
+            self.d.execute_script("mobile: swipeGesture", {
+                "left": int(size["width"] * 0.1), "top": int(size["height"] * 0.2),
+                "width": int(size["width"] * 0.8), "height": int(size["height"] * 0.6),
+                "direction": direccion, "percent": porcentaje,
+            })
+            return True
+        except WebDriverException:
+            return False
+
     # ---------- búsqueda por texto y zonas de pantalla ----------
     def buscar(self, texto) -> list:
         """Elementos visibles cuyo texto o descripción de accesibilidad contiene `texto`.

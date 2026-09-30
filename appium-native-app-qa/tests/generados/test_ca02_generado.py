@@ -64,18 +64,41 @@ def test_ca02_ca1(app, registro):
 # Entonces el tooltip debe mantenerse visible hasta que interactúe y luego desaparecer con efecto
 def test_ca02_ca2(app, registro):
     """CA2: verifica que el tooltip permanece durante scroll y desaparece con efecto."""
-    # TODO revisar: no hay un método de scroll disponible en App todavía, así que este
-    # test solo verifica que el tooltip sigue visible sin interactuar -- falta cubrir
-    # la parte de "desaparece con efecto al hacer scroll".
     app.reiniciar_limpio()
     time.sleep(2)
 
-    tooltip_presente = _tooltip_presente(app)
+    tooltip_antes_del_scroll = _tooltip_presente(app)
+    registro["evidencias"].append(app.captura("CA2", "1_antes_del_scroll", "Tooltip visible antes de hacer scroll"))
 
-    registro["detalle"].update({"tooltip_durante_interaccion": tooltip_presente})
-    registro["evidencias"].append(app.captura("CA2", "tooltip_scroll", "Tooltip durante navegación"))
+    # Hacer scroll por sí solo NO debe cerrar el tooltip -- se compara el estado antes y
+    # después del gesto para dejarlo evidenciado (antes esta captura era la única del test,
+    # y con una sola foto no se podía distinguir "sigue visible durante el scroll" de
+    # "desaparece con efecto al interactuar": hacían falta las tres).
+    app.scroll("down")
+    time.sleep(1)
+    tooltip_despues_del_scroll = _tooltip_presente(app)
+    registro["evidencias"].append(app.captura("CA2", "2_despues_del_scroll", "Tooltip sigue visible después de scrollear"))
 
-    assert tooltip_presente, "El tooltip no permanece visible durante la interacción"
+    # Recién al interactuar (tocar la X) debe desaparecer, con efecto.
+    boton_x = _boton_cerrar_tooltip(app)
+    boton_x_encontrado = boton_x is not None
+    if boton_x is not None:
+        boton_x.click()
+        time.sleep(1)
+    tooltip_tras_interactuar = _tooltip_presente(app)
+    registro["evidencias"].append(app.captura("CA2", "3_tras_interactuar", "Tooltip cerrado después de interactuar (tocar la X)"))
+
+    registro["detalle"].update({
+        "tooltip_visible_antes_del_scroll": tooltip_antes_del_scroll,
+        "tooltip_sigue_visible_despues_del_scroll": tooltip_despues_del_scroll,
+        "boton_x_encontrado": boton_x_encontrado,
+        "tooltip_desaparecio_al_interactuar": not tooltip_tras_interactuar,
+    })
+
+    assert tooltip_antes_del_scroll, "El tooltip no apareció antes de hacer scroll"
+    assert tooltip_despues_del_scroll, "El tooltip desapareció solo con el scroll, sin que el usuario interactúe"
+    assert boton_x_encontrado, "No se encontró el botón de cerrar (X) del tooltip para interactuar"
+    assert not tooltip_tras_interactuar, "El tooltip no desapareció después de interactuar (tocar la X)"
 
 
 # CA3: Una vez que el usuario accede debe permanecer cerrada
