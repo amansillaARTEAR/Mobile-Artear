@@ -23,6 +23,7 @@ class App:
         except WebDriverException:
             self.actividad_inicial = None
         self._logcat()  # descarta el log previo al inicio (no-op en iOS, no hay logcat)
+        self.cerrar_dialogo_permisos()  # por si la app lo pide ya al primer arranque de la sesión
 
     # ---------- estado ----------
     def en_primer_plano(self) -> bool:
@@ -32,14 +33,55 @@ class App:
         limite = time.time() + timeout
         while time.time() < limite:
             if self.en_primer_plano():
+                self.cerrar_dialogo_permisos()
                 return True
             time.sleep(0.5)
         return False
 
+    def cerrar_dialogo_permisos(self, permitir=True) -> bool:
+        """Si hay un diálogo nativo de Android pidiendo un permiso (notificaciones, ubicación,
+        etc.), lo resuelve tocando "Permitir" (o "No permitir" si permitir=False) y devuelve
+        True. Si no hay ninguno, no hace nada y devuelve False.
+
+        Este diálogo lo dibuja el sistema (no la app que se está probando), por eso
+        terminate_app/activate_app NO lo cierran solos, y si queda sin resolver se queda
+        pegado en pantalla -- incluso se ve por encima del launcher si la app se cierra con el
+        diálogo todavía abierto -- tapando cualquier elemento que un test busque después.
+
+        NO filtramos por @package: según el fabricante/ROM el diálogo lo puede dibujar
+        com.android.permissioncontroller, un paquete propio del fabricante, o directamente
+        "android" -- filtrar por uno de esos nombres puede no matchear en otro dispositivo.
+        El texto del botón es la parte estable."""
+        # Contempla el dispositivo en español ("Permitir"/"No permitir") y por si algún día
+        # corre con el idioma del sistema en inglés ("Allow"/"Don't allow") -- sin distinguir
+        # mayúsculas/minúsculas, porque algunos fabricantes lo muestran en versalitas.
+        # Igualdad exacta (no contains): "permitir" es substring de "no permitir", así que un
+        # contains() con permitir=True terminaría matcheando también el botón "No permitir".
+        textos = ["permitir", "allow"] if permitir else ["no permitir", "don't allow", "deny"]
+        condicion = " or ".join(
+            f"translate(@text,'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚ',"
+            f"'abcdefghijklmnopqrstuvwxyzáéíóú')={t!r}"
+            for t in textos)
+        try:
+            botones = self.d.find_elements(AppiumBy.XPATH, f"//*[@clickable='true' and ({condicion})]")
+        except WebDriverException:
+            return False
+        if not botones:
+            return False
+        try:
+            botones[0].click()
+            time.sleep(1)
+        except WebDriverException:
+            return False
+        return True
+
     def esperar_contenido(self, timeout=20) -> bool:
-        """Espera a que la pantalla tenga al menos un elemento tocable."""
+        """Espera a que la pantalla tenga al menos un elemento tocable. Si en el medio aparece
+        el diálogo de permisos (puede pedirse con un pequeño delay tras el arranque), lo cierra
+        para no quedarse esperando contenido que el diálogo está tapando."""
         limite = time.time() + timeout
         while time.time() < limite:
+            self.cerrar_dialogo_permisos()
             if self.clickeables():
                 return True
             time.sleep(0.5)
@@ -67,7 +109,15 @@ class App:
 
     # ---------- acciones ----------
     def clickeables(self, maximo=None) -> list:
-        """Elementos tocables visibles de la app, con texto o descripción."""
+        """Elementos tocables visibles de la app, con texto o descripción.
+
+        El diálogo de permisos de Android (ver cerrar_dialogo_permisos) puede aparecer con
+        cierto delay después del arranque, en cualquier momento de un test -- no solo justo
+        al reiniciar. Como clickeables() es el método que prácticamente todo lo demás usa
+        para "mirar la pantalla" (navbar, topbar, buscar, los tests generados), resolverlo
+        acá antes de leer la pantalla es lo que lo cubre de verdad, en vez de solo en el
+        momento del reinicio."""
+        self.cerrar_dialogo_permisos()
         try:
             els = self.d.find_elements(AppiumBy.XPATH, "//*[@clickable='true' and @displayed='true']")
         except WebDriverException:
@@ -130,6 +180,20 @@ class App:
         self.esperar_primer_plano()
         self.esperar_contenido(timeout=30)
         return round(time.time() - inicio, 2)
+
+    def reiniciar_limpio(self) -> float:
+        """Como reiniciar(), pero antes borra los datos/preferencias de la app (equivalente a
+        `pm clear`), para simular de verdad una app recién instalada (onboarding, tooltips de
+        "primera vez", banners que dependen de un flag persistido, etc). El driver corre en el
+        mismo dispositivo físico entre corridas, así que sin este borrado un flag de "usuario ya
+        vio esto" queda pegado para siempre y esos escenarios dejan de poder probarse.
+        Usa la extensión "mobile: clearApp" del driver (no requiere --allow-insecure); en drivers
+        que no la soportan (ej. iOS todavía sin este caso de uso) hace un reinicio normal."""
+        try:
+            self.d.execute_script("mobile: clearApp", {"appId": self.paquete})
+        except WebDriverException:
+            pass  # driver sin soporte para limpiar datos: seguimos con un reinicio normal
+        return self.reiniciar()
 
     # ---------- búsqueda por texto y zonas de pantalla ----------
     def buscar(self, texto) -> list:
