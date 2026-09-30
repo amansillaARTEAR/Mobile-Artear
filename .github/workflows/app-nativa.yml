@@ -10,13 +10,17 @@ on:
         type: string
         default: ""
       apk:
-        description: "Opcional: nombre del .apk dentro de apks\\ a usar (si no se indica, se usa el más reciente ya copiado ahí)"
+        description: "Opcional: nombre del .apk dentro de la carpeta de APKs a usar (si no se indica, se usa el más reciente)"
         required: false
         type: string
         default: ""
 
 env:
   PYTHONUNBUFFERED: "1"
+  # Carpeta donde se copian los .apk a mano en este runner. Es la misma carpeta que usa
+  # correr.ps1 para las corridas manuales (D:\Artear\Mobile\appium-native-app-qa\apks) --
+  # NO la carpeta apks\ del checkout de este job, que siempre está vacía (gitignored).
+  CARPETA_APKS: "D:\\Artear\\Mobile\\appium-native-app-qa\\apks"
 
 jobs:
   correr-suite:
@@ -26,10 +30,6 @@ jobs:
         working-directory: appium-native-app-qa
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Los .apk viven en apks\ (gitignored) y se copian a mano en este runner -- clean:false
-          # evita que el checkout los borre antes de cada corrida (ver README de esta suite).
-          clean: false
 
       - name: Crear entorno virtual e instalar dependencias
         shell: powershell
@@ -53,22 +53,26 @@ jobs:
         shell: powershell
         run: |
           $apkInput = "${{ inputs.apk }}"
-          if ($apkInput) {
-            $ruta = Join-Path "apks" $apkInput
-            if (-not (Test-Path $ruta)) {
-              Write-Host "::error::No existe apks\$apkInput en este runner. Copialo ahí antes de disparar la corrida."
-              exit 1
-            }
-            Write-Host "APK: $apkInput"
-            echo "TN_APP=$((Resolve-Path $ruta).Path)" >> $env:GITHUB_ENV
-          } else {
-            $ultimo = Get-ChildItem "apks\*.apk" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1
-            if (-not $ultimo) {
-              Write-Host "::error::No hay ningún .apk en apks\ de este runner. Copiá el APK a probar ahí antes de disparar la corrida."
-              exit 1
-            }
-            Write-Host "APK: $($ultimo.Name) (más reciente)"
+          if (-not (Test-Path $env:CARPETA_APKS)) {
+            Write-Host "::error::No existe la carpeta $env:CARPETA_APKS en este runner."
+            exit 1
           }
+          if ($apkInput) {
+            $ruta = Join-Path $env:CARPETA_APKS $apkInput
+            if (-not (Test-Path $ruta)) {
+              Write-Host "::error::No existe $apkInput dentro de $env:CARPETA_APKS. Copialo ahí antes de disparar la corrida."
+              exit 1
+            }
+          } else {
+            $ultimo = Get-ChildItem (Join-Path $env:CARPETA_APKS "*.apk") -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1
+            if (-not $ultimo) {
+              Write-Host "::error::No hay ningún .apk en $env:CARPETA_APKS. Copiá ahí el APK a probar antes de disparar la corrida."
+              exit 1
+            }
+            $ruta = $ultimo.FullName
+          }
+          Write-Host "APK: $ruta"
+          echo "TN_APP=$((Resolve-Path $ruta).Path)" >> $env:GITHUB_ENV
 
       - name: Iniciar Appium
         shell: powershell
