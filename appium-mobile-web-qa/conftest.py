@@ -139,17 +139,23 @@ def pytest_runtest_makereport(item, call):
 
 
 def pytest_html_report_title(report):
-    report.title = f"TNARC-4366 · Suite Appium · {PLATAFORMA.capitalize() if PLATAFORMA else ''}"
+    report.title = f"Reporte - TNARC-4366 ({PLATAFORMA.capitalize() if PLATAFORMA else ''})"
 
 
-# "Environment" y la fila de checkboxes/contadores ("0 Failed, 6 Passed...") las arma
-# pytest-html directo en su template (index.jinja2), no a través de additional_summary --
-# no hay hook que las saque, así que se ocultan con CSS. "Passed" -> "OK" también se hace
-# en el navegador (cosmético, con un MutationObserver por si la tabla se vuelve a dibujar
-# al filtrar/ordenar) y NO tocando el texto de la celda en pytest_html_results_table_row:
-# pytest-html usa justo ese texto (_hydrate_data, en basereport.py) para clasificar cada
-# fila y decidir si el filtro la muestra -- cambiarlo ahí rompía el filtrado entero y el
-# reporte quedaba en blanco ("No results found. Check the filters.").
+# "Environment", la fila de checkboxes/contadores ("0 Failed, 6 Passed..."), el subtítulo
+# ("Report generated on... by pytest-html vX") y el título "Summary" los arma pytest-html
+# directo en su template (index.jinja2), no a través de additional_summary -- no hay hook
+# que los edite, así que se ocultan/reescriben con CSS y JS. "Passed" -> "OK" también se
+# hace en el navegador (cosmético, con un MutationObserver por si la tabla se vuelve a
+# dibujar al filtrar/ordenar) y NO tocando el texto de la celda en
+# pytest_html_results_table_row: pytest-html usa justo ese texto (_hydrate_data, en
+# basereport.py) para clasificar cada fila y decidir si el filtro la muestra -- cambiarlo
+# ahí rompía el filtrado entero y el reporte quedaba en blanco ("No results found. Check
+# the filters.").
+# El subtítulo y el "Summary" están ANTES de este bloque en el HTML (se arman en el mismo
+# tick, sin esperar nada), así que se pueden tocar de una. Los botones "Show/Hide all
+# details" están DESPUÉS (dentro de .controls, que cierra recién más abajo) -- esos se
+# relabelean en el postfix, que sí se renderiza después de ellos.
 _CSS_JS_REPORTE = """
 <style>
   #environment-header, #environment { display: none !important; }
@@ -169,6 +175,28 @@ _CSS_JS_REPORTE = """
       m.addedNodes.forEach(function (n) { if (n.nodeType === 1) relabel(n); });
     });
   }).observe(target, { childList: true, subtree: true });
+
+  var pSubtitulo = document.querySelector('body > p');
+  if (pSubtitulo) {
+    var m = pSubtitulo.textContent.match(/Report generated on (.+?) at (.+?) by/);
+    if (m) { pSubtitulo.textContent = 'Generado el ' + m[1] + ' a las ' + m[2]; }
+  }
+
+  var h2Resumen = document.querySelector('.summary__data > h2');
+  if (h2Resumen && h2Resumen.textContent.trim() === 'Summary') {
+    h2Resumen.textContent = 'Resumen';
+  }
+})();
+</script>
+"""
+
+_JS_POSTFIX_REPORTE = """
+<script>
+(function () {
+  var mostrar = document.getElementById('show_all_details');
+  if (mostrar) mostrar.textContent = 'Mostrar detalles';
+  var ocultar = document.getElementById('hide_all_details');
+  if (ocultar) ocultar.textContent = 'Ocultar detalles';
 })();
 </script>
 """
@@ -183,6 +211,7 @@ def pytest_html_results_summary(prefix, summary, postfix):
             f"<b>Dispositivo:</b> {html.escape(str(info.get('dispositivo')))} · "
             f"<b>Sistema:</b> {html.escape(str(info.get('sistema')))} · "
             f"<b>URL:</b> {html.escape(str(info.get('url')))}</p>")
+    postfix.append(_JS_POSTFIX_REPORTE)
 
 
 def pytest_html_results_table_header(cells):
