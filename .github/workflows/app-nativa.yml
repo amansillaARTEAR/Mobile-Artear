@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       filtro:
-        description: "Opcional: expresión -k de pytest para correr solo algunos casos (ej: smk01 or smk03)"
+        description: "Opcional: expresión -k de pytest para correr solo algunos casos (ej: test_01 or test_03)"
         required: false
         type: string
         default: ""
@@ -17,10 +17,14 @@ on:
 
 env:
   PYTHONUNBUFFERED: "1"
+  CI: "true"
   # Carpeta donde se copian los .apk a mano en este runner. Es la misma carpeta que usa
   # correr.ps1 para las corridas manuales (D:\Artear\Mobile\appium-native-app-qa\apks) --
   # NO la carpeta apks\ del checkout de este job, que siempre está vacía (gitignored).
   CARPETA_APKS: "D:\\Artear\\Mobile\\appium-native-app-qa\\apks"
+
+permissions:
+  contents: write
 
 jobs:
   correr-suite:
@@ -119,3 +123,49 @@ jobs:
           path: appium-native-app-qa/resultados/android/
           retention-days: 30
           if-no-files-found: error
+
+      - name: Publicar reporte (rama reportes-appnativa-android)
+        if: always()
+        shell: powershell
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ultimaCorrida = Get-ChildItem "appium-native-app-qa\resultados\android\corridas" -Directory -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime | Select-Object -Last 1
+          if (-not $ultimaCorrida -or -not (Test-Path (Join-Path $ultimaCorrida.FullName "reporte.html"))) {
+            Write-Host "No hay reporte.html para publicar (la corrida no llegó a generarlo)."
+            exit 0
+          }
+
+          $rama = "reportes-appnativa-android"
+          $destino = "reportes/appnativa/android"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin $rama 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            git checkout -B $rama "origin/$rama"
+          } else {
+            git checkout --orphan $rama
+            git rm -rf . --quiet 2>$null
+          }
+
+          Remove-Item $destino -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $destino -Force | Out-Null
+          Copy-Item (Join-Path $ultimaCorrida.FullName "reporte.html") $destino
+          $evidencias = Join-Path $ultimaCorrida.FullName "evidencias"
+          if (Test-Path $evidencias) {
+            Copy-Item $evidencias (Join-Path $destino "evidencias") -Recurse
+          }
+
+          git add $destino
+          $huboCambios = (git status --porcelain) -ne $null
+          if ($huboCambios) {
+            git commit -m "Reporte App Nativa Android - run ${{ github.run_id }}" | Out-Null
+            git push origin $rama --force
+            Write-Host "Reporte publicado en la rama $rama"
+          } else {
+            Write-Host "El reporte no cambió, nada que publicar"
+          }
+
+          git checkout main

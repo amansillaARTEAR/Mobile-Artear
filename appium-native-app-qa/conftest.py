@@ -1,5 +1,6 @@
 import html
 import json
+import os
 import time
 from pathlib import Path
 
@@ -38,7 +39,10 @@ def pytest_configure(config):
         raise pytest.UsageError(str(e))
     if hasattr(config.option, "htmlpath"):
         config.option.htmlpath = str(SALIDA / "reporte.html")
-        config.option.self_contained_html = False
+        # En CI el reporte se publica solo (reporte.html + evidencias/), así que conviene que
+        # el CSS/JS de pytest-html vengan embebidos (self-contained) y no dependan de una
+        # carpeta assets/ aparte. En corridas manuales se deja liviano, como antes.
+        config.option.self_contained_html = os.environ.get("CI", "").lower() == "true"
 
 
 @pytest.fixture(scope="session")
