@@ -43,18 +43,27 @@ class App:
         etc.), lo resuelve tocando "Permitir" (o "No permitir" si permitir=False) y devuelve
         True. Si no hay ninguno, no hace nada y devuelve False.
 
-        Este diálogo lo dibuja el sistema (paquete com.android.permissioncontroller), no la app:
-        por eso terminate_app/activate_app NO lo cierran solos, y si queda sin resolver se queda
+        Este diálogo lo dibuja el sistema (no la app que se está probando), por eso
+        terminate_app/activate_app NO lo cierran solos, y si queda sin resolver se queda
         pegado en pantalla -- incluso se ve por encima del launcher si la app se cierra con el
-        diálogo todavía abierto -- tapando cualquier elemento que un test busque después."""
-        # Contempla el dispositivo en español ("Permitir"/"No permitir") y por si algún
-        # día corre con el idioma del sistema en inglés ("Allow"/"Don't allow").
-        textos = ["Permitir", "Allow"] if permitir else ["No permitir", "Don't allow", "Deny"]
-        condicion = " or ".join(f"@text={t!r}" for t in textos)
+        diálogo todavía abierto -- tapando cualquier elemento que un test busque después.
+
+        NO filtramos por @package: según el fabricante/ROM el diálogo lo puede dibujar
+        com.android.permissioncontroller, un paquete propio del fabricante, o directamente
+        "android" -- filtrar por uno de esos nombres puede no matchear en otro dispositivo.
+        El texto del botón es la parte estable."""
+        # Contempla el dispositivo en español ("Permitir"/"No permitir") y por si algún día
+        # corre con el idioma del sistema en inglés ("Allow"/"Don't allow") -- sin distinguir
+        # mayúsculas/minúsculas, porque algunos fabricantes lo muestran en versalitas.
+        # Igualdad exacta (no contains): "permitir" es substring de "no permitir", así que un
+        # contains() con permitir=True terminaría matcheando también el botón "No permitir".
+        textos = ["permitir", "allow"] if permitir else ["no permitir", "don't allow", "deny"]
+        condicion = " or ".join(
+            f"translate(@text,'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚ',"
+            f"'abcdefghijklmnopqrstuvwxyzáéíóú')={t!r}"
+            for t in textos)
         try:
-            botones = self.d.find_elements(
-                AppiumBy.XPATH,
-                f"//*[@package='com.android.permissioncontroller' and ({condicion})]")
+            botones = self.d.find_elements(AppiumBy.XPATH, f"//*[@clickable='true' and ({condicion})]")
         except WebDriverException:
             return False
         if not botones:
