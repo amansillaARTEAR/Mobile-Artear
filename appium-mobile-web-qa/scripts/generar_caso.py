@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-A partir del texto de un ticket de Jira, aplica técnicas de diseño de casos de
-QA (no solo "escribí un test") para derivar varios escenarios — camino feliz
-(positivo), caso negativo/alternativo y caso de borde, cuando el ticket da pie
-a cada uno — documentados en formato Given-When-Then, y genera el código
-pytest para cada uno usando la API de Claude. Todo queda en tests/generados/
-para revisión humana antes de mergear (no se mezcla con la suite oficial hasta
-que se aprueba el Pull Request).
+A partir del texto de un ticket de Jira, identifica cada criterio de aceptación (CA)
+que el ticket enumera y genera una función de test pytest por cada uno -- trazable
+1 a 1 al CA que cubre (si el ticket tiene 6 CA, se generan 6 funciones) -- usando la
+API de Claude. Todo queda en tests/generados/ para revisión humana antes de mergear
+(no se mezcla con la suite oficial hasta que se aprueba el Pull Request).
 
 Uso:
     python scripts/generar_caso.py --ticket-file /tmp/ticket.txt
@@ -28,38 +26,44 @@ DIR_GENERADOS = RAIZ / "tests" / "generados"
 
 MODELO = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
 
-SYSTEM = """Sos un ingeniero de QA automation senior, experto en diseño de casos de
-prueba y en Appium + pytest. Tu tarea es analizar un ticket de Jira aplicando técnicas
-estándar de diseño de casos (no simplemente "escribir un test cualquiera") y producir
-varias funciones de test nuevas para una suite existente de un player de videos
-verticales (mobile web, Android/iOS, dispositivo real).
+SYSTEM = """Sos un ingeniero de QA automation senior, experto en Appium + pytest. Tu
+tarea es analizar un ticket de Jira y producir una función de test por cada criterio
+de aceptación (CA) que el ticket enumera, para una suite existente de un player de
+videos verticales (mobile web, Android/iOS, dispositivo real).
 
-Proceso de diseño (hacelo antes de escribir código, pero NO lo muestres como texto
-aparte — se refleja en los escenarios que elijas y en los comentarios Given/When/Then):
-1. Identificá el camino feliz / caso POSITIVO que el ticket describe.
-2. Si el ticket da pie a un caso NEGATIVO o alternativo razonable (algo que no debería
-   pasar, un estado distinto al esperado, una acción en orden distinto), incluilo.
-3. Si el ticket da pie a un caso de BORDE (un límite, una condición extrema, un estado
-   inicial atípico), incluilo.
-No inventes casos negativos/borde forzados si el ticket es demasiado simple para dar
-pie a ellos — en ese caso alcanza con el positivo. Nunca generes más de 3 funciones.
+Proceso (hacelo antes de escribir código, pero NO lo muestres como texto aparte):
+1. Encontrá la lista de criterios de aceptación del ticket (suele estar numerada:
+   "1.", "2.", ... o con subitems tipo "6a", "6b"). Tomalos en el orden en que
+   aparecen en el ticket, tal como están escritos.
+2. Para CADA criterio de aceptación (incluyendo subitems), generá EXACTAMENTE UNA
+   función de test que lo verifique. No agrupes dos CA en una sola función ni
+   dividas un CA en varias. Si el ticket tiene 6 criterios de aceptación (contando
+   subitems como propios, ej. 6a y 6b cuentan como 2), el resultado son 6 funciones.
+3. No inventes criterios que el ticket no menciona, y no omitas ninguno de los que
+   sí menciona, aunque te parezca trivial o difícil de automatizar con los métodos
+   disponibles (en ese caso, hacé la mejor aproximación posible y usá "# TODO
+   revisar:" para lo que falte, pero generá la función igual).
 
 Reglas estrictas para el código:
 - Devolvé ÚNICAMENTE código Python válido, sin explicaciones fuera de comentarios, sin
   markdown, sin ```.
-- Generá una función por escenario, con estos nombres exactos y en este orden (usá
-  solo los que apliquen, salteando los que no correspondan): {nombres_funciones}
-- Firma de cada función: def test_caXX_tipo(player, registro):  (misma firma que los
+- Nombrá cada función test_{caso_id}_caN (o test_{caso_id}_caNa / test_{caso_id}_caNb
+  para subitems), donde N es el número de criterio de aceptación tal como figura en
+  el ticket, en el mismo orden. Ej: con 6 CA (el 6to con subitems a/b) generás
+  test_{caso_id}_ca1, test_{caso_id}_ca2, test_{caso_id}_ca3, test_{caso_id}_ca4,
+  test_{caso_id}_ca5, test_{caso_id}_ca6a, test_{caso_id}_ca6b. No uses "positivo",
+  "negativo" ni "borde" en ningún nombre, comentario ni docstring.
+- Firma de cada función: def test_caXX_caN(player, registro):  (misma firma que los
   casos existentes)
-- Inmediatamente arriba de cada función, un bloque de comentarios con el escenario en
-  formato Given-When-Then:
-    # Escenario: <Positivo|Negativo|Borde>
+- Inmediatamente arriba de cada función, un bloque de comentarios que cite (textual
+  o casi textual) el criterio de aceptación que cubre, y lo traduzca a Given-When-Then:
+    # CA<N>: <texto del criterio de aceptación, tal como está en el ticket>
     # Dado ...
     # Cuando ...
     # Entonces ...
-- El docstring de una línea debe empezar con "POSITIVO:", "NEGATIVO:" o "BORDE:" según
-  corresponda, seguido de la descripción (mismo estilo que los casos existentes que
-  usan "CAxx: ...").
+- El docstring de una línea debe empezar con "CA<N>: " (ej. "CA6b: ...", igual que
+  en el comentario de arriba), seguido de una descripción breve de qué verifica esa
+  función (mismo estilo que los casos existentes que usan "CAxx: ...").
 - Usá SOLO los métodos que ya existen en la clase Player (los que se listan abajo). Si
   algún escenario necesita una interacción que ningún método de Player permite hacer
   hoy, escribí el test igual con la mejor aproximación posible, y agregá un comentario
@@ -164,7 +168,6 @@ def main():
 
     ticket_key = extraer_ticket_key(ticket)
     caso_id = siguiente_nombre()
-    nombres_posibles = [f"test_{caso_id}_positivo", f"test_{caso_id}_negativo", f"test_{caso_id}_borde"]
 
     prompt = f"""Ticket de Jira:
 ---
@@ -179,10 +182,14 @@ Métodos disponibles en la clase Player:
 Ejemplos de casos existentes (para copiar el estilo):
 {leer_ejemplos()}
 
-Generá entre 1 y 3 funciones, usando estos nombres exactos según el escenario
-(saltea los que no correspondan, no agregues otros): {", ".join(nombres_posibles)}
+Generá una función por cada criterio de aceptación del ticket (ni más ni menos),
+nombrada test_{caso_id}_caN (o test_{caso_id}_caNa/caNb para subitems), respetando
+el número/letra tal como figura en el ticket y el orden en que aparecen. Como límite
+de seguridad, no generes más de 12 funciones -- si el ticket tuviera más criterios
+que eso, agregá un comentario "# TODO revisar:" al final indicando cuáles quedaron
+sin cubrir.
 """
-    system = SYSTEM.format(nombres_funciones=", ".join(nombres_posibles))
+    system = SYSTEM.format(caso_id=caso_id)
 
     client = anthropic.Anthropic(api_key=api_key)
     try:
@@ -216,8 +223,8 @@ Generá entre 1 y 3 funciones, usando estos nombres exactos según el escenario
         encabezado += f"# Ticket: {ticket_key}\n"
     out_file.write_text(
         encabezado
-        + '"""Escenarios generados automáticamente a partir de un ticket de Jira, aplicando diseño '
-        'de casos (positivo/negativo/borde). REVISAR ANTES DE APROBAR EL PR."""\n\n'
+        + '"""Casos generados automáticamente a partir de un ticket de Jira, uno por cada '
+        'criterio de aceptación (CA). REVISAR ANTES DE APROBAR EL PR."""\n\n'
         + codigo + "\n",
         encoding="utf-8",
     )
