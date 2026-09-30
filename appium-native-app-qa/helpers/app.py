@@ -23,6 +23,7 @@ class App:
         except WebDriverException:
             self.actividad_inicial = None
         self._logcat()  # descarta el log previo al inicio (no-op en iOS, no hay logcat)
+        self.cerrar_dialogo_permisos()  # por si la app lo pide ya al primer arranque de la sesión
 
     # ---------- estado ----------
     def en_primer_plano(self) -> bool:
@@ -32,14 +33,46 @@ class App:
         limite = time.time() + timeout
         while time.time() < limite:
             if self.en_primer_plano():
+                self.cerrar_dialogo_permisos()
                 return True
             time.sleep(0.5)
         return False
 
+    def cerrar_dialogo_permisos(self, permitir=True) -> bool:
+        """Si hay un diálogo nativo de Android pidiendo un permiso (notificaciones, ubicación,
+        etc.), lo resuelve tocando "Permitir" (o "No permitir" si permitir=False) y devuelve
+        True. Si no hay ninguno, no hace nada y devuelve False.
+
+        Este diálogo lo dibuja el sistema (paquete com.android.permissioncontroller), no la app:
+        por eso terminate_app/activate_app NO lo cierran solos, y si queda sin resolver se queda
+        pegado en pantalla -- incluso se ve por encima del launcher si la app se cierra con el
+        diálogo todavía abierto -- tapando cualquier elemento que un test busque después."""
+        # Contempla el dispositivo en español ("Permitir"/"No permitir") y por si algún
+        # día corre con el idioma del sistema en inglés ("Allow"/"Don't allow").
+        textos = ["Permitir", "Allow"] if permitir else ["No permitir", "Don't allow", "Deny"]
+        condicion = " or ".join(f"@text={t!r}" for t in textos)
+        try:
+            botones = self.d.find_elements(
+                AppiumBy.XPATH,
+                f"//*[@package='com.android.permissioncontroller' and ({condicion})]")
+        except WebDriverException:
+            return False
+        if not botones:
+            return False
+        try:
+            botones[0].click()
+            time.sleep(1)
+        except WebDriverException:
+            return False
+        return True
+
     def esperar_contenido(self, timeout=20) -> bool:
-        """Espera a que la pantalla tenga al menos un elemento tocable."""
+        """Espera a que la pantalla tenga al menos un elemento tocable. Si en el medio aparece
+        el diálogo de permisos (puede pedirse con un pequeño delay tras el arranque), lo cierra
+        para no quedarse esperando contenido que el diálogo está tapando."""
         limite = time.time() + timeout
         while time.time() < limite:
+            self.cerrar_dialogo_permisos()
             if self.clickeables():
                 return True
             time.sleep(0.5)
