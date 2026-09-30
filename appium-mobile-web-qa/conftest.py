@@ -1,5 +1,6 @@
 import html
 import json
+import re
 import time
 from pathlib import Path
 
@@ -43,6 +44,15 @@ def pytest_configure(config):
         config.option.self_contained_html = False
 
 
+def pytest_sessionstart(session):
+    # La sección "Environment" que arma pytest-metadata (versión de Python, plataforma,
+    # plugins instalados, etc.) es ruido técnico para quien lee el reporte sin ser QA/dev.
+    # Se limpia acá (no en pytest_configure, que corre antes de que pytest-metadata la
+    # complete) para que no aparezca en el reporte.
+    if hasattr(session.config, "_metadata"):
+        session.config._metadata.clear()
+
+
 @pytest.fixture(scope="session")
 def plataforma():
     return PLATAFORMA
@@ -84,13 +94,13 @@ def _valor(v):
 
 
 def _tabla_detalle(datos):
+    # El nombre/descripción del caso ya se muestra en la columna "Caso de prueba" de la
+    # tabla de resultados (ver pytest_html_results_table_row) -- no hace falta repetirlo acá.
     filas = "".join(
         f"<tr><td style='padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333'>"
         f"{html.escape(str(k))}</td><td style='padding:4px 8px;border:1px solid #ddd;color:#333'>{_valor(v)}</td></tr>"
         for k, v in datos.get("detalle", {}).items())
-    caso = html.escape(datos.get("caso", ""))
-    return (f"<p style='color:#333;font-size:13px;margin:6px 0'><b>{caso}</b></p>"
-            f"<table style='border-collapse:collapse;margin-bottom:8px;font-size:12px'>{filas}</table>")
+    return f"<table style='border-collapse:collapse;margin-bottom:8px;font-size:12px'>{filas}</table>"
 
 
 def _galeria(datos):
@@ -127,7 +137,11 @@ def pytest_html_report_title(report):
     report.title = f"TNARC-4366 · Suite Appium · {PLATAFORMA.capitalize() if PLATAFORMA else ''}"
 
 
+@pytest.hookimpl(trylast=True)  # corre después de que pytest-html arma su fila de checkboxes
 def pytest_html_results_summary(prefix, summary, postfix):
+    # "X Failed, Y Passed, Z Skipped..." con checkboxes para filtrar es para uso de QA/dev,
+    # no para quien solo necesita ver el resultado -- se saca y queda solo nuestro resumen.
+    summary.clear()
     info = RESULTADOS.get("test_00_version", {}).get("detalle", {})
     if info:
         prefix.append(
@@ -135,3 +149,20 @@ def pytest_html_results_summary(prefix, summary, postfix):
             f"<b>Dispositivo:</b> {html.escape(str(info.get('dispositivo')))} · "
             f"<b>Sistema:</b> {html.escape(str(info.get('sistema')))} · "
             f"<b>URL:</b> {html.escape(str(info.get('url')))}</p>")
+
+
+def pytest_html_results_table_header(cells):
+    # La columna "Test" mostraba la ruta del archivo + nombre interno de la función de
+    # pytest -- se renombra para dejar en claro que ahí va el nombre del caso.
+    if len(cells) > 1:
+        cells[1] = "<th>Caso de prueba</th>"
+
+
+def pytest_html_results_table_row(report, cells):
+    if len(cells) < 2:
+        return
+    nombre = report.nodeid.split("::")[-1]
+    caso = RESULTADOS.get(nombre, {}).get("caso") or nombre
+    cells[1] = f'<td class="col-name">{html.escape(caso)}</td>'
+    if getattr(report, "passed", False):
+        cells[0] = re.sub(r">\s*Passed\s*<", ">OK<", cells[0])
