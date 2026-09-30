@@ -1,0 +1,117 @@
+name: App Nativa (Appium Android)
+run-name: "App Nativa Android — ${{ inputs.filtro != '' && inputs.filtro || 'suite completa' }} por @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      filtro:
+        description: "Opcional: expresión -k de pytest para correr solo algunos casos (ej: smk01 or smk03)"
+        required: false
+        type: string
+        default: ""
+      apk:
+        description: "Opcional: nombre del .apk dentro de apks\\ a usar (si no se indica, se usa el más reciente ya copiado ahí)"
+        required: false
+        type: string
+        default: ""
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  correr-suite:
+    runs-on: [self-hosted, windows]
+    defaults:
+      run:
+        working-directory: appium-native-app-qa
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Los .apk viven en apks\ (gitignored) y se copian a mano en este runner -- clean:false
+          # evita que el checkout los borre antes de cada corrida (ver README de esta suite).
+          clean: false
+
+      - name: Crear entorno virtual e instalar dependencias
+        shell: powershell
+        run: |
+          py -m venv .venv
+          .\.venv\Scripts\pip install -r requirements.txt
+
+      - name: Detectar dispositivo Android conectado
+        shell: powershell
+        run: |
+          $linea = adb devices | Select-String "`tdevice$" | Select-Object -First 1
+          if (-not $linea) {
+            Write-Host "No hay ningún Android conectado. Revisá el cable y la depuración USB." -ForegroundColor Red
+            exit 1
+          }
+          $udid = ($linea.ToString() -split "`t")[0]
+          Write-Host "Dispositivo detectado: $udid"
+          echo "ANDROID_UDID=$udid" >> $env:GITHUB_ENV
+
+      - name: Ubicar el APK a probar
+        shell: powershell
+        run: |
+          $apkInput = "${{ inputs.apk }}"
+          if ($apkInput) {
+            $ruta = Join-Path "apks" $apkInput
+            if (-not (Test-Path $ruta)) {
+              Write-Host "::error::No existe apks\$apkInput en este runner. Copialo ahí antes de disparar la corrida."
+              exit 1
+            }
+            Write-Host "APK: $apkInput"
+            echo "TN_APP=$((Resolve-Path $ruta).Path)" >> $env:GITHUB_ENV
+          } else {
+            $ultimo = Get-ChildItem "apks\*.apk" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1
+            if (-not $ultimo) {
+              Write-Host "::error::No hay ningún .apk en apks\ de este runner. Copiá el APK a probar ahí antes de disparar la corrida."
+              exit 1
+            }
+            Write-Host "APK: $($ultimo.Name) (más reciente)"
+          }
+
+      - name: Iniciar Appium
+        shell: powershell
+        run: |
+          $npmBin = Join-Path $env:APPDATA "npm"
+          if ($env:Path -notlike "*$npmBin*") { $env:Path += ";$npmBin" }
+          Start-Process appium.cmd -ArgumentList "--allow-insecure=uiautomator2:chromedriver_autodownload", "--log", "appium.log" -WindowStyle Hidden
+          $limite = (Get-Date).AddSeconds(40)
+          $listo = $false
+          while (-not $listo) {
+            try {
+              $c = [Net.Sockets.TcpClient]::new(); $c.Connect("127.0.0.1", 4723); $c.Close(); $listo = $true
+            } catch {
+              if ((Get-Date) -gt $limite) { Write-Host "Appium no arrancó a tiempo" -ForegroundColor Red; exit 1 }
+              Start-Sleep -Seconds 1
+            }
+          }
+
+      - name: Correr suite
+        shell: powershell
+        run: |
+          $pyArgs = @("-m", "pytest")
+          if ("${{ inputs.filtro }}") { $pyArgs += @("-k", "${{ inputs.filtro }}") }
+          & .\.venv\Scripts\python.exe @pyArgs 2>&1 | Tee-Object -FilePath pytest_output.log
+          $ec = $LASTEXITCODE
+          if ($ec -ne 0) {
+            $tail = ((Get-Content pytest_output.log -Tail 60) -join " | ") -replace "%", "%25" -replace "`r", "" -replace "`n", " | "
+            Write-Host "::error::pytest fallo (exit $ec): $tail"
+          }
+          exit $ec
+
+      - name: Detener Appium
+        if: always()
+        shell: powershell
+        run: |
+          Get-Process appium -ErrorAction SilentlyContinue | Stop-Process -Force
+          Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*appium*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+
+      - name: Subir resultados como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-appnativa-android-${{ github.run_id }}
+          path: appium-native-app-qa/resultados/android/
+          retention-days: 30
+          if-no-files-found: error
