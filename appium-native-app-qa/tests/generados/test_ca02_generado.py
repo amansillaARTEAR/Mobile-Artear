@@ -63,28 +63,37 @@ def test_ca02_ca1(app, registro):
 # Cuando el usuario hace scroll en la pantalla
 # Entonces el tooltip debe mantenerse visible hasta que interactúe y luego desaparecer con efecto
 def test_ca02_ca2(app, registro):
-    """CA2: DIAGNÓSTICO -- mide si el tooltip se cierra solo por tiempo, sin scroll ni
-    interacción. Dos corridas seguidas con un scroll calculado para quedar claramente
-    afuera del rect del tooltip (confirmado comparando las evidencias: el fondo de la
-    pantalla no se mueve nada) igual terminaron con el tooltip cerrado -- así que puede no
-    ser el scroll. Esta versión no scrollea ni toca nada, solo espera y va sacando capturas
-    a distintos tiempos, para aislar si hay un auto-dismiss por tiempo. Es temporal: una
-    vez que se vea el patrón, se reescribe con el fix real y los asserts del CA."""
+    """CA2: verifica que el tooltip se mantiene visible hasta que el usuario interactúa
+    haciendo scroll, y que al hacerlo desaparece con efecto.
+
+    Diagnóstico previo: sin tocar nada, el tooltip permanece visible indefinidamente
+    (confirmado a los 0/2/4/6/9s sin scroll ni interacción -- no hay auto-dismiss por
+    tiempo). Los dos intentos anteriores de este test fallaban porque asumían que el
+    tooltip debía seguir visible INMEDIATAMENTE después del scroll, y que recién se
+    cerraba con una interacción aparte -- pero la propia CA dice "interactuar CON EL
+    SCROLL": el scroll ES la interacción que lo cierra. Por eso alcanza con un scroll
+    simple, sin necesidad de calcular una zona que lo evite."""
     app.reiniciar_limpio()
     time.sleep(2)
 
-    tiempos = []
-    for segundos in (0, 2, 4, 6, 9):
-        if segundos:
-            time.sleep(segundos - tiempos[-1][0] if tiempos else segundos)
-        presente = _tooltip_presente(app)
-        tiempos.append((segundos, presente))
-        registro["evidencias"].append(
-            app.captura("CA2", f"diag_t{segundos}s", f"Tooltip a los {segundos}s sin tocar nada: {presente}"))
+    tooltip_antes = _tooltip_presente(app)
+    registro["evidencias"].append(
+        app.captura("CA2", "antes_scroll", f"Tooltip antes de scrollear: {tooltip_antes}"))
 
-    registro["detalle"].update({"tooltip_por_tiempo_sin_interactuar": {f"{s}s": p for s, p in tiempos}})
+    app.scroll("down")
+    time.sleep(1)  # tiempo para que la animación de cierre termine
 
-    assert tiempos[0][1], "El tooltip no apareció"
+    tooltip_despues = _tooltip_presente(app)
+    registro["evidencias"].append(
+        app.captura("CA2", "despues_scroll", f"Tooltip después de scrollear: {tooltip_despues}"))
+
+    registro["detalle"].update({
+        "tooltip_visible_antes_scroll": tooltip_antes,
+        "tooltip_visible_despues_scroll": tooltip_despues,
+    })
+
+    assert tooltip_antes, "El tooltip no estaba visible antes de scrollear"
+    assert not tooltip_despues, "El tooltip debería desaparecer (con efecto) al interactuar haciendo scroll"
 
 
 # CA3: Una vez que el usuario accede debe permanecer cerrada
