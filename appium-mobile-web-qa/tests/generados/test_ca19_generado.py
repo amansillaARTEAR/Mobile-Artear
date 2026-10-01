@@ -5,97 +5,26 @@
 import json
 import time
 
-# Los 4 CA de abajo (CA1a, CA1b, CA2, CA3) usan player.abrir(), que carga la página fija
-# de test del PLAYER de shorts/videos (config.URL) -- pero este ticket es sobre bricks
-# nota en una PORTADA/nota editorial, que el player no puede verificar (ver el TODO en
-# cada test). La portada real para probar esto es
-# https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764 (dato del usuario, confirmó
-# que el brick nota longform debería estar visible ahí).
+# Este ticket es sobre el brick nota con estilo "longform" en una PORTADA/nota editorial
+# (no sobre el player de shorts/videos), así que CA1a/CA1b navegan directo a la portada real
+# donde el usuario confirmó que el brick longform está configurado:
+# https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764
 #
-# DIAGNÓSTICO temporal: antes de reescribir los 4 CA contra esa portada hace falta ver
-# cómo se arma el brick nota longform ahí (tipo de componente y customFields en el árbol
-# de PageBuilder, window.Fusion.tree) para poder escribir selectores/asserts reales. El
-# primer intento (ver historial) devolvía demasiado texto y la anotación de error de
-# GitHub Actions (tope ~4KB) lo cortaba antes de llegar a lo útil -- también el JS vivía
-# inline en el test, y pytest muestra el source completo de la función en el traceback,
-# comiéndose la mayor parte del presupuesto. Por eso ahora el JS es una constante aparte
-# (como en helpers/player.py) y la salida es mínima: la lista de tipos de componente
-# brick/nota que hay en la página, más el nodo longform si lo encuentra. Se borra/
-# reemplaza una vez que se reescriban CA1a-CA3 con el fix real.
-# Segunda pasada del diagnóstico: ya sabemos (ver JS_RELEVAR_BRICKS más abajo, usado en la
-# corrida anterior) que el componente es "global/BrickNota" con customFields.style ==
-# "nota_longform" -- pero esos datos no dicen nada sobre la orientación de la imagen
-# renderizada ni sobre cuántos bricks nota lo acompañan, que es lo que de verdad define la
-# regla del ticket (horizontal por defecto, vertical con 1 brick nota mayor al lado, 40%
-# con 4 bricks notas). Esta pasada mide eso directo en el DOM: por cada elemento con clase
-# "brick_nota", el tamaño real de su <img> (para clasificar horizontal/vertical por su
-# propio aspect ratio, sin depender de adivinar el nombre de una clase CSS) y cuántos
-# hermanos brick_nota hay en su mismo contenedor.
-JS_RELEVAR_ORIENTACION = r"""
-const arts = [...document.querySelectorAll('[class*="brick_nota" i]')];
-const resumen = arts.slice(0, 8).map(el => {
-  const img = el.querySelector('img, picture img');
-  const rect = img ? img.getBoundingClientRect() : null;
-  const cont = el.parentElement;
-  const hermanos = cont ? cont.querySelectorAll(':scope > [class*="brick_nota" i]').length : null;
-  return {
-    clases: [...el.classList].join(' '),
-    imgAncho: rect ? Math.round(rect.width) : null,
-    imgAlto: rect ? Math.round(rect.height) : null,
-    hermanosEnContenedor: hermanos,
-  };
-});
-return { totalEncontrados: arts.length, resumen };
-"""
-
-# Tercera pasada: en vez de adivinar por DOM, se recorre directo el árbol de PageBuilder
-# (window.Fusion.tree, la fuente de verdad de qué Tamaño se configuró para cada Brick Nota
-# -- "Nota mayor", etc., ver customFields) buscando TODOS los grupos (mismo contenedor
-# padre) que tengan al menos un hijo con estilo "nota_longform". Por cada grupo así,
-# se informa cuántos Brick Nota hermanos tiene y el Tamaño configurado de cada uno --
-# esto ubica directo el caso CA1a (longform + exactamente 1 hermano con Tamaño "mayor")
-# sin depender de medir imágenes ni adivinar clases CSS.
-JS_RELEVAR_GRUPOS_LONGFORM = r"""
-const encontrados = [];
-function walk(nodo, padre) {
-  if (!nodo) return;
-  const cf = (nodo.props && nodo.props.customFields) || null;
-  if (cf && typeof cf.style === 'string' && /brick|nota/i.test(nodo.type || '')) {
-    encontrados.push({ nodo, padre, cf });
-  }
-  (nodo.children || []).forEach(h => walk(h, nodo));
-}
-walk((window.Fusion || {}).tree, null);
-const grupos = new Map();
-encontrados.forEach(e => {
-  if (!grupos.has(e.padre)) grupos.set(e.padre, []);
-  grupos.get(e.padre).push(e);
-});
-const salida = [];
-grupos.forEach((items) => {
-  const esLongform = items.some(i => /longform/i.test(i.cf.style || ''));
-  if (!esLongform) return;
-  salida.push({
-    total: items.length,
-    items: items.map(i => {
-      const cf = i.cf;
-      const claveTam = Object.keys(cf).find(k => /tama|size/i.test(k));
-      return { estilo: cf.style, tamanio: claveTam ? cf[claveTam] : null };
-    }),
-  });
-});
-return salida;
-"""
-
-
-# Cuarta pasada: cruza las dos anteriores en una sola consulta -- recorre Fusion.tree (para
-# saber estilo/tamaño configurado de cada brick nota, en orden) y mide el <img> del elemento
-# del DOM que ocupa la misma posición (document.querySelectorAll devuelve en orden de
-# aparición, igual que el recorrido del árbol) -- así cada hermano queda con su estilo/tamaño
-# Y su imagen medida en el mismo objeto, sin tener que asumir nada por separado. Se valida
-# además que ambos relevamientos encuentren la misma cantidad de bricks nota (si no coincide,
-# el cruce por posición no es confiable y se informa aparte).
-JS_RELEVAR_LONGFORM_COMBINADO = r"""
+# Regla del ticket: el brick nota longform muestra la imagen en horizontal, EXCEPTO cuando
+# está acompañado de 1 brick nota de tamaño mayor (ahí va vertical -- CA1a) o acompañado de
+# 4 bricks nota (ahí va vertical al 40% -- CA1b). CA3 (que el JSON informe el formato) queda
+# fuera de alcance por pedido explícito.
+#
+# Para no depender de adivinar clases CSS, se recorre window.Fusion.tree (customFields.style
+# / Tamaño configurados en PageBuilder, la fuente de verdad) agrupando por contenedor padre,
+# y se cruza cada grupo con la medida real del <img> de cada hermano en el DOM (mismo orden
+# de aparición). Diagnosticado contra la portada real: el grupo de 2 (longform + 1 "nota
+# mayor") da sistemáticamente 1 imagen vertical (~314x558) + 1 horizontal (~314x177); el
+# grupo de 5 (longform + 4 bricks nota) da 1 vertical + 4 horizontales. La asamblea evita
+# atribuir la imagen a un hermano puntual (en grupos grandes el cruce por posición no es
+# confiable) y en cambio valida por grupo: cuántos son longform, cuántos tienen tamaño
+# "mayor", y cuántas imágenes del grupo son verticales/horizontales.
+JS_GRUPOS_BRICK_LONGFORM = r"""
 const treeItems = [];
 function walk(nodo, padre) {
   if (!nodo) return;
@@ -127,58 +56,24 @@ combinados.forEach(c => {
 });
 const salida = [];
 grupos.forEach((items) => {
-  if (!items.some(i => /longform/i.test(i.estilo || ''))) return;
-  salida.push({ total: items.length, items: items.map(({ padre, ...resto }) => resto) });
+  const cantLongform = items.filter(i => /longform/i.test(i.estilo || '')).length;
+  if (cantLongform < 1) return;
+  const verticales = items.filter(i => i.imgAlto != null && i.imgAncho != null && i.imgAlto > i.imgAncho).length;
+  const horizontales = items.filter(i => i.imgAlto != null && i.imgAncho != null && i.imgAncho >= i.imgAlto).length;
+  const cantMayor = items.filter(i => /mayor/i.test(i.tamanio || '')).length;
+  salida.push({ total: items.length, cantLongform, cantMayor, verticales, horizontales,
+                items: items.map(({ padre, ...resto }) => resto) });
 });
-return { coinciden: treeItems.length === domEls.length, totalArbol: treeItems.length,
-         totalDom: domEls.length, grupos: salida };
+return salida;
 """
 
 
-def test_ca19_diag_grupos(player, registro):
-    """DIAGNÓSTICO: busca en Fusion.tree todos los grupos con un brick nota longform y el
-    Tamaño configurado de cada hermano, para ubicar el caso CA1a (1 hermano "mayor")."""
+def _grupos_longform(player):
     url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
-    info = player.d.execute_script(JS_RELEVAR_GRUPOS_LONGFORM)
-    registro["detalle"].update({"portada": url, "grupos_longform": info})
-    registro["evidencias"].append(player.captura(
-        "CA19diag", "grupos", f"Portada ALEM-DEV ?d=4764 -- grupos longform: {info}"))
-    print("INFO_GRUPOS_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
-    assert False, "DIAGNOSTICO (no es un fallo real)"
-
-
-def test_ca19_diag_combinado(player, registro):
-    """DIAGNÓSTICO: por cada grupo con un brick nota longform, cruza estilo/tamaño (árbol)
-    con la medida real de la imagen (DOM) de cada hermano, para confirmar la orientación
-    exacta del longform en el caso de 1 hermano mayor (CA1a) y de 4 hermanos (CA1b)."""
-    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
-    player._web()
-    player.d.get(url)
-    time.sleep(3)
-    info = player.d.execute_script(JS_RELEVAR_LONGFORM_COMBINADO)
-    registro["detalle"].update({"portada": url, "combinado": info})
-    registro["evidencias"].append(player.captura(
-        "CA19diag", "combinado", f"Portada ALEM-DEV ?d=4764 -- combinado: {info}"))
-    print("INFO_COMBINADO_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
-    assert False, "DIAGNOSTICO (no es un fallo real)"
-
-
-def test_ca19_diag_portada(player, registro):
-    """DIAGNÓSTICO: releva orientación de imagen y hermanos de cada brick nota en la
-    portada real (ALEM-DEV ?d=4764), antes de reescribir CA1a-CA3 contra esa página."""
-    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
-    player._web()
-    player.d.get(url)
-    time.sleep(3)
-    info = player.d.execute_script(JS_RELEVAR_ORIENTACION)
-    registro["detalle"].update({"portada": url, "info_relevada": info})
-    registro["evidencias"].append(player.captura(
-        "CA19diag", "portada", f"Portada ALEM-DEV ?d=4764 -- {info}"))
-    print("INFO_RELEVADA_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
-    assert False, "DIAGNOSTICO (no es un fallo real)"
+    return url, player.d.execute_script(JS_GRUPOS_BRICK_LONGFORM)
 
 
 # CA1a: Cuando se encuentra acompañado de 1 brick nota tamaño mayor
@@ -187,19 +82,18 @@ def test_ca19_diag_portada(player, registro):
 # Entonces la imagen debe mostrarse en formato vertical
 def test_ca19_ca1a(player, registro):
     """CA1a: el brick nota longform muestra imagen vertical cuando acompaña a 1 brick nota mayor."""
-    # TODO revisar: Este ticket describe comportamiento de brick/componente editorial,
-    # no del player de videos. Los métodos de Player no permiten inspeccionar bricks
-    # ni el formato de imágenes en contextos editoriales. Se necesitaría acceso a la
-    # página que contiene el brick y métodos para verificar dimensiones de imagen.
-    s = player.abrir()
-    registro["detalle"].update({
-        "video_inicial": s["video"],
-        "nota": "Este CA requiere verificar bricks nota en contexto editorial, fuera del alcance del player",
-    })
+    url, grupos = _grupos_longform(player)
+    objetivo = next((g for g in grupos if g["total"] == 2 and g["cantLongform"] >= 1 and g["cantMayor"] >= 1), None)
+    registro["detalle"].update({"portada": url, "grupos_encontrados": grupos, "grupo_ca1a": objetivo})
     registro["evidencias"].append(player.captura(
-        "CA1a", "player_cargado",
-        "CA1a · Player cargado (el CA requiere verificación de bricks en página editorial)"))
-    assert s["tiene_video"], "El player debe cargar correctamente"
+        "CA1a", "portada",
+        f"CA1a · Portada ALEM-DEV ?d=4764 · grupo longform+1 mayor: {objetivo}"))
+    assert objetivo is not None, (
+        "No se encontró en la portada un brick nota longform acompañado de exactamente "
+        f"1 brick nota de tamaño mayor. Grupos con longform relevados: {grupos}")
+    assert objetivo["verticales"] == 1 and objetivo["horizontales"] == 1, (
+        "El grupo longform + 1 brick nota mayor no muestra 1 imagen vertical y 1 horizontal "
+        f"como exige el CA: {objetivo}")
 
 
 # CA1b: Cuando se encuentra acompañando de 4 bricks notas, donde toma el formato 40%
@@ -208,18 +102,18 @@ def test_ca19_ca1a(player, registro):
 # Entonces la imagen debe mostrarse en formato vertical (40%)
 def test_ca19_ca1b(player, registro):
     """CA1b: el brick nota longform muestra imagen vertical (40%) cuando acompaña a 4 bricks nota."""
-    # TODO revisar: Similar a CA1a, requiere verificar comportamiento de bricks en
-    # contexto editorial. Los métodos de Player no exponen información sobre layout
-    # de bricks ni dimensiones de imágenes editoriales.
-    s = player.abrir()
-    registro["detalle"].update({
-        "video_inicial": s["video"],
-        "nota": "Este CA requiere verificar bricks nota en contexto editorial con 4 elementos",
-    })
+    url, grupos = _grupos_longform(player)
+    objetivo = next((g for g in grupos if g["total"] == 5 and g["cantLongform"] >= 1), None)
+    registro["detalle"].update({"portada": url, "grupos_encontrados": grupos, "grupo_ca1b": objetivo})
     registro["evidencias"].append(player.captura(
-        "CA1b", "player_cargado",
-        "CA1b · Player cargado (el CA requiere verificación de 4 bricks en página editorial)"))
-    assert s["tiene_video"], "El player debe cargar correctamente"
+        "CA1b", "portada",
+        f"CA1b · Portada ALEM-DEV ?d=4764 · grupo longform+4 bricks nota: {objetivo}"))
+    assert objetivo is not None, (
+        "No se encontró en la portada un brick nota longform acompañado de 4 bricks nota. "
+        f"Grupos con longform relevados: {grupos}")
+    assert objetivo["verticales"] == 1 and objetivo["horizontales"] == 4, (
+        "El grupo longform + 4 bricks nota no muestra 1 imagen vertical (40%) y 4 "
+        f"horizontales como exige el CA: {objetivo}")
 
 
 # CA2: Debe funcionar correctamente con max-true
@@ -228,43 +122,18 @@ def test_ca19_ca1b(player, registro):
 # Entonces debe funcionar correctamente mostrando el formato de imagen apropiado
 def test_ca19_ca2(player, registro):
     """CA2: el brick nota longform funciona correctamente con configuración max-true."""
-    # TODO revisar: Este CA requiere verificar configuración "max-true" en el contexto
-    # de bricks editoriales. Los métodos de Player no exponen esta configuración ni
-    # permiten verificar el comportamiento de bricks fuera del reproductor de videos.
+    # TODO revisar: no se encontró en la portada real (ni en customFields relevados vía
+    # Fusion.tree) un campo "max-true" asociado al brick nota longform -- no está claro a qué
+    # configuración puntual se refiere este CA dentro de PageBuilder. Pendiente de aclaración
+    # antes de poder automatizarlo contra la portada real.
     s = player.abrir()
     cfg = player.config()
     registro["detalle"].update({
         "video_inicial": s["video"],
         "config_disponible": list(cfg.keys()) if cfg else [],
-        "nota": "Este CA requiere verificar configuración max-true en bricks editoriales",
+        "nota": "Pendiente de aclaración: no se identificó el campo 'max-true' en PageBuilder",
     })
     registro["evidencias"].append(player.captura(
         "CA2", "player_con_config",
         f"CA2 · Player cargado · config keys: {list(cfg.keys()) if cfg else 'N/A'}"))
-    assert s["tiene_video"], "El player debe cargar correctamente"
-
-
-# CA3: Informar en el JSON cuando la imagen se muestra en formato horizontal o vertical
-# Dado el brick nota con estilo longform
-# Cuando se renderiza la imagen
-# Entonces el JSON debe informar si la imagen está en formato horizontal o vertical
-def test_ca19_ca3(player, registro):
-    """CA3: el JSON informa el formato (horizontal/vertical) de la imagen del brick nota longform."""
-    # TODO revisar: Este CA requiere inspeccionar el JSON de respuesta que alimenta
-    # los bricks editoriales. Los métodos de Player trabajan con videos en el reproductor,
-    # no con el JSON de configuración de bricks. Se necesitaría acceso al endpoint que
-    # devuelve la estructura de la nota/página para verificar la presencia de un campo
-    # que indique orientación de imagen.
-    s = player.abrir()
-    cfg = player.config()
-    registro["detalle"].update({
-        "video_inicial": s["video"],
-        "ancho_video": s.get("ancho_video"),
-        "alto_video": s.get("alto_video"),
-        "ratio_video": s.get("ratio"),
-        "nota": "Este CA requiere verificar JSON de bricks, no de videos del player",
-    })
-    registro["evidencias"].append(player.captura(
-        "CA3", "video_dimensiones",
-        f"CA3 · Video: {s['ancho_video']}x{s['alto_video']} ratio:{s.get('ratio')} (el CA requiere JSON de bricks)"))
     assert s["tiene_video"], "El player debe cargar correctamente"
