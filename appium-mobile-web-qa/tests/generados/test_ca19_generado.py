@@ -88,6 +88,53 @@ return salida;
 """
 
 
+# Cuarta pasada: cruza las dos anteriores en una sola consulta -- recorre Fusion.tree (para
+# saber estilo/tamaño configurado de cada brick nota, en orden) y mide el <img> del elemento
+# del DOM que ocupa la misma posición (document.querySelectorAll devuelve en orden de
+# aparición, igual que el recorrido del árbol) -- así cada hermano queda con su estilo/tamaño
+# Y su imagen medida en el mismo objeto, sin tener que asumir nada por separado. Se valida
+# además que ambos relevamientos encuentren la misma cantidad de bricks nota (si no coincide,
+# el cruce por posición no es confiable y se informa aparte).
+JS_RELEVAR_LONGFORM_COMBINADO = r"""
+const treeItems = [];
+function walk(nodo, padre) {
+  if (!nodo) return;
+  const cf = (nodo.props && nodo.props.customFields) || null;
+  if (cf && typeof cf.style === 'string' && /brick|nota/i.test(nodo.type || '')) {
+    treeItems.push({ padre, cf });
+  }
+  (nodo.children || []).forEach(h => walk(h, nodo));
+}
+walk((window.Fusion || {}).tree, null);
+const domEls = [...document.querySelectorAll('[class*="brick_nota" i]')];
+const combinados = treeItems.map((t, i) => {
+  const el = domEls[i];
+  const img = el ? el.querySelector('img, picture img') : null;
+  const rect = img ? img.getBoundingClientRect() : null;
+  const claveTam = Object.keys(t.cf).find(k => /tama|size/i.test(k));
+  return {
+    padre: t.padre,
+    estilo: t.cf.style,
+    tamanio: claveTam ? t.cf[claveTam] : null,
+    imgAncho: rect ? Math.round(rect.width) : null,
+    imgAlto: rect ? Math.round(rect.height) : null,
+  };
+});
+const grupos = new Map();
+combinados.forEach(c => {
+  if (!grupos.has(c.padre)) grupos.set(c.padre, []);
+  grupos.get(c.padre).push(c);
+});
+const salida = [];
+grupos.forEach((items) => {
+  if (!items.some(i => /longform/i.test(i.estilo || ''))) return;
+  salida.push({ total: items.length, items: items.map(({ padre, ...resto }) => resto) });
+});
+return { coinciden: treeItems.length === domEls.length, totalArbol: treeItems.length,
+         totalDom: domEls.length, grupos: salida };
+"""
+
+
 def test_ca19_diag_grupos(player, registro):
     """DIAGNÓSTICO: busca en Fusion.tree todos los grupos con un brick nota longform y el
     Tamaño configurado de cada hermano, para ubicar el caso CA1a (1 hermano "mayor")."""
@@ -100,6 +147,22 @@ def test_ca19_diag_grupos(player, registro):
     registro["evidencias"].append(player.captura(
         "CA19diag", "grupos", f"Portada ALEM-DEV ?d=4764 -- grupos longform: {info}"))
     print("INFO_GRUPOS_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
+    assert False, "DIAGNOSTICO (no es un fallo real)"
+
+
+def test_ca19_diag_combinado(player, registro):
+    """DIAGNÓSTICO: por cada grupo con un brick nota longform, cruza estilo/tamaño (árbol)
+    con la medida real de la imagen (DOM) de cada hermano, para confirmar la orientación
+    exacta del longform en el caso de 1 hermano mayor (CA1a) y de 4 hermanos (CA1b)."""
+    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
+    player._web()
+    player.d.get(url)
+    time.sleep(3)
+    info = player.d.execute_script(JS_RELEVAR_LONGFORM_COMBINADO)
+    registro["detalle"].update({"portada": url, "combinado": info})
+    registro["evidencias"].append(player.captura(
+        "CA19diag", "combinado", f"Portada ALEM-DEV ?d=4764 -- combinado: {info}"))
+    print("INFO_COMBINADO_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
     assert False, "DIAGNOSTICO (no es un fallo real)"
 
 
