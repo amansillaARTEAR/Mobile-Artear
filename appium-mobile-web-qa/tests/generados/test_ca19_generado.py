@@ -2,6 +2,7 @@
 # Ticket: TNARC-4368
 """Casos generados automáticamente a partir de un ticket de Jira, uno por cada criterio de aceptación (CA). REVISAR ANTES DE APROBAR EL PR."""
 
+import json
 import time
 
 # Los 4 CA de abajo (CA1a, CA1b, CA2, CA3) usan player.abrir(), que carga la página fija
@@ -55,7 +56,13 @@ def test_ca19_diag_portada(player, registro):
     registro["evidencias"].append(player.captura(
         "CA19diag", "portada", f"Portada ALEM-DEV ?d=4764 -- {info}"))
 
-    assert info is not None, "No se pudo ejecutar el script de relevamiento en la portada"
+    # No hay step que publique el reporte de WebMobile a una rama (a diferencia de App
+    # Nativa), así que la única forma confiable de leer este diagnóstico desde afuera del
+    # runner es el log de la corrida -- se imprime acá y se fuerza un fail para que el
+    # workflow lo saque como anotación de error (lo demás son recortes de pantalla que
+    # tampoco se publican a ningún lado). Sacar este print+assert al reescribir CA1a-CA3.
+    print("INFO_RELEVADA_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
+    assert False, "DIAGNÓSTICO: ver INFO_RELEVADA_CA19_DIAG en el log de la corrida (no es un fallo real)"
 
 
 # CA1a: Cuando se encuentra acompañado de 1 brick nota tamaño mayor
