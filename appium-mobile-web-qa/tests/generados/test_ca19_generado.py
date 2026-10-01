@@ -119,6 +119,48 @@ def _grupos_longform(player, criterio):
     return url, resultado["grupos"], resultado["enfocado"]
 
 
+# DIAGNÓSTICO temporal: las dos últimas corridas de CA1a/CA1b mostraron en la captura de
+# evidencia un aviso de cine ("Tom Cruise es Digger") tapando toda la pantalla, en vez del
+# brick longform -- el click de cierre no le pegó y el scroll pareció no moverse. Antes de
+# tocar JS_CERRAR_PUBLICIDAD / JS_ENFOCAR_GRUPO_LONGFORM a ciegas, se releva: si ese aviso es
+# un overlay fijo (sticky/interstitial, no se mueve con el scroll) o contenido normal del
+# feed; y si hay elementos que matchean el selector "brick_nota" que en realidad son
+# publicidad nativa (lo que rompería el cruce por posición con Fusion.tree).
+JS_DIAGNOSTICO_PUBLICIDAD = r"""
+const arts = [...document.querySelectorAll('[class*="brick_nota" i]')];
+const resumen = arts.map((el, i) => ({
+  i, tag: el.tagName, clases: [...el.classList].join(' '),
+  dataAttrs: Object.keys(el.dataset || {}).join(','),
+}));
+const posiblesAds = [...document.querySelectorAll('[class*="ad" i],[id*="ad" i],iframe')].slice(0, 15).map(el => {
+  const r = el.getBoundingClientRect();
+  return { tag: el.tagName, clases: [...el.classList].join(' '), id: el.id, src: el.src || null,
+           posicionCSS: getComputedStyle(el).position, top: Math.round(r.top), left: Math.round(r.left) };
+});
+return { totalBrickNota: arts.length, resumen, posiblesAds };
+"""
+
+
+def test_ca19_diag_publicidad(player, registro):
+    """DIAGNÓSTICO: releva si el aviso que tapa la pantalla es un overlay fijo y si hay
+    publicidad nativa matcheando el selector de brick_nota, antes de corregir el cierre."""
+    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
+    player._web()
+    player.d.get(url)
+    time.sleep(3)
+    registro["evidencias"].append(player.captura("CA19diag", "antes_de_cerrar", "Apenas carga, antes de intentar cerrar publicidad"))
+    info = player.d.execute_script(JS_DIAGNOSTICO_PUBLICIDAD)
+    cerrados = player.d.execute_script(JS_CERRAR_PUBLICIDAD)
+    time.sleep(1)
+    registro["evidencias"].append(player.captura("CA19diag", "tras_intentar_cerrar", f"Tras intentar cerrar publicidad (cerrados={cerrados})"))
+    player.d.execute_script("window.scrollBy(0, 1200);")
+    time.sleep(1)
+    registro["evidencias"].append(player.captura("CA19diag", "tras_scroll", "Tras hacer scroll 1200px hacia abajo"))
+    registro["detalle"].update({"portada": url, "info": info, "cerrados": cerrados})
+    print("INFO_PUBLICIDAD_CA19_DIAG=" + json.dumps(info, ensure_ascii=False)[:3000])
+    assert False, "DIAGNOSTICO (no es un fallo real)"
+
+
 # CA1a: Cuando se encuentra acompañado de 1 brick nota tamaño mayor
 # Dado un brick nota con estilo longform
 # Cuando se encuentra acompañado de 1 brick nota tamaño mayor
