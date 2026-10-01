@@ -22,35 +22,41 @@ import time
 # (como en helpers/player.py) y la salida es mínima: la lista de tipos de componente
 # brick/nota que hay en la página, más el nodo longform si lo encuentra. Se borra/
 # reemplaza una vez que se reescriban CA1a-CA3 con el fix real.
-JS_RELEVAR_BRICKS = r"""
-const todosTipos = new Set();
-let notaLongform = null;
-function recorrer(n, prof) {
-  if (!n || prof > 20) return;
-  if (n.type) todosTipos.add(n.type);
-  const cf = (n.props && n.props.customFields) || {};
-  if (!notaLongform && (/longform/i.test(n.type || '') || /longform/i.test(JSON.stringify(cf)))) {
-    notaLongform = { type: n.type || null, name: n.name || null, customFields: cf };
-  }
-  for (const c of (n.children || [])) recorrer(c, prof + 1);
-}
-try { recorrer((window.Fusion || {}).tree, 0); } catch (e) {}
-return {
-  totalTipos: todosTipos.size,
-  tiposBrickONota: [...todosTipos].filter(t => /brick|nota/i.test(t)),
-  notaLongformEncontrado: notaLongform,
-};
+# Segunda pasada del diagnóstico: ya sabemos (ver JS_RELEVAR_BRICKS más abajo, usado en la
+# corrida anterior) que el componente es "global/BrickNota" con customFields.style ==
+# "nota_longform" -- pero esos datos no dicen nada sobre la orientación de la imagen
+# renderizada ni sobre cuántos bricks nota lo acompañan, que es lo que de verdad define la
+# regla del ticket (horizontal por defecto, vertical con 1 brick nota mayor al lado, 40%
+# con 4 bricks notas). Esta pasada mide eso directo en el DOM: por cada elemento con clase
+# "brick_nota", el tamaño real de su <img> (para clasificar horizontal/vertical por su
+# propio aspect ratio, sin depender de adivinar el nombre de una clase CSS) y cuántos
+# hermanos brick_nota hay en su mismo contenedor.
+JS_RELEVAR_ORIENTACION = r"""
+const arts = [...document.querySelectorAll('[class*="brick_nota" i]')];
+const resumen = arts.slice(0, 8).map(el => {
+  const img = el.querySelector('img, picture img');
+  const rect = img ? img.getBoundingClientRect() : null;
+  const cont = el.parentElement;
+  const hermanos = cont ? cont.querySelectorAll(':scope > [class*="brick_nota" i]').length : null;
+  return {
+    clases: [...el.classList].join(' '),
+    imgAncho: rect ? Math.round(rect.width) : null,
+    imgAlto: rect ? Math.round(rect.height) : null,
+    hermanosEnContenedor: hermanos,
+  };
+});
+return { totalEncontrados: arts.length, resumen };
 """
 
 
 def test_ca19_diag_portada(player, registro):
-    """DIAGNÓSTICO: releva el tipo de componente y customFields del brick nota longform
-    en la portada real (ALEM-DEV ?d=4764), antes de reescribir CA1a-CA3 contra esa página."""
+    """DIAGNÓSTICO: releva orientación de imagen y hermanos de cada brick nota en la
+    portada real (ALEM-DEV ?d=4764), antes de reescribir CA1a-CA3 contra esa página."""
     url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
-    info = player.d.execute_script(JS_RELEVAR_BRICKS)
+    info = player.d.execute_script(JS_RELEVAR_ORIENTACION)
     registro["detalle"].update({"portada": url, "info_relevada": info})
     registro["evidencias"].append(player.captura(
         "CA19diag", "portada", f"Portada ALEM-DEV ?d=4764 -- {info}"))
