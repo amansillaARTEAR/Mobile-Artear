@@ -24,6 +24,11 @@ on:
         required: false
         type: string
         default: ""
+      portada:
+        description: "Opcional: página/portada a validar (ej: ALEM-DEV, o la ruta completa de una nota). Si se deja vacío, cada test usa su propia URL por defecto."
+        required: false
+        type: string
+        default: ""
 
 env:
   PYTHONUNBUFFERED: "1"
@@ -57,16 +62,38 @@ jobs:
           }
           $ruta = "/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/"
           if ($ambiente -eq "sbx") {
-            $tnUrl = "https://$dominio$ruta"
+            $tnUrl = "https://${dominio}${ruta}"
           } else {
             if (-not $version) {
               Write-Host "::error::El ambiente '$ambiente' necesita el input 'version' (ej: 721)"
               exit 1
             }
-            $tnUrl = "https://$dominio$ruta?d=$version"
+            # OJO: "$ruta?d" sin llaves hace que PowerShell intente resolver una variable
+            # literal llamada "ruta?d" (no existe, da vacío) en vez de cortar el nombre en el
+            # "?" -- hay que usar ${ruta} para delimitar el nombre explícitamente antes de
+            # cualquier "?" u otro caracter pegado (ver mismo bug ya corregido en webmobile.yml).
+            $tnUrl = "https://${dominio}${ruta}?d=${version}"
           }
           Write-Host "Ambiente: $ambiente -> TN_URL: $tnUrl"
           echo "TN_URL=$tnUrl" >> $env:GITHUB_ENV
+
+          # Portada a validar (CA19 y los que vengan de portada/nota, no del player) -- mismo
+          # armado que en webmobile.yml, para que config.PORTADA_URL funcione igual en iOS.
+          $portada = "${{ inputs.portada }}"
+          if ($portada) {
+            if ($portada -match '^https?://') {
+              $tnPortada = $portada
+            } else {
+              $rutaPortada = "/" + $portada.Trim('/') + "/"
+              if ($ambiente -eq "sbx") {
+                $tnPortada = "https://${dominio}${rutaPortada}"
+              } else {
+                $tnPortada = "https://${dominio}${rutaPortada}?d=${version}"
+              }
+            }
+            Write-Host "Portada: $tnPortada"
+            echo "TN_PORTADA=$tnPortada" >> $env:GITHUB_ENV
+          }
 
       - name: Correr suite contra el endpoint de AWS Device Farm
         shell: powershell
