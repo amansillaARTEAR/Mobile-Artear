@@ -9,60 +9,53 @@ import time
 # de test del PLAYER de shorts/videos (config.URL) -- pero este ticket es sobre bricks
 # nota en una PORTADA/nota editorial, que el player no puede verificar (ver el TODO en
 # cada test). La portada real para probar esto es
-# https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764 (dato del usuario).
+# https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764 (dato del usuario, confirmó
+# que el brick nota longform debería estar visible ahí).
 #
 # DIAGNÓSTICO temporal: antes de reescribir los 4 CA contra esa portada hace falta ver
-# cómo se arman los bricks nota longform ahí (clases CSS, o el árbol de PageBuilder vía
-# window.Fusion.tree) para poder escribir selectores/asserts reales. Este test no verifica
-# ningún CA todavía -- solo junta esa info como evidencia. Se borra/reemplaza una vez que
-# se reescriban CA1a-CA3 con el fix real.
+# cómo se arma el brick nota longform ahí (tipo de componente y customFields en el árbol
+# de PageBuilder, window.Fusion.tree) para poder escribir selectores/asserts reales. El
+# primer intento (ver historial) devolvía demasiado texto y la anotación de error de
+# GitHub Actions (tope ~4KB) lo cortaba antes de llegar a lo útil -- también el JS vivía
+# inline en el test, y pytest muestra el source completo de la función en el traceback,
+# comiéndose la mayor parte del presupuesto. Por eso ahora el JS es una constante aparte
+# (como en helpers/player.py) y la salida es mínima: la lista de tipos de componente
+# brick/nota que hay en la página, más el nodo longform si lo encuentra. Se borra/
+# reemplaza una vez que se reescriban CA1a-CA3 con el fix real.
+JS_RELEVAR_BRICKS = r"""
+const todosTipos = new Set();
+let notaLongform = null;
+function recorrer(n, prof) {
+  if (!n || prof > 20) return;
+  if (n.type) todosTipos.add(n.type);
+  const cf = (n.props && n.props.customFields) || {};
+  if (!notaLongform && (/longform/i.test(n.type || '') || /longform/i.test(JSON.stringify(cf)))) {
+    notaLongform = { type: n.type || null, name: n.name || null, customFields: cf };
+  }
+  for (const c of (n.children || [])) recorrer(c, prof + 1);
+}
+try { recorrer((window.Fusion || {}).tree, 0); } catch (e) {}
+return {
+  totalTipos: todosTipos.size,
+  tiposBrickONota: [...todosTipos].filter(t => /brick|nota/i.test(t)),
+  notaLongformEncontrado: notaLongform,
+};
+"""
+
+
 def test_ca19_diag_portada(player, registro):
-    """DIAGNÓSTICO: inspecciona la portada real (ALEM-DEV ?d=4764) para relevar cómo se
-    arman los bricks nota longform, antes de reescribir CA1a-CA3 contra esa página."""
+    """DIAGNÓSTICO: releva el tipo de componente y customFields del brick nota longform
+    en la portada real (ALEM-DEV ?d=4764), antes de reescribir CA1a-CA3 contra esa página."""
     url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
-
-    info = player.d.execute_script("""
-        const bricks = [...document.querySelectorAll('[class*="brick" i]')];
-        const clasesBrick = [...new Set(bricks.flatMap(b => [...b.classList]))]
-          .filter(c => /brick|longform|nota|vertical|horizontal/i.test(c));
-
-        function buscarEnArbol(n, encontrados, profundidad) {
-          if (!n || profundidad > 12 || encontrados.length >= 15) return;
-          const etiqueta = ((n.type || '') + ' ' + (n.name || ''));
-          if (/brick|longform|nota/i.test(etiqueta)) {
-            encontrados.push({
-              type: n.type || null,
-              name: n.name || null,
-              customFields: (n.props && n.props.customFields) || null,
-            });
-          }
-          for (const c of (n.children || [])) buscarEnArbol(c, encontrados, profundidad + 1);
-        }
-        const encontradosEnArbol = [];
-        try { buscarEnArbol((window.Fusion || {}).tree, encontradosEnArbol, 0); } catch (e) {}
-
-        return {
-          titulo: document.title,
-          totalElementosConClaseBrick: bricks.length,
-          clasesRelevantes: clasesBrick,
-          fusionDisponible: !!window.Fusion,
-          nodosDelArbolConBrickONota: encontradosEnArbol,
-        };
-    """)
+    info = player.d.execute_script(JS_RELEVAR_BRICKS)
     registro["detalle"].update({"portada": url, "info_relevada": info})
     registro["evidencias"].append(player.captura(
         "CA19diag", "portada", f"Portada ALEM-DEV ?d=4764 -- {info}"))
-
-    # No hay step que publique el reporte de WebMobile a una rama (a diferencia de App
-    # Nativa), así que la única forma confiable de leer este diagnóstico desde afuera del
-    # runner es el log de la corrida -- se imprime acá y se fuerza un fail para que el
-    # workflow lo saque como anotación de error (lo demás son recortes de pantalla que
-    # tampoco se publican a ningún lado). Sacar este print+assert al reescribir CA1a-CA3.
     print("INFO_RELEVADA_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
-    assert False, "DIAGNÓSTICO: ver INFO_RELEVADA_CA19_DIAG en el log de la corrida (no es un fallo real)"
+    assert False, "DIAGNOSTICO (no es un fallo real)"
 
 
 # CA1a: Cuando se encuentra acompañado de 1 brick nota tamaño mayor
