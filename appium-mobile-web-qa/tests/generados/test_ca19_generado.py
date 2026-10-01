@@ -5,6 +5,8 @@
 import json
 import time
 
+from selenium.webdriver.common.by import By
+
 # Este ticket es sobre el brick nota con estilo "longform" en una PORTADA/nota editorial
 # (no sobre el player de shorts/videos), así que CA1a/CA1b navegan directo a la portada real
 # donde el usuario confirmó que el brick longform está configurado:
@@ -29,17 +31,30 @@ import time
 # (banner superior, interstitial, sticky) -- el ad block tiene que estar deshabilitado para
 # validar (ver notas del proyecto), pero una vez que la publicidad ya se vio/registró no debe
 # quedar tapando la captura de evidencia de un CA que no tiene nada que ver con ella.
+#
+# Diagnosticado contra la portada real: el ad del header ("parent-ad-slot-header") es
+# position:sticky (top:0) -- por eso tapaba la pantalla sin importar el scroll -- y su botón
+# de cierre no vive en el documento principal sino DENTRO de un iframe del servidor de
+# anuncios, así que hay que entrar a cada iframe (cerrar_publicidad en player, más abajo) y
+# buscar ahí también. Por eso este JS ya no exige que el botón esté "dentro de un contenedor
+# con pinta de ad" (adentro del iframe, todo lo que hay ES el ad): alcanza con que el texto o
+# el nombre de clase/id sugieran cierre Y que el elemento sea chico (un botón de cerrar nunca
+# es un bloque grande de la página).
 JS_CERRAR_PUBLICIDAD = r"""
-const patronCierre = /^(x|×|cerrar|close|skip ad|omitir)$/i;
-const candidatos = [...document.querySelectorAll('button, a, div[role="button"], span[role="button"]')]
+const patronTexto = /^(x|×|cerrar|close|skip ad|omitir)$/i;
+const patronClase = /close|cerrar/i;
+const candidatos = [...document.querySelectorAll('button, a, div, span, i, svg')]
   .filter(el => el.offsetParent);
 let cerrados = 0;
 candidatos.forEach(el => {
   const texto = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('title') || '').trim();
-  const dentroDeAd = !!el.closest('[class*="ad-" i],[class*="-ad" i],[id*="ad-" i],[class*="sticky" i],[class*="interstitial" i],[class*="advert" i],[class*="gpt" i],[class*="dfp" i]');
-  if (patronCierre.test(texto) && dentroDeAd) {
-    try { el.click(); cerrados++; } catch (e) {}
-  }
+  const claseCruda = el.className && el.className.baseVal !== undefined ? el.className.baseVal : (el.className || '');
+  const clasesId = `${claseCruda} ${el.id || ''}`;
+  const pareceCierre = patronTexto.test(texto) || patronClase.test(clasesId);
+  if (!pareceCierre) return;
+  const r = el.getBoundingClientRect();
+  const esChico = r.width > 0 && r.width < 80 && r.height > 0 && r.height < 80;
+  if (esChico) { try { el.click(); cerrados++; } catch (e) {} }
 });
 return cerrados;
 """
@@ -104,17 +119,40 @@ return { enfocado, grupos: listaGrupos.map(g => ({
 """
 
 
+def _cerrar_publicidad(player):
+    """Busca un botón de cierre tanto en el documento principal como adentro de cada
+    iframe (los avisos de este sitio renderizan su botón de cerrar dentro del iframe del
+    servidor de anuncios, no en la página -- ver comentario de JS_CERRAR_PUBLICIDAD)."""
+    cerrados = player.d.execute_script(JS_CERRAR_PUBLICIDAD) or 0
+    try:
+        iframes = player.d.find_elements(By.TAG_NAME, "iframe")
+    except Exception:
+        iframes = []
+    for iframe in iframes:
+        try:
+            player.d.switch_to.frame(iframe)
+            cerrados += player.d.execute_script(JS_CERRAR_PUBLICIDAD) or 0
+        except Exception:
+            pass
+        finally:
+            try:
+                player.d.switch_to.default_content()
+            except Exception:
+                pass
+    return cerrados
+
+
 def _grupos_longform(player, criterio):
     url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
-    player.d.execute_script(JS_CERRAR_PUBLICIDAD)
+    if _cerrar_publicidad(player):
+        time.sleep(1)
     resultado = player.d.execute_script(JS_ENFOCAR_GRUPO_LONGFORM, criterio)
     if resultado["enfocado"]:
         time.sleep(1)  # deja asentar el scroll antes de capturar
-    cerrados_tras_scroll = player.d.execute_script(JS_CERRAR_PUBLICIDAD)
-    if cerrados_tras_scroll:
+    if _cerrar_publicidad(player):
         time.sleep(1)
     return url, resultado["grupos"], resultado["enfocado"]
 
@@ -150,7 +188,7 @@ def test_ca19_diag_publicidad(player, registro):
     time.sleep(3)
     registro["evidencias"].append(player.captura("CA19diag", "antes_de_cerrar", "Apenas carga, antes de intentar cerrar publicidad"))
     info = player.d.execute_script(JS_DIAGNOSTICO_PUBLICIDAD)
-    cerrados = player.d.execute_script(JS_CERRAR_PUBLICIDAD)
+    cerrados = _cerrar_publicidad(player)
     time.sleep(1)
     registro["evidencias"].append(player.captura("CA19diag", "tras_intentar_cerrar", f"Tras intentar cerrar publicidad (cerrados={cerrados})"))
     player.d.execute_script("window.scrollBy(0, 1200);")
