@@ -48,6 +48,60 @@ const resumen = arts.slice(0, 8).map(el => {
 return { totalEncontrados: arts.length, resumen };
 """
 
+# Tercera pasada: en vez de adivinar por DOM, se recorre directo el árbol de PageBuilder
+# (window.Fusion.tree, la fuente de verdad de qué Tamaño se configuró para cada Brick Nota
+# -- "Nota mayor", etc., ver customFields) buscando TODOS los grupos (mismo contenedor
+# padre) que tengan al menos un hijo con estilo "nota_longform". Por cada grupo así,
+# se informa cuántos Brick Nota hermanos tiene y el Tamaño configurado de cada uno --
+# esto ubica directo el caso CA1a (longform + exactamente 1 hermano con Tamaño "mayor")
+# sin depender de medir imágenes ni adivinar clases CSS.
+JS_RELEVAR_GRUPOS_LONGFORM = r"""
+const encontrados = [];
+function walk(nodo, padre) {
+  if (!nodo) return;
+  const cf = (nodo.props && nodo.props.customFields) || null;
+  if (cf && typeof cf.style === 'string' && /brick|nota/i.test(nodo.type || '')) {
+    encontrados.push({ nodo, padre, cf });
+  }
+  (nodo.children || []).forEach(h => walk(h, nodo));
+}
+walk((window.Fusion || {}).tree, null);
+const grupos = new Map();
+encontrados.forEach(e => {
+  if (!grupos.has(e.padre)) grupos.set(e.padre, []);
+  grupos.get(e.padre).push(e);
+});
+const salida = [];
+grupos.forEach((items) => {
+  const esLongform = items.some(i => /longform/i.test(i.cf.style || ''));
+  if (!esLongform) return;
+  salida.push({
+    total: items.length,
+    items: items.map(i => {
+      const cf = i.cf;
+      const claveTam = Object.keys(cf).find(k => /tama|size/i.test(k));
+      return { estilo: cf.style, tamanio: claveTam ? cf[claveTam] : null };
+    }),
+  });
+});
+return salida;
+"""
+
+
+def test_ca19_diag_grupos(player, registro):
+    """DIAGNÓSTICO: busca en Fusion.tree todos los grupos con un brick nota longform y el
+    Tamaño configurado de cada hermano, para ubicar el caso CA1a (1 hermano "mayor")."""
+    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
+    player._web()
+    player.d.get(url)
+    time.sleep(3)
+    info = player.d.execute_script(JS_RELEVAR_GRUPOS_LONGFORM)
+    registro["detalle"].update({"portada": url, "grupos_longform": info})
+    registro["evidencias"].append(player.captura(
+        "CA19diag", "grupos", f"Portada ALEM-DEV ?d=4764 -- grupos longform: {info}"))
+    print("INFO_GRUPOS_CA19_DIAG=" + json.dumps(info, ensure_ascii=False))
+    assert False, "DIAGNOSTICO (no es un fallo real)"
+
 
 def test_ca19_diag_portada(player, registro):
     """DIAGNÓSTICO: releva orientación de imagen y hermanos de cada brick nota en la
