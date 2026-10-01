@@ -24,6 +24,9 @@ on:
 env:
   PYTHONUNBUFFERED: "1"
 
+permissions:
+  contents: write
+
 jobs:
   correr-suite:
     runs-on: [self-hosted, windows]
@@ -123,3 +126,72 @@ jobs:
           path: appium-mobile-web-qa/resultados/android/
           retention-days: 30
           if-no-files-found: error
+
+      - name: Publicar reporte (rama reportes-webmobile-android)
+        if: always()
+        shell: powershell
+        working-directory: ${{ github.workspace }}
+        run: |
+          # Mismo patrón que app-nativa.yml: sin esto, la única forma de ver el reporte o las
+          # capturas de una corrida de WebMobile es el artifact de Actions (descarga por Azure
+          # Blob, bloqueada para el agente) -- publicando en una rama queda accesible también
+          # vía la API de contenidos de GitHub (que sí está permitida).
+          $ErrorActionPreference = "Continue"
+
+          $ultimaCorrida = Get-ChildItem "appium-mobile-web-qa\resultados\android\corridas" -Directory -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime | Select-Object -Last 1
+          if (-not $ultimaCorrida -or -not (Test-Path (Join-Path $ultimaCorrida.FullName "reporte.html"))) {
+            Write-Host "No hay reporte.html para publicar (la corrida no llegó a generarlo)."
+            exit 0
+          }
+
+          $rama = "reportes-webmobile-android"
+          $raizReportes = "reportes/webmobile/android"
+          $raizRuns = "$raizReportes/runs"
+          $maxCorridasGuardadas = 10
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin $rama 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            git checkout -B $rama "origin/$rama"
+          } else {
+            git checkout --orphan $rama
+            git rm -rf . --quiet 2>$null
+          }
+
+          $destino = "$raizRuns/${{ github.run_id }}"
+          New-Item -ItemType Directory -Path $destino -Force | Out-Null
+          Copy-Item (Join-Path $ultimaCorrida.FullName "reporte.html") $destino
+          $evidencias = Join-Path $ultimaCorrida.FullName "evidencias"
+          if (Test-Path $evidencias) {
+            Copy-Item $evidencias (Join-Path $destino "evidencias") -Recurse
+          }
+
+          try {
+            $resultadosJson = Get-Content (Join-Path $ultimaCorrida.FullName "resultados.json") -Raw -ErrorAction Stop | ConvertFrom-Json
+            @{ ambiente = "${{ inputs.ambiente }}"; version = "${{ inputs.version }}"; filtro = "${{ inputs.filtro }}" } |
+              ConvertTo-Json -Compress | Set-Content (Join-Path $destino "meta.json") -Encoding utf8
+          } catch {
+            Write-Host "No se pudo armar meta.json (no es grave): $($_.Exception.Message)"
+          }
+
+          if (Test-Path $raizRuns) {
+            $carpetas = Get-ChildItem $raizRuns -Directory | Sort-Object { [int64]$_.Name } -Descending
+            $carpetas | Select-Object -Skip $maxCorridasGuardadas | ForEach-Object {
+              git rm -rf --quiet -- "$raizRuns/$($_.Name)" 2>$null
+            }
+          }
+
+          git add -A -- $raizReportes
+          $huboCambios = (git status --porcelain) -ne $null
+          if ($huboCambios) {
+            git commit -m "Reporte WebMobile Android - run ${{ github.run_id }}" | Out-Null
+            git push origin $rama --force
+            Write-Host "Reporte publicado en la rama $rama"
+          } else {
+            Write-Host "El reporte no cambió, nada que publicar"
+          }
+
+          git checkout main
