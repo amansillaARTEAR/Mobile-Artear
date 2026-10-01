@@ -4,7 +4,7 @@
 
 # CA1: Un mismo contenido no debe mostrarse en los dos tabs del player.
 # Dado que el player está abierto y carga videos de ambas colecciones
-# Cuando se navega por todos los videos de "Lo importante" y "Tenés que ver"
+# Cuando se navega por todos los videos de "Lo importante" y "Lo último"
 # Entonces ningún ID de video debe aparecer en ambos tabs
 def test_ca20_ca1(player, registro):
     """CA1: verifica que no hay videos duplicados entre los dos tabs del player."""
@@ -25,8 +25,8 @@ def test_ca20_ca1(player, registro):
     
     registro["evidencias"].append(player.captura("CA20_CA1", "2_fin_importante", f"Fin de Lo importante: {len(importante_ids)} videos"))
     
-    # Cambiar a "Tenés que ver"
-    player.pestana("Tenés que ver")
+    # Cambiar a "Lo último"
+    player.pestana("Lo último")
     s = player.snap()
     ultimo_ids = [s["video"]]
     for _ in range(50):
@@ -45,7 +45,7 @@ def test_ca20_ca1(player, registro):
     })
     registro["evidencias"].append(player.captura(
         "CA20_CA1", "3_fin_ultimo", 
-        f"Fin de Tenés que ver: {len(ultimo_ids)} videos · Duplicados encontrados: {len(duplicados)}"))
+        f"Fin de Lo último: {len(ultimo_ids)} videos · Duplicados encontrados: {len(duplicados)}"))
     
     assert len(duplicados) == 0, f"Se encontraron {len(duplicados)} videos duplicados entre tabs: {list(duplicados)}"
 
@@ -77,7 +77,7 @@ def test_ca20_ca2(player, registro):
         if s["video"] not in importante_mostrados:
             importante_mostrados.append(s["video"])
     
-    player.pestana("Tenés que ver")
+    player.pestana("Lo último")
     s = player.snap()
     ultimo_mostrados = [s["video"]]
     for _ in range(50):
@@ -118,8 +118,8 @@ def test_ca20_ca3(player, registro):
     url_compartida = s["url"]
     registro["evidencias"].append(player.captura("CA20_CA3", "1_video_original", f"Video a compartir: {video_compartido}"))
     
-    # Verificar si este video está en "Tenés que ver"
-    player.pestana("Tenés que ver")
+    # Verificar si este video está en "Lo último"
+    player.pestana("Lo último")
     s = player.snap()
     encontrado_en_ultimo = False
     ultimo_ids = [s["video"]]
@@ -142,7 +142,7 @@ def test_ca20_ca3(player, registro):
     })
     registro["evidencias"].append(player.captura(
         "CA20_CA3", "2_verificacion",
-        f"Video {video_compartido} · Duplicado en Tenés que ver: {encontrado_en_ultimo}"))
+        f"Video {video_compartido} · Duplicado en Lo último: {encontrado_en_ultimo}"))
     
     assert not encontrado_en_ultimo, f"El video {video_compartido} aparece en ambos tabs al compartir por URL"
 
@@ -164,13 +164,13 @@ def test_ca20_ca4(player, registro):
     tab_importante = s["tab"]
     registro["evidencias"].append(player.captura("CA20_CA4", "1_video_importante", f"Video en Lo importante: {video_importante}"))
     
-    # Cambiar a "Tenés que ver" y capturar otro video
-    player.pestana("Tenés que ver")
+    # Cambiar a "Lo último" y capturar otro video
+    player.pestana("Lo último")
     s = player.snap()
     video_ultimo = s["video"]
     url_ultimo = s["url"]
     tab_ultimo = s["tab"]
-    registro["evidencias"].append(player.captura("CA20_CA4", "2_video_ultimo", f"Video en Tenés que ver: {video_ultimo}"))
+    registro["evidencias"].append(player.captura("CA20_CA4", "2_video_ultimo", f"Video en Lo último: {video_ultimo}"))
     
     # TODO revisar: No hay método para abrir una URL específica y verificar el tab de destino
     # Se asume que player.url_actual() y la presencia de "/importante/" o "/ultimo/" en la URL
@@ -229,8 +229,8 @@ def test_ca20_ca5(player, registro):
     
     duplicados_en_importante = duplicados & set(importante_mostrados)
     
-    # Verificar que NO están en "Tenés que ver"
-    player.pestana("Tenés que ver")
+    # Verificar que NO están en "Lo último"
+    player.pestana("Lo último")
     s = player.snap()
     ultimo_mostrados = [s["video"]]
     for _ in range(50):
@@ -251,11 +251,11 @@ def test_ca20_ca5(player, registro):
     registro["evidencias"].append(player.captura(
         "CA20_CA5", "verificacion_tab",
         f"Duplicados en colecciones: {len(duplicados)} · mostrados en Lo importante: "
-        f"{len(duplicados_en_importante)} · mostrados en Tenés que ver: {len(duplicados_en_ultimo)}"))
+        f"{len(duplicados_en_importante)} · mostrados en Lo último: {len(duplicados_en_ultimo)}"))
 
     assert duplicados <= set(importante_mostrados), (
         "No todos los contenidos duplicados entre colecciones se muestran en 'Lo importante': "
         f"faltan {duplicados - duplicados_en_importante}")
     assert len(duplicados_en_ultimo) == 0, (
-        "Contenidos duplicados también aparecen en 'Tenés que ver' (deberían quedar solo en "
+        "Contenidos duplicados también aparecen en 'Lo último' (deberían quedar solo en "
         f"'Lo importante'): {list(duplicados_en_ultimo)}")
