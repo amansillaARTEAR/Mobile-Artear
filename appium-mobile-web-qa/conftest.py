@@ -91,21 +91,6 @@ def registro(request):
 
 
 # ---------------------------------------------------------------- reporte HTML
-def _valor(v):
-    if isinstance(v, (dict, list)):
-        return "<pre style='margin:0;white-space:pre-wrap'>" + html.escape(
-            json.dumps(v, ensure_ascii=False, indent=2)) + "</pre>"
-    return html.escape(str(v))
-
-
-def _tabla_detalle(datos):
-    # El nombre/descripción del caso ya se muestra en la columna "Caso de prueba" de la
-    # tabla de resultados (ver pytest_html_results_table_row) -- no hace falta repetirlo acá.
-    filas = "".join(
-        f"<tr><td style='padding:4px 8px;border:1px solid #ddd;font-weight:bold;vertical-align:top;color:#333'>"
-        f"{html.escape(str(k))}</td><td style='padding:4px 8px;border:1px solid #ddd;color:#333'>{_valor(v)}</td></tr>"
-        for k, v in datos.get("detalle", {}).items())
-    return f"<table style='border-collapse:collapse;margin-bottom:8px;font-size:12px'>{filas}</table>"
 
 
 def _galeria(datos):
@@ -134,7 +119,10 @@ def pytest_runtest_makereport(item, call):
             d["error"] = str(rep.longrepr)[-1500:]
         if html_extras is not None:
             extras = getattr(rep, "extras", [])
-            extras.append(html_extras.html(_tabla_detalle(d) + _galeria(d)))
+            # Antes se agregaba _tabla_detalle(d) (una tabla cruda key/value, ej.
+            # "tooltip_inicial_visible | True") -- es la misma info que ya está en el
+            # caption de cada captura de la galería, solo que repetida en formato técnico.
+            extras.append(html_extras.html(_galeria(d)))
             rep.extras = extras
 
 
