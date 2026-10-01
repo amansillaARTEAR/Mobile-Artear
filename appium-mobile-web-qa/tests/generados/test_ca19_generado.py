@@ -6,14 +6,6 @@ import time
 
 import config
 
-
-def test_ca19_diag_portada_url(registro):
-    """DIAGNÓSTICO temporal: confirma qué valor exacto llegó a config.PORTADA_URL desde el
-    input "portada" del workflow -- las últimas corridas con ese input fallaron con
-    ERR_NAME_NOT_RESOLVED al navegar, aunque la URL debería ser idéntica a la hardcodeada."""
-    registro["detalle"]["portada_url_repr"] = repr(config.PORTADA_URL)
-    assert False, f"DIAGNOSTICO: config.PORTADA_URL = {config.PORTADA_URL!r}"
-
 # Este ticket es sobre el brick nota con estilo "longform" en una PORTADA/nota editorial
 # (no sobre el player de shorts/videos), así que CA1a/CA1b navegan directo a la portada real
 # donde el usuario confirmó que el brick longform está configurado:
