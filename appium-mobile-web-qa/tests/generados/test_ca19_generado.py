@@ -2,6 +2,62 @@
 # Ticket: TNARC-4368
 """Casos generados automáticamente a partir de un ticket de Jira, uno por cada criterio de aceptación (CA). REVISAR ANTES DE APROBAR EL PR."""
 
+import time
+
+# Los 4 CA de abajo (CA1a, CA1b, CA2, CA3) usan player.abrir(), que carga la página fija
+# de test del PLAYER de shorts/videos (config.URL) -- pero este ticket es sobre bricks
+# nota en una PORTADA/nota editorial, que el player no puede verificar (ver el TODO en
+# cada test). La portada real para probar esto es
+# https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764 (dato del usuario).
+#
+# DIAGNÓSTICO temporal: antes de reescribir los 4 CA contra esa portada hace falta ver
+# cómo se arman los bricks nota longform ahí (clases CSS, o el árbol de PageBuilder vía
+# window.Fusion.tree) para poder escribir selectores/asserts reales. Este test no verifica
+# ningún CA todavía -- solo junta esa info como evidencia. Se borra/reemplaza una vez que
+# se reescriban CA1a-CA3 con el fix real.
+def test_ca19_diag_portada(player, registro):
+    """DIAGNÓSTICO: inspecciona la portada real (ALEM-DEV ?d=4764) para relevar cómo se
+    arman los bricks nota longform, antes de reescribir CA1a-CA3 contra esa página."""
+    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
+    player._web()
+    player.d.get(url)
+    time.sleep(3)
+
+    info = player.d.execute_script("""
+        const bricks = [...document.querySelectorAll('[class*="brick" i]')];
+        const clasesBrick = [...new Set(bricks.flatMap(b => [...b.classList]))]
+          .filter(c => /brick|longform|nota|vertical|horizontal/i.test(c));
+
+        function buscarEnArbol(n, encontrados, profundidad) {
+          if (!n || profundidad > 12 || encontrados.length >= 15) return;
+          const etiqueta = ((n.type || '') + ' ' + (n.name || ''));
+          if (/brick|longform|nota/i.test(etiqueta)) {
+            encontrados.push({
+              type: n.type || null,
+              name: n.name || null,
+              customFields: (n.props && n.props.customFields) || null,
+            });
+          }
+          for (const c of (n.children || [])) buscarEnArbol(c, encontrados, profundidad + 1);
+        }
+        const encontradosEnArbol = [];
+        try { buscarEnArbol((window.Fusion || {}).tree, encontradosEnArbol, 0); } catch (e) {}
+
+        return {
+          titulo: document.title,
+          totalElementosConClaseBrick: bricks.length,
+          clasesRelevantes: clasesBrick,
+          fusionDisponible: !!window.Fusion,
+          nodosDelArbolConBrickONota: encontradosEnArbol,
+        };
+    """)
+    registro["detalle"].update({"portada": url, "info_relevada": info})
+    registro["evidencias"].append(player.captura(
+        "CA19diag", "portada", f"Portada ALEM-DEV ?d=4764 -- {info}"))
+
+    assert info is not None, "No se pudo ejecutar el script de relevamiento en la portada"
+
+
 # CA1a: Cuando se encuentra acompañado de 1 brick nota tamaño mayor
 # Dado un brick nota con estilo longform
 # Cuando se encuentra acompañado de 1 brick nota tamaño mayor
