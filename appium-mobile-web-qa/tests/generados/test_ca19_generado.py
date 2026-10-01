@@ -119,10 +119,33 @@ return { enfocado, grupos: listaGrupos.map(g => ({
 """
 
 
+# Último recurso si el cierre por DOM/iframe no alcanzó: mide el contenedor del ad sticky
+# del header (la publicidad que tapaba la evidencia, ver diagnóstico) y, si sigue ocupando
+# pantalla, se le hace un toque NATIVO (coordenadas reales de pantalla, no del DOM) en su
+# esquina superior derecha -- ahí es donde este sitio pone el botón "X", visible en todas
+# las capturas de diagnóstico, aunque esté adentro de un iframe anidado que no se pudo
+# recorrer por JS (ej. un SafeFrame de Google Ads). getBoundingClientRect da píxeles CSS;
+# se multiplica por devicePixelRatio porque los toques de Appium son en píxeles de pantalla.
+JS_MEDIR_AD_HEADER = r"""
+const selectores = ['#parent-ad-slot-header', '.header_ad', '[id*="ad-slot-header" i]'];
+for (const sel of selectores) {
+  const el = document.querySelector(sel);
+  if (!el) continue;
+  const r = el.getBoundingClientRect();
+  if (r.height > 20 && r.width > 20) {
+    return { top: r.top, right: r.right, width: r.width, height: r.height, dpr: window.devicePixelRatio || 1 };
+  }
+}
+return null;
+"""
+
+
 def _cerrar_publicidad(player):
     """Busca un botón de cierre tanto en el documento principal como adentro de cada
     iframe (los avisos de este sitio renderizan su botón de cerrar dentro del iframe del
-    servidor de anuncios, no en la página -- ver comentario de JS_CERRAR_PUBLICIDAD)."""
+    servidor de anuncios, no en la página -- ver comentario de JS_CERRAR_PUBLICIDAD). Si
+    después de eso el ad sticky del header sigue ocupando pantalla, hace un toque nativo
+    en su esquina superior derecha (ver JS_MEDIR_AD_HEADER)."""
     cerrados = player.d.execute_script(JS_CERRAR_PUBLICIDAD) or 0
     try:
         iframes = player.d.find_elements(By.TAG_NAME, "iframe")
@@ -139,6 +162,19 @@ def _cerrar_publicidad(player):
                 player.d.switch_to.default_content()
             except Exception:
                 pass
+    for _ in range(2):
+        info = player.d.execute_script(JS_MEDIR_AD_HEADER)
+        if not info:
+            break
+        dpr = info["dpr"] or 1
+        x = (info["right"] - 35) * dpr
+        y = (info["top"] + 35) * dpr
+        try:
+            player.d.execute_script("mobile: clickGesture", {"x": x, "y": y})
+            cerrados += 1
+            time.sleep(1)
+        except Exception:
+            break
     return cerrados
 
 
