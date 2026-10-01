@@ -63,16 +63,14 @@ def test_ca02_ca1(app, registro):
 # Cuando el usuario hace scroll en la pantalla
 # Entonces el tooltip debe mantenerse visible hasta que interactúe y luego desaparecer con efecto
 def test_ca02_ca2(app, registro):
-    """CA2: verifica que el tooltip se mantiene visible hasta que el usuario interactúa
-    haciendo scroll, y que al hacerlo desaparece con efecto.
-
-    Diagnóstico previo: sin tocar nada, el tooltip permanece visible indefinidamente
-    (confirmado a los 0/2/4/6/9s sin scroll ni interacción -- no hay auto-dismiss por
-    tiempo). Los dos intentos anteriores de este test fallaban porque asumían que el
-    tooltip debía seguir visible INMEDIATAMENTE después del scroll, y que recién se
-    cerraba con una interacción aparte -- pero la propia CA dice "interactuar CON EL
-    SCROLL": el scroll ES la interacción que lo cierra. Por eso alcanza con un scroll
-    simple, sin necesidad de calcular una zona que lo evite."""
+    """CA2: verifica que el tooltip se mantiene visible hasta que el usuario interactúa con el scroll y desaparece con efecto."""
+    # Diagnóstico previo (ver historial del archivo): sin tocar nada, el tooltip permanece
+    # visible indefinidamente (confirmado a los 0/2/4/6/9s sin scroll ni interacción -- no
+    # hay auto-dismiss por tiempo). Los dos intentos anteriores de este test fallaban porque
+    # asumían que el tooltip debía seguir visible INMEDIATAMENTE después del scroll, y que
+    # recién se cerraba con una interacción aparte -- pero la propia CA dice "interactuar
+    # CON EL SCROLL": el scroll ES la interacción que lo cierra. Por eso alcanza con un
+    # scroll simple, sin necesidad de calcular una zona que lo evite.
     app.reiniciar_limpio()
     time.sleep(2)
 

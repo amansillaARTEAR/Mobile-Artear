@@ -165,6 +165,10 @@ _CSS_JS_REPORTE = """
 <style>
   #environment-header, #environment { display: none !important; }
   .summary .filter, .summary .controls .filters { display: none !important; }
+  /* El log de stdout/stderr que arma pytest-html por caso (siempre dice "No log output
+     captured." porque no logueamos nada) no aporta nada -- la evidencia real (capturas +
+     detalle) va aparte, en el extraHTML de al lado, que sí se deja ver. */
+  .logwrapper { display: none !important; }
 </style>
 <script>
 (function () {
