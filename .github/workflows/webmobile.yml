@@ -115,6 +115,7 @@ jobs:
               $tnPortada = if ($ambiente -eq "sbx") { "https://$dominio$rutaPortada" } else { "https://$dominio$rutaPortada?d=$version" }
             }
             Write-Host "Portada: $tnPortada"
+            Write-Host "::error::DIAGNOSTICO tnPortada=[$tnPortada] rutaPortada=[$rutaPortada] dominio=[$dominio] version=[$version]"
             echo "TN_PORTADA=$tnPortada" >> $env:GITHUB_ENV
           }
 
