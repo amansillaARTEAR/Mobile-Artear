@@ -2,10 +2,7 @@
 # Ticket: TNARC-4368
 """Casos generados automáticamente a partir de un ticket de Jira, uno por cada criterio de aceptación (CA). REVISAR ANTES DE APROBAR EL PR."""
 
-import json
 import time
-
-from selenium.webdriver.common.by import By
 
 # Este ticket es sobre el brick nota con estilo "longform" en una PORTADA/nota editorial
 # (no sobre el player de shorts/videos), así que CA1a/CA1b navegan directo a la portada real
@@ -22,49 +19,13 @@ from selenium.webdriver.common.by import By
 # y se cruza cada grupo con la medida real del <img> de cada hermano en el DOM (mismo orden
 # de aparición). Diagnosticado contra la portada real: el grupo de 2 (longform + 1 "nota
 # mayor") da sistemáticamente 1 imagen vertical (~314x558) + 1 horizontal (~314x177); el
-# grupo de 5 (longform + 4 bricks nota) da 1 vertical + 4 horizontales. La asamblea evita
+# grupo de 5 (longform + 4 bricks nota) da 1 vertical + 4 horizontales. La validación evita
 # atribuir la imagen a un hermano puntual (en grupos grandes el cruce por posición no es
 # confiable) y en cambio valida por grupo: cuántos son longform, cuántos tienen tamaño
 # "mayor", y cuántas imágenes del grupo son verticales/horizontales.
 #
-# Antes de medir/capturar se intenta cerrar cualquier publicidad con botón de cierre visible
-# (banner superior, interstitial, sticky) -- el ad block tiene que estar deshabilitado para
-# validar (ver notas del proyecto), pero una vez que la publicidad ya se vio/registró no debe
-# quedar tapando la captura de evidencia de un CA que no tiene nada que ver con ella.
-#
-# Diagnosticado contra la portada real: el ad del header ("parent-ad-slot-header") es
-# position:sticky (top:0) -- por eso tapaba la pantalla sin importar el scroll -- y su botón
-# de cierre no vive en el documento principal sino DENTRO de un iframe del servidor de
-# anuncios, así que hay que entrar a cada iframe (cerrar_publicidad en player, más abajo) y
-# buscar ahí también. Por eso este JS ya no exige que el botón esté "dentro de un contenedor
-# con pinta de ad" (adentro del iframe, todo lo que hay ES el ad): alcanza con que el texto o
-# el nombre de clase/id sugieran cierre Y que el elemento sea chico (un botón de cerrar nunca
-# es un bloque grande de la página).
-JS_CERRAR_PUBLICIDAD = r"""
-const patronTexto = /^(x|×|cerrar|close|skip ad|omitir)$/i;
-const patronClase = /close|cerrar/i;
-const candidatos = [...document.querySelectorAll('button, a, div, span, i, svg')]
-  .filter(el => el.offsetParent);
-let cerrados = 0;
-candidatos.forEach(el => {
-  const texto = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('title') || '').trim();
-  const claseCruda = el.className && el.className.baseVal !== undefined ? el.className.baseVal : (el.className || '');
-  const clasesId = `${claseCruda} ${el.id || ''}`;
-  const pareceCierre = patronTexto.test(texto) || patronClase.test(clasesId);
-  if (!pareceCierre) return;
-  const r = el.getBoundingClientRect();
-  const esChico = r.width > 0 && r.width < 80 && r.height > 0 && r.height < 80;
-  if (esChico) { try { el.click(); cerrados++; } catch (e) {} }
-});
-return cerrados;
-"""
-
-
-# La función recibe un criterio (total esperado, y si exige al menos 1 hermano "mayor") y,
-# si encuentra el grupo buscado, hace scrollIntoView sobre su primer elemento ANTES de
-# devolver el resultado -- la captura de evidencia se toma después de este scroll, para que
-# muestre el brick longform y sus hermanos en vez de lo que haya al tope de la portada
-# (normalmente un banner de publicidad, que no tiene nada que ver con este CA).
+# La captura de evidencia hace scrollIntoView sobre el grupo encontrado antes de capturar,
+# para que muestre el brick longform en vez de lo que haya al tope de la portada.
 JS_ENFOCAR_GRUPO_LONGFORM = r"""
 const criterio = arguments[0];
 const treeItems = [];
@@ -119,127 +80,15 @@ return { enfocado, grupos: listaGrupos.map(g => ({
 """
 
 
-# Último recurso si el cierre por DOM/iframe no alcanzó: mide el contenedor del ad sticky
-# del header (la publicidad que tapaba la evidencia, ver diagnóstico) y, si sigue ocupando
-# pantalla, se le hace un toque NATIVO (coordenadas reales de pantalla, no del DOM) en su
-# esquina superior derecha -- ahí es donde este sitio pone el botón "X", visible en todas
-# las capturas de diagnóstico, aunque esté adentro de un iframe anidado que no se pudo
-# recorrer por JS (ej. un SafeFrame de Google Ads). getBoundingClientRect da píxeles CSS;
-# se multiplica por devicePixelRatio porque los toques de Appium son en píxeles de pantalla.
-JS_MEDIR_AD_HEADER = r"""
-const selectores = ['#parent-ad-slot-header', '.header_ad', '[id*="ad-slot-header" i]'];
-for (const sel of selectores) {
-  const el = document.querySelector(sel);
-  if (!el) continue;
-  const r = el.getBoundingClientRect();
-  if (r.height > 20 && r.width > 20) {
-    return { top: r.top, right: r.right, width: r.width, height: r.height, dpr: window.devicePixelRatio || 1 };
-  }
-}
-return null;
-"""
-
-
-def _cerrar_publicidad(player):
-    """Busca un botón de cierre tanto en el documento principal como adentro de cada
-    iframe (los avisos de este sitio renderizan su botón de cerrar dentro del iframe del
-    servidor de anuncios, no en la página -- ver comentario de JS_CERRAR_PUBLICIDAD). Si
-    después de eso el ad sticky del header sigue ocupando pantalla, hace un toque nativo
-    en su esquina superior derecha (ver JS_MEDIR_AD_HEADER)."""
-    cerrados = player.d.execute_script(JS_CERRAR_PUBLICIDAD) or 0
-    try:
-        iframes = player.d.find_elements(By.TAG_NAME, "iframe")
-    except Exception:
-        iframes = []
-    for iframe in iframes:
-        try:
-            player.d.switch_to.frame(iframe)
-            cerrados += player.d.execute_script(JS_CERRAR_PUBLICIDAD) or 0
-        except Exception:
-            pass
-        finally:
-            try:
-                player.d.switch_to.default_content()
-            except Exception:
-                pass
-    # El cálculo de coordenadas a partir de getBoundingClientRect (arriba) no acertó -- el
-    # botón "X" no está pegado al borde superior del contenedor como se asumía, hay
-    # contenido arriba dentro del mismo ad. Medido directo sobre varias capturas reales
-    # (1080x2340, mismo dispositivo del runner): el botón "X" del ad sticky del header
-    # queda siempre en (944, 339) en píxeles de pantalla. Se usa ese punto fijo en vez de
-    # seguir intentando derivarlo del DOM, y solo se toca si JS_MEDIR_AD_HEADER confirma
-    # que el ad sigue presente (para no tocar contenido real por error si no hay ad).
-    PUNTO_CIERRE_AD_HEADER = (944, 339)
-    for _ in range(2):
-        info = player.d.execute_script(JS_MEDIR_AD_HEADER)
-        if not info:
-            break
-        try:
-            player.d.execute_script(
-                "mobile: clickGesture",
-                {"x": PUNTO_CIERRE_AD_HEADER[0], "y": PUNTO_CIERRE_AD_HEADER[1]})
-            cerrados += 1
-            time.sleep(1)
-        except Exception:
-            break
-    return cerrados
-
-
 def _grupos_longform(player, criterio):
     url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
-    if _cerrar_publicidad(player):
-        time.sleep(1)
     resultado = player.d.execute_script(JS_ENFOCAR_GRUPO_LONGFORM, criterio)
     if resultado["enfocado"]:
         time.sleep(1)  # deja asentar el scroll antes de capturar
-    if _cerrar_publicidad(player):
-        time.sleep(1)
     return url, resultado["grupos"], resultado["enfocado"]
-
-
-# DIAGNÓSTICO temporal: las dos últimas corridas de CA1a/CA1b mostraron en la captura de
-# evidencia un aviso de cine ("Tom Cruise es Digger") tapando toda la pantalla, en vez del
-# brick longform -- el click de cierre no le pegó y el scroll pareció no moverse. Antes de
-# tocar JS_CERRAR_PUBLICIDAD / JS_ENFOCAR_GRUPO_LONGFORM a ciegas, se releva: si ese aviso es
-# un overlay fijo (sticky/interstitial, no se mueve con el scroll) o contenido normal del
-# feed; y si hay elementos que matchean el selector "brick_nota" que en realidad son
-# publicidad nativa (lo que rompería el cruce por posición con Fusion.tree).
-JS_DIAGNOSTICO_PUBLICIDAD = r"""
-const arts = [...document.querySelectorAll('[class*="brick_nota" i]')];
-const resumen = arts.map((el, i) => ({
-  i, tag: el.tagName, clases: [...el.classList].join(' '),
-  dataAttrs: Object.keys(el.dataset || {}).join(','),
-}));
-const posiblesAds = [...document.querySelectorAll('[class*="ad" i],[id*="ad" i],iframe')].slice(0, 15).map(el => {
-  const r = el.getBoundingClientRect();
-  return { tag: el.tagName, clases: [...el.classList].join(' '), id: el.id, src: el.src || null,
-           posicionCSS: getComputedStyle(el).position, top: Math.round(r.top), left: Math.round(r.left) };
-});
-return { totalBrickNota: arts.length, resumen, posiblesAds };
-"""
-
-
-def test_ca19_diag_publicidad(player, registro):
-    """DIAGNÓSTICO: releva si el aviso que tapa la pantalla es un overlay fijo y si hay
-    publicidad nativa matcheando el selector de brick_nota, antes de corregir el cierre."""
-    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
-    player._web()
-    player.d.get(url)
-    time.sleep(3)
-    registro["evidencias"].append(player.captura("CA19diag", "antes_de_cerrar", "Apenas carga, antes de intentar cerrar publicidad"))
-    info = player.d.execute_script(JS_DIAGNOSTICO_PUBLICIDAD)
-    cerrados = _cerrar_publicidad(player)
-    time.sleep(1)
-    registro["evidencias"].append(player.captura("CA19diag", "tras_intentar_cerrar", f"Tras intentar cerrar publicidad (cerrados={cerrados})"))
-    player.d.execute_script("window.scrollBy(0, 1200);")
-    time.sleep(1)
-    registro["evidencias"].append(player.captura("CA19diag", "tras_scroll", "Tras hacer scroll 1200px hacia abajo"))
-    registro["detalle"].update({"portada": url, "info": info, "cerrados": cerrados})
-    print("INFO_PUBLICIDAD_CA19_DIAG=" + json.dumps(info, ensure_ascii=False)[:3000])
-    assert False, "DIAGNOSTICO (no es un fallo real)"
 
 
 # CA1a: Cuando se encuentra acompañado de 1 brick nota tamaño mayor
