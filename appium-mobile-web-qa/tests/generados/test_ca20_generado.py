@@ -232,4 +232,30 @@ def test_ca20_ca5(player, registro):
     # Verificar que NO están en "Tenés que ver"
     player.pestana("Tenés que ver")
     s = player.snap()
-    ultimo_mostrados = [s["
+    ultimo_mostrados = [s["video"]]
+    for _ in range(50):
+        s = player.swipe()
+        if s["fin"]:
+            break
+        if s["video"] not in ultimo_mostrados:
+            ultimo_mostrados.append(s["video"])
+
+    duplicados_en_ultimo = duplicados & set(ultimo_mostrados)
+
+    registro["detalle"].update({
+        "duplicados_en_colecciones": list(duplicados),
+        "duplicados_en_lo_importante": list(duplicados_en_importante),
+        "duplicados_en_tenes_que_ver": list(duplicados_en_ultimo),
+        "se_mantienen_en_lo_importante": duplicados <= duplicados_en_importante,
+    })
+    registro["evidencias"].append(player.captura(
+        "CA20_CA5", "verificacion_tab",
+        f"Duplicados en colecciones: {len(duplicados)} · mostrados en Lo importante: "
+        f"{len(duplicados_en_importante)} · mostrados en Tenés que ver: {len(duplicados_en_ultimo)}"))
+
+    assert duplicados <= set(importante_mostrados), (
+        "No todos los contenidos duplicados entre colecciones se muestran en 'Lo importante': "
+        f"faltan {duplicados - duplicados_en_importante}")
+    assert len(duplicados_en_ultimo) == 0, (
+        "Contenidos duplicados también aparecen en 'Tenés que ver' (deberían quedar solo en "
+        f"'Lo importante'): {list(duplicados_en_ultimo)}")
