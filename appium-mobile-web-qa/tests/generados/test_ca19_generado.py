@@ -24,7 +24,34 @@ import time
 # atribuir la imagen a un hermano puntual (en grupos grandes el cruce por posición no es
 # confiable) y en cambio valida por grupo: cuántos son longform, cuántos tienen tamaño
 # "mayor", y cuántas imágenes del grupo son verticales/horizontales.
-JS_GRUPOS_BRICK_LONGFORM = r"""
+#
+# Antes de medir/capturar se intenta cerrar cualquier publicidad con botón de cierre visible
+# (banner superior, interstitial, sticky) -- el ad block tiene que estar deshabilitado para
+# validar (ver notas del proyecto), pero una vez que la publicidad ya se vio/registró no debe
+# quedar tapando la captura de evidencia de un CA que no tiene nada que ver con ella.
+JS_CERRAR_PUBLICIDAD = r"""
+const patronCierre = /^(x|×|cerrar|close|skip ad|omitir)$/i;
+const candidatos = [...document.querySelectorAll('button, a, div[role="button"], span[role="button"]')]
+  .filter(el => el.offsetParent);
+let cerrados = 0;
+candidatos.forEach(el => {
+  const texto = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('title') || '').trim();
+  const dentroDeAd = !!el.closest('[class*="ad-" i],[class*="-ad" i],[id*="ad-" i],[class*="sticky" i],[class*="interstitial" i],[class*="advert" i],[class*="gpt" i],[class*="dfp" i]');
+  if (patronCierre.test(texto) && dentroDeAd) {
+    try { el.click(); cerrados++; } catch (e) {}
+  }
+});
+return cerrados;
+"""
+
+
+# La función recibe un criterio (total esperado, y si exige al menos 1 hermano "mayor") y,
+# si encuentra el grupo buscado, hace scrollIntoView sobre su primer elemento ANTES de
+# devolver el resultado -- la captura de evidencia se toma después de este scroll, para que
+# muestre el brick longform y sus hermanos en vez de lo que haya al tope de la portada
+# (normalmente un banner de publicidad, que no tiene nada que ver con este CA).
+JS_ENFOCAR_GRUPO_LONGFORM = r"""
+const criterio = arguments[0];
 const treeItems = [];
 function walk(nodo, padre) {
   if (!nodo) return;
@@ -42,7 +69,7 @@ const combinados = treeItems.map((t, i) => {
   const rect = img ? img.getBoundingClientRect() : null;
   const claveTam = Object.keys(t.cf).find(k => /tama|size/i.test(k));
   return {
-    padre: t.padre,
+    padre: t.padre, el,
     estilo: t.cf.style,
     tamanio: claveTam ? t.cf[claveTam] : null,
     imgAncho: rect ? Math.round(rect.width) : null,
@@ -54,26 +81,42 @@ combinados.forEach(c => {
   if (!grupos.has(c.padre)) grupos.set(c.padre, []);
   grupos.get(c.padre).push(c);
 });
-const salida = [];
+const listaGrupos = [];
 grupos.forEach((items) => {
   const cantLongform = items.filter(i => /longform/i.test(i.estilo || '')).length;
   if (cantLongform < 1) return;
   const verticales = items.filter(i => i.imgAlto != null && i.imgAncho != null && i.imgAlto > i.imgAncho).length;
   const horizontales = items.filter(i => i.imgAlto != null && i.imgAncho != null && i.imgAncho >= i.imgAlto).length;
   const cantMayor = items.filter(i => /mayor/i.test(i.tamanio || '')).length;
-  salida.push({ total: items.length, cantLongform, cantMayor, verticales, horizontales,
-                items: items.map(({ padre, ...resto }) => resto) });
+  listaGrupos.push({ total: items.length, cantLongform, cantMayor, verticales, horizontales, items });
 });
-return salida;
+const objetivo = listaGrupos.find(g => g.total === criterio.total && g.cantLongform >= 1
+  && (!criterio.requiereMayor || g.cantMayor >= 1));
+let enfocado = false;
+if (objetivo) {
+  const el = objetivo.items[0].el;
+  if (el && el.scrollIntoView) { el.scrollIntoView({ block: 'center', inline: 'center' }); enfocado = true; }
+}
+return { enfocado, grupos: listaGrupos.map(g => ({
+  total: g.total, cantLongform: g.cantLongform, cantMayor: g.cantMayor,
+  verticales: g.verticales, horizontales: g.horizontales,
+  items: g.items.map(({ padre, el, ...resto }) => resto) })) };
 """
 
 
-def _grupos_longform(player):
+def _grupos_longform(player, criterio):
     url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
-    return url, player.d.execute_script(JS_GRUPOS_BRICK_LONGFORM)
+    player.d.execute_script(JS_CERRAR_PUBLICIDAD)
+    resultado = player.d.execute_script(JS_ENFOCAR_GRUPO_LONGFORM, criterio)
+    if resultado["enfocado"]:
+        time.sleep(1)  # deja asentar el scroll antes de capturar
+    cerrados_tras_scroll = player.d.execute_script(JS_CERRAR_PUBLICIDAD)
+    if cerrados_tras_scroll:
+        time.sleep(1)
+    return url, resultado["grupos"], resultado["enfocado"]
 
 
 # CA1a: Cuando se encuentra acompañado de 1 brick nota tamaño mayor
@@ -82,12 +125,12 @@ def _grupos_longform(player):
 # Entonces la imagen debe mostrarse en formato vertical
 def test_ca19_ca1a(player, registro):
     """CA1a: el brick nota longform muestra imagen vertical cuando acompaña a 1 brick nota mayor."""
-    url, grupos = _grupos_longform(player)
+    url, grupos, enfocado = _grupos_longform(player, {"total": 2, "requiereMayor": True})
     objetivo = next((g for g in grupos if g["total"] == 2 and g["cantLongform"] >= 1 and g["cantMayor"] >= 1), None)
     registro["detalle"].update({"portada": url, "grupos_encontrados": grupos, "grupo_ca1a": objetivo})
     registro["evidencias"].append(player.captura(
         "CA1a", "portada",
-        f"CA1a · Portada ALEM-DEV ?d=4764 · grupo longform+1 mayor: {objetivo}"))
+        f"CA1a · Portada ALEM-DEV ?d=4764 · grupo longform+1 mayor (scroll al grupo: {enfocado}): {objetivo}"))
     assert objetivo is not None, (
         "No se encontró en la portada un brick nota longform acompañado de exactamente "
         f"1 brick nota de tamaño mayor. Grupos con longform relevados: {grupos}")
@@ -102,12 +145,12 @@ def test_ca19_ca1a(player, registro):
 # Entonces la imagen debe mostrarse en formato vertical (40%)
 def test_ca19_ca1b(player, registro):
     """CA1b: el brick nota longform muestra imagen vertical (40%) cuando acompaña a 4 bricks nota."""
-    url, grupos = _grupos_longform(player)
+    url, grupos, enfocado = _grupos_longform(player, {"total": 5, "requiereMayor": False})
     objetivo = next((g for g in grupos if g["total"] == 5 and g["cantLongform"] >= 1), None)
     registro["detalle"].update({"portada": url, "grupos_encontrados": grupos, "grupo_ca1b": objetivo})
     registro["evidencias"].append(player.captura(
         "CA1b", "portada",
-        f"CA1b · Portada ALEM-DEV ?d=4764 · grupo longform+4 bricks nota: {objetivo}"))
+        f"CA1b · Portada ALEM-DEV ?d=4764 · grupo longform+4 bricks nota (scroll al grupo: {enfocado}): {objetivo}"))
     assert objetivo is not None, (
         "No se encontró en la portada un brick nota longform acompañado de 4 bricks nota. "
         f"Grupos con longform relevados: {grupos}")
