@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">Reporte - TNARC-4366 (Android)</title>
+      <link href="assets\style.css" rel="stylesheet" type="text/css"/>
+  </head>
+  <body>
+    <h1 id="title">Reporte - TNARC-4366 (Android)</h1>
+    <p>Report generated on 01-Oct-2026 at 18:04:46 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.2.0</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</td>
+        </tr>
+      </tbody>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left">&lt;</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">&gt;</div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+          
+<style>
+  #environment-header, #environment { display: none !important; }
+  .summary .filter, .summary .controls .filters { display: none !important; }
+  /* El log de stdout/stderr que arma pytest-html por caso (siempre dice "No log output
+     captured." porque no logueamos nada) no aporta nada -- la evidencia real (capturas +
+     detalle) va aparte, en el extraHTML de al lado, que sí se deja ver. */
+  .logwrapper { display: none !important; }
+</style>
+<script>
+(function () {
+  function relabel(root) {
+    (root || document).querySelectorAll('td.col-result').forEach(function (td) {
+      if (td.textContent.trim() === 'Passed') { td.textContent = 'OK'; }
+    });
+  }
+  relabel();
+  var target = document.getElementById('results-table') || document.body;
+  new MutationObserver(function (mutations) {
+    mutations.forEach(function (m) {
+      m.addedNodes.forEach(function (n) { if (n.nodeType === 1) relabel(n); });
+    });
+  }).observe(target, { childList: true, subtree: true });
+
+  var pSubtitulo = document.querySelector('body > p');
+  if (pSubtitulo) {
+    var m = pSubtitulo.textContent.match(/Report generated on (.+?) at (.+?) by/);
+    if (m) { pSubtitulo.textContent = 'Generado el ' + m[1] + ' a las ' + m[2]; }
+  }
+
+  var h2Resumen = document.querySelector('.summary__data > h2');
+  if (h2Resumen && h2Resumen.textContent.trim() === 'Summary') {
+    h2Resumen.textContent = 'Resumen';
+  }
+})();
+</script>
+
+        </div>
+        <p class="run-count">5 tests took 00:09:57.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" >
+            <span class="failed">5 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" disabled>
+            <span class="passed">0 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled>
+            <span class="rerun">0 Reruns</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="retried" disabled>
+            <span class="retried">0 Retried,</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+        
+<script>
+(function () {
+  var mostrar = document.getElementById('show_all_details');
+  if (mostrar) mostrar.textContent = 'Mostrar detalles';
+  var ocultar = document.getElementById('hide_all_details');
+  if (ocultar) ocultar.textContent = 'Ocultar detalles';
+})();
+</script>
+
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th>Caso de prueba</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {}, &#34;tests&#34;: {&#34;tests/generados/test_ca20_generado.py::test_ca20_ca1&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA1_1_inicio.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA1_1_inicio.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Inicio en Lo importante: videolab-collection-8&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA1_2_fin_importante.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA1_2_fin_importante.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Fin de Lo importante: 9 videos&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA1_3_fin_ultimo.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA1_3_fin_ultimo.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Fin de Lo \u00faltimo: 35 videos \u00b7 Duplicados encontrados: 9&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Failed&#34;, &#34;duration&#34;: &#34;00:02:40&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-name\&#34;&gt;CA1: verifica que no hay videos duplicados entre los dos tabs del player.&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:02:40&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;player = &amp;lt;helpers.player.Player object at 0x0000000004FF5160&amp;gt;\nregistro = {&amp;#x27;detalle&amp;#x27;: {&amp;#x27;videos_lo_importante&amp;#x27;: 9, &amp;#x27;videos_tenes_que_ver&amp;#x27;: 35, &amp;#x27;duplicados&amp;#x27;: [&amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-...}, {&amp;#x27;archivo&amp;#x27;: &amp;#x27;CA20_CA1_3_fin_ultimo.png&amp;#x27;, &amp;#x27;descripcion&amp;#x27;: &amp;#x27;Fin de Lo \u00faltimo: 35 videos \u00b7 Duplicados encontrados: 9&amp;#x27;}]}\n\n    def test_ca20_ca1(player, registro):\n        &amp;quot;&amp;quot;&amp;quot;CA1: verifica que no hay videos duplicados entre los dos tabs del player.&amp;quot;&amp;quot;&amp;quot;\n        s = player.abrir()\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA20_CA1&amp;quot;, &amp;quot;1_inicio&amp;quot;, f&amp;quot;Inicio en {s[&amp;#x27;tab&amp;#x27;]}: {s[&amp;#x27;video&amp;#x27;]}&amp;quot;))\n    \n        # Recolectar IDs de &amp;quot;Lo importante&amp;quot;\n        if s[&amp;quot;tab&amp;quot;] != &amp;quot;Lo importante&amp;quot;:\n            player.pestana(&amp;quot;Lo importante&amp;quot;)\n            s = player.snap()\n        importante_ids = [s[&amp;quot;video&amp;quot;]]\n        for _ in range(50):\n            s = player.swipe()\n            if s[&amp;quot;fin&amp;quot;]:\n                break\n            if s[&amp;quot;video&amp;quot;] not in importante_ids:\n                importante_ids.append(s[&amp;quot;video&amp;quot;])\n    \n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA20_CA1&amp;quot;, &amp;quot;2_fin_importante&amp;quot;, f&amp;quot;Fin de Lo importante: {len(importante_ids)} videos&amp;quot;))\n    \n        # Cambiar a &amp;quot;Lo \u00faltimo&amp;quot;\n        player.pestana(&amp;quot;Lo \u00faltimo&amp;quot;)\n        s = player.snap()\n        ultimo_ids = [s[&amp;quot;video&amp;quot;]]\n        for _ in range(50):\n            s = player.swipe()\n            if s[&amp;quot;fin&amp;quot;]:\n                break\n            if s[&amp;quot;video&amp;quot;] not in ultimo_ids:\n                ultimo_ids.append(s[&amp;quot;video&amp;quot;])\n    \n        duplicados = set(importante_ids) &amp;amp; set(ultimo_ids)\n        registro[&amp;quot;detalle&amp;quot;].update({\n            &amp;quot;videos_lo_importante&amp;quot;: len(importante_ids),\n            &amp;quot;videos_tenes_que_ver&amp;quot;: len(ultimo_ids),\n            &amp;quot;duplicados&amp;quot;: list(duplicados),\n            &amp;quot;cantidad_duplicados&amp;quot;: len(duplicados),\n        })\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(\n            &amp;quot;CA20_CA1&amp;quot;, &amp;quot;3_fin_ultimo&amp;quot;,\n            f&amp;quot;Fin de Lo \u00faltimo: {len(ultimo_ids)} videos \u00b7 Duplicados encontrados: {len(duplicados)}&amp;quot;))\n    \n&amp;gt;       assert len(duplicados) == 0, f&amp;quot;Se encontraron {len(duplicados)} videos duplicados entre tabs: {list(duplicados)}&amp;quot;\nE       AssertionError: Se encontraron 9 videos duplicados entre tabs: [&amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-collection-6&amp;#x27;, &amp;#x27;videolab-collection-3&amp;#x27;, &amp;#x27;videolab-collection-7&amp;#x27;, &amp;#x27;videolab-collection-2&amp;#x27;, &amp;#x27;videolab-collection-5&amp;#x27;, &amp;#x27;videolab-collection-8&amp;#x27;, &amp;#x27;un-avion-turco-bien-argentino&amp;#x27;, &amp;#x27;videolab-collection-4&amp;#x27;]\nE       assert 9 == 0\nE        +  where 9 = len({&amp;#x27;un-avion-turco-bien-argentino&amp;#x27;, &amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-collection-2&amp;#x27;, &amp;#x27;videolab-collection-3&amp;#x27;, &amp;#x27;videolab-collection-4&amp;#x27;, &amp;#x27;videolab-collection-5&amp;#x27;, ...})\n\ntests\\generados\\test_ca20_generado.py:50: AssertionError\n&#34;}], &#34;tests/generados/test_ca20_generado.py::test_ca20_ca2&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA2_verificacion_ids.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA2_verificacion_ids.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Duplicados en colecciones: 9 \u00b7 En player: 9&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Failed&#34;, &#34;duration&#34;: &#34;00:02:33&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-name\&#34;&gt;CA2: verifica que la comparaci\u00f3n de duplicados se realiza por ID \u00fanico del contenido.&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:02:33&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;player = &amp;lt;helpers.player.Player object at 0x0000000004FF5160&amp;gt;\nregistro = {&amp;#x27;detalle&amp;#x27;: {&amp;#x27;duplicados_en_colecciones_originales&amp;#x27;: [&amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-collection-6&amp;#x27;, &amp;#x27;videolab-coll...dencias&amp;#x27;: [{&amp;#x27;archivo&amp;#x27;: &amp;#x27;CA20_CA2_verificacion_ids.png&amp;#x27;, &amp;#x27;descripcion&amp;#x27;: &amp;#x27;Duplicados en colecciones: 9 \u00b7 En player: 9&amp;#x27;}]}\n\n    def test_ca20_ca2(player, registro):\n        &amp;quot;&amp;quot;&amp;quot;CA2: verifica que la comparaci\u00f3n de duplicados se realiza por ID \u00fanico del contenido.&amp;quot;&amp;quot;&amp;quot;\n        s = player.abrir()\n        col_importante = player.coleccion(&amp;quot;id_importante&amp;quot;)\n        col_ultimo = player.coleccion(&amp;quot;id_ultimo&amp;quot;)\n    \n        # Extraer IDs de las colecciones originales\n        ids_importante = [c[&amp;quot;slug&amp;quot;] for c in col_importante]\n        ids_ultimo = [c[&amp;quot;slug&amp;quot;] for c in col_ultimo]\n        duplicados_en_colecciones = set(ids_importante) &amp;amp; set(ids_ultimo)\n    \n        # Verificar que en el player no aparecen duplicados\n        if s[&amp;quot;tab&amp;quot;] != &amp;quot;Lo importante&amp;quot;:\n            player.pestana(&amp;quot;Lo importante&amp;quot;)\n            s = player.snap()\n        importante_mostrados = [s[&amp;quot;video&amp;quot;]]\n        for _ in range(50):\n            s = player.swipe()\n            if s[&amp;quot;fin&amp;quot;]:\n                break\n            if s[&amp;quot;video&amp;quot;] not in importante_mostrados:\n                importante_mostrados.append(s[&amp;quot;video&amp;quot;])\n    \n        player.pestana(&amp;quot;Lo \u00faltimo&amp;quot;)\n        s = player.snap()\n        ultimo_mostrados = [s[&amp;quot;video&amp;quot;]]\n        for _ in range(50):\n            s = player.swipe()\n            if s[&amp;quot;fin&amp;quot;]:\n                break\n            if s[&amp;quot;video&amp;quot;] not in ultimo_mostrados:\n                ultimo_mostrados.append(s[&amp;quot;video&amp;quot;])\n    \n        duplicados_en_player = set(importante_mostrados) &amp;amp; set(ultimo_mostrados)\n    \n        registro[&amp;quot;detalle&amp;quot;].update({\n            &amp;quot;duplicados_en_colecciones_originales&amp;quot;: list(duplicados_en_colecciones),\n            &amp;quot;cantidad_duplicados_colecciones&amp;quot;: len(duplicados_en_colecciones),\n            &amp;quot;duplicados_en_player&amp;quot;: list(duplicados_en_player),\n            &amp;quot;filtrado_correcto&amp;quot;: len(duplicados_en_colecciones) &amp;gt; 0 and len(duplicados_en_player) == 0,\n        })\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(\n            &amp;quot;CA20_CA2&amp;quot;, &amp;quot;verificacion_ids&amp;quot;,\n            f&amp;quot;Duplicados en colecciones: {len(duplicados_en_colecciones)} \u00b7 En player: {len(duplicados_en_player)}&amp;quot;))\n    \n&amp;gt;       assert len(duplicados_en_player) == 0, f&amp;quot;El filtro por ID no funcion\u00f3: hay {len(duplicados_en_player)} duplicados en el player&amp;quot;\nE       AssertionError: El filtro por ID no funcion\u00f3: hay 9 duplicados en el player\nE       assert 9 == 0\nE        +  where 9 = len({&amp;#x27;un-avion-turco-bien-argentino&amp;#x27;, &amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-collection-2&amp;#x27;, &amp;#x27;videolab-collection-3&amp;#x27;, &amp;#x27;videolab-collection-4&amp;#x27;, &amp;#x27;videolab-collection-5&amp;#x27;, ...})\n\ntests\\generados\\test_ca20_generado.py:102: AssertionError\n&#34;}], &#34;tests/generados/test_ca20_generado.py::test_ca20_ca3&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA3_1_video_original.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA3_1_video_original.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Video a compartir: videolab-collection-8&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA3_2_verificacion.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA3_2_verificacion.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Video videolab-collection-8 \u00b7 Duplicado en Lo \u00faltimo: True&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Failed&#34;, &#34;duration&#34;: &#34;00:02:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-name\&#34;&gt;CA3: verifica que un video compartido por URL no aparece duplicado en ambos tabs.&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:02:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;player = &amp;lt;helpers.player.Player object at 0x0000000004FF5160&amp;gt;\nregistro = {&amp;#x27;detalle&amp;#x27;: {&amp;#x27;video_compartido&amp;#x27;: &amp;#x27;videolab-collection-8&amp;#x27;, &amp;#x27;url_compartida&amp;#x27;: &amp;#x27;https://artear-tn-sandbox.cdn.arcpublishi...archivo&amp;#x27;: &amp;#x27;CA20_CA3_2_verificacion.png&amp;#x27;, &amp;#x27;descripcion&amp;#x27;: &amp;#x27;Video videolab-collection-8 \u00b7 Duplicado en Lo \u00faltimo: True&amp;#x27;}]}\n\n    def test_ca20_ca3(player, registro):\n        &amp;quot;&amp;quot;&amp;quot;CA3: verifica que un video compartido por URL no aparece duplicado en ambos tabs.&amp;quot;&amp;quot;&amp;quot;\n        # Abrir y obtener URL de un video en &amp;quot;Lo importante&amp;quot;\n        s = player.abrir()\n        if s[&amp;quot;tab&amp;quot;] != &amp;quot;Lo importante&amp;quot;:\n            player.pestana(&amp;quot;Lo importante&amp;quot;)\n            s = player.snap()\n    \n        video_compartido = s[&amp;quot;video&amp;quot;]\n        url_compartida = s[&amp;quot;url&amp;quot;]\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA20_CA3&amp;quot;, &amp;quot;1_video_original&amp;quot;, f&amp;quot;Video a compartir: {video_compartido}&amp;quot;))\n    \n        # Verificar si este video est\u00e1 en &amp;quot;Lo \u00faltimo&amp;quot;\n        player.pestana(&amp;quot;Lo \u00faltimo&amp;quot;)\n        s = player.snap()\n        encontrado_en_ultimo = False\n        ultimo_ids = [s[&amp;quot;video&amp;quot;]]\n        if s[&amp;quot;video&amp;quot;] == video_compartido:\n            encontrado_en_ultimo = True\n    \n        for _ in range(50):\n            s = player.swipe()\n            if s[&amp;quot;fin&amp;quot;]:\n                break\n            if s[&amp;quot;video&amp;quot;] == video_compartido:\n                encontrado_en_ultimo = True\n            if s[&amp;quot;video&amp;quot;] not in ultimo_ids:\n                ultimo_ids.append(s[&amp;quot;video&amp;quot;])\n    \n        registro[&amp;quot;detalle&amp;quot;].update({\n            &amp;quot;video_compartido&amp;quot;: video_compartido,\n            &amp;quot;url_compartida&amp;quot;: url_compartida,\n            &amp;quot;aparece_en_tenes_que_ver&amp;quot;: encontrado_en_ultimo,\n        })\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(\n            &amp;quot;CA20_CA3&amp;quot;, &amp;quot;2_verificacion&amp;quot;,\n            f&amp;quot;Video {video_compartido} \u00b7 Duplicado en Lo \u00faltimo: {encontrado_en_ultimo}&amp;quot;))\n    \n&amp;gt;       assert not encontrado_en_ultimo, f&amp;quot;El video {video_compartido} aparece en ambos tabs al compartir por URL&amp;quot;\nE       AssertionError: El video videolab-collection-8 aparece en ambos tabs al compartir por URL\nE       assert not True\n\ntests\\generados\\test_ca20_generado.py:147: AssertionError\n&#34;}], &#34;tests/generados/test_ca20_generado.py::test_ca20_ca4&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA4_1_video_importante.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA4_1_video_importante.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Video en Lo importante: videolab-collection-8&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA4_2_video_ultimo.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA4_2_video_ultimo.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Video en Lo \u00faltimo: videolab-collection-8&lt;/figcaption&gt;&lt;/figure&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA4_3_urls.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA4_3_urls.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;URLs con routing correcto: importante=False, ultimo=False&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Failed&#34;, &#34;duration&#34;: &#34;00:00:09&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-name\&#34;&gt;CA4: verifica que compartir un video redirige al tab correcto sin duplicar.&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:09&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;player = &amp;lt;helpers.player.Player object at 0x0000000004FF5160&amp;gt;\nregistro = {&amp;#x27;detalle&amp;#x27;: {&amp;#x27;video_lo_importante&amp;#x27;: &amp;#x27;videolab-collection-8&amp;#x27;, &amp;#x27;url_lo_importante&amp;#x27;: &amp;#x27;https://artear-tn-sandbox.cdn.arcpu...n-8&amp;#x27;}, {&amp;#x27;archivo&amp;#x27;: &amp;#x27;CA20_CA4_3_urls.png&amp;#x27;, &amp;#x27;descripcion&amp;#x27;: &amp;#x27;URLs con routing correcto: importante=False, ultimo=False&amp;#x27;}]}\n\n    def test_ca20_ca4(player, registro):\n        &amp;quot;&amp;quot;&amp;quot;CA4: verifica que compartir un video redirige al tab correcto sin duplicar.&amp;quot;&amp;quot;&amp;quot;\n        # Abrir en &amp;quot;Lo importante&amp;quot; y capturar URL\n        s = player.abrir()\n        if s[&amp;quot;tab&amp;quot;] != &amp;quot;Lo importante&amp;quot;:\n            player.pestana(&amp;quot;Lo importante&amp;quot;)\n            s = player.snap()\n    \n        video_importante = s[&amp;quot;video&amp;quot;]\n        url_importante = s[&amp;quot;url&amp;quot;]\n        tab_importante = s[&amp;quot;tab&amp;quot;]\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA20_CA4&amp;quot;, &amp;quot;1_video_importante&amp;quot;, f&amp;quot;Video en Lo importante: {video_importante}&amp;quot;))\n    \n        # Cambiar a &amp;quot;Lo \u00faltimo&amp;quot; y capturar otro video\n        player.pestana(&amp;quot;Lo \u00faltimo&amp;quot;)\n        s = player.snap()\n        video_ultimo = s[&amp;quot;video&amp;quot;]\n        url_ultimo = s[&amp;quot;url&amp;quot;]\n        tab_ultimo = s[&amp;quot;tab&amp;quot;]\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA20_CA4&amp;quot;, &amp;quot;2_video_ultimo&amp;quot;, f&amp;quot;Video en Lo \u00faltimo: {video_ultimo}&amp;quot;))\n    \n        # TODO revisar: No hay m\u00e9todo para abrir una URL espec\u00edfica y verificar el tab de destino\n        # Se asume que player.url_actual() y la presencia de &amp;quot;/importante/&amp;quot; o &amp;quot;/ultimo/&amp;quot; en la URL\n        # indican el comportamiento correcto del routing\n    \n        tiene_routing_importante = &amp;quot;/importante/&amp;quot; in url_importante\n        tiene_routing_ultimo = &amp;quot;/ultimo/&amp;quot; in url_ultimo\n    \n        registro[&amp;quot;detalle&amp;quot;].update({\n            &amp;quot;video_lo_importante&amp;quot;: video_importante,\n            &amp;quot;url_lo_importante&amp;quot;: url_importante,\n            &amp;quot;tiene_routing_importante&amp;quot;: tiene_routing_importante,\n            &amp;quot;video_tenes_que_ver&amp;quot;: video_ultimo,\n            &amp;quot;url_tenes_que_ver&amp;quot;: url_ultimo,\n            &amp;quot;tiene_routing_ultimo&amp;quot;: tiene_routing_ultimo,\n        })\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(\n            &amp;quot;CA20_CA4&amp;quot;, &amp;quot;3_urls&amp;quot;,\n            f&amp;quot;URLs con routing correcto: importante={tiene_routing_importante}, ultimo={tiene_routing_ultimo}&amp;quot;))\n    \n&amp;gt;       assert tiene_routing_importante or tiene_routing_ultimo, &amp;quot;Las URLs compartidas no incluyen el indicador de tab (/importante/ o /ultimo/)&amp;quot;\nE       AssertionError: Las URLs compartidas no incluyen el indicador de tab (/importante/ o /ultimo/)\nE       assert (False or False)\n\ntests\\generados\\test_ca20_generado.py:194: AssertionError\n&#34;}], &#34;tests/generados/test_ca20_generado.py::test_ca20_ca5&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: null, &#34;format_type&#34;: &#34;html&#34;, &#34;content&#34;: &#34;&lt;div&gt;&lt;figure style=&#39;display:inline-block;margin:0 12px 12px 0;vertical-align:top;width:190px&#39;&gt;&lt;a href=&#39;evidencias/CA20_CA5_verificacion_tab.png&#39; target=&#39;_blank&#39;&gt;&lt;img src=&#39;evidencias/CA20_CA5_verificacion_tab.png&#39; style=&#39;height:360px;border:1px solid #ccc&#39;&gt;&lt;/a&gt;&lt;figcaption style=&#39;color:#333;font-size:11px&#39;&gt;Duplicados en colecciones: 9 \u00b7 mostrados en Lo importante: 9 \u00b7 mostrados en Lo \u00faltimo: 9&lt;/figcaption&gt;&lt;/figure&gt;&lt;/div&gt;&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Failed&#34;, &#34;duration&#34;: &#34;00:02:32&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-name\&#34;&gt;CA5: verifica que contenidos duplicados se mantienen en Lo importante.&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:02:32&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;player = &amp;lt;helpers.player.Player object at 0x0000000004FF5160&amp;gt;\nregistro = {&amp;#x27;detalle&amp;#x27;: {&amp;#x27;duplicados_en_colecciones&amp;#x27;: [&amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-collection-6&amp;#x27;, &amp;#x27;videolab-collection-3&amp;#x27;, ..._tab.png&amp;#x27;, &amp;#x27;descripcion&amp;#x27;: &amp;#x27;Duplicados en colecciones: 9 \u00b7 mostrados en Lo importante: 9 \u00b7 mostrados en Lo \u00faltimo: 9&amp;#x27;}]}\n\n    def test_ca20_ca5(player, registro):\n        &amp;quot;&amp;quot;&amp;quot;CA5: verifica que contenidos duplicados se mantienen en Lo importante.&amp;quot;&amp;quot;&amp;quot;\n        s = player.abrir()\n        col_importante = player.coleccion(&amp;quot;id_importante&amp;quot;)\n        col_ultimo = player.coleccion(&amp;quot;id_ultimo&amp;quot;)\n    \n        ids_importante = [c[&amp;quot;slug&amp;quot;] for c in col_importante]\n        ids_ultimo = [c[&amp;quot;slug&amp;quot;] for c in col_ultimo]\n        duplicados = set(ids_importante) &amp;amp; set(ids_ultimo)\n    \n        if len(duplicados) == 0:\n            registro[&amp;quot;detalle&amp;quot;][&amp;quot;sin_duplicados_en_colecciones&amp;quot;] = True\n            registro[&amp;quot;evidencias&amp;quot;].append(player.captura(&amp;quot;CA20_CA5&amp;quot;, &amp;quot;sin_duplicados&amp;quot;, &amp;quot;No hay duplicados en las colecciones para verificar&amp;quot;))\n            # Si no hay duplicados, el test pasa trivialmente\n            return\n    \n        # Verificar que los duplicados est\u00e1n en &amp;quot;Lo importante&amp;quot;\n        if s[&amp;quot;tab&amp;quot;] != &amp;quot;Lo importante&amp;quot;:\n            player.pestana(&amp;quot;Lo importante&amp;quot;)\n            s = player.snap()\n    \n        importante_mostrados = [s[&amp;quot;video&amp;quot;]]\n        for _ in range(50):\n            s = player.swipe()\n            if s[&amp;quot;fin&amp;quot;]:\n                break\n            if s[&amp;quot;video&amp;quot;] not in importante_mostrados:\n                importante_mostrados.append(s[&amp;quot;video&amp;quot;])\n    \n        duplicados_en_importante = duplicados &amp;amp; set(importante_mostrados)\n    \n        # Verificar que NO est\u00e1n en &amp;quot;Lo \u00faltimo&amp;quot;\n        player.pestana(&amp;quot;Lo \u00faltimo&amp;quot;)\n        s = player.snap()\n        ultimo_mostrados = [s[&amp;quot;video&amp;quot;]]\n        for _ in range(50):\n            s = player.swipe()\n            if s[&amp;quot;fin&amp;quot;]:\n                break\n            if s[&amp;quot;video&amp;quot;] not in ultimo_mostrados:\n                ultimo_mostrados.append(s[&amp;quot;video&amp;quot;])\n    \n        duplicados_en_ultimo = duplicados &amp;amp; set(ultimo_mostrados)\n    \n        registro[&amp;quot;detalle&amp;quot;].update({\n            &amp;quot;duplicados_en_colecciones&amp;quot;: list(duplicados),\n            &amp;quot;duplicados_en_lo_importante&amp;quot;: list(duplicados_en_importante),\n            &amp;quot;duplicados_en_tenes_que_ver&amp;quot;: list(duplicados_en_ultimo),\n            &amp;quot;se_mantienen_en_lo_importante&amp;quot;: duplicados &amp;lt;= duplicados_en_importante,\n        })\n        registro[&amp;quot;evidencias&amp;quot;].append(player.captura(\n            &amp;quot;CA20_CA5&amp;quot;, &amp;quot;verificacion_tab&amp;quot;,\n            f&amp;quot;Duplicados en colecciones: {len(duplicados)} \u00b7 mostrados en Lo importante: &amp;quot;\n            f&amp;quot;{len(duplicados_en_importante)} \u00b7 mostrados en Lo \u00faltimo: {len(duplicados_en_ultimo)}&amp;quot;))\n    \n        assert duplicados &amp;lt;= set(importante_mostrados), (\n            &amp;quot;No todos los contenidos duplicados entre colecciones se muestran en &amp;#x27;Lo importante&amp;#x27;: &amp;quot;\n            f&amp;quot;faltan {duplicados - duplicados_en_importante}&amp;quot;)\n&amp;gt;       assert len(duplicados_en_ultimo) == 0, (\n            &amp;quot;Contenidos duplicados tambi\u00e9n aparecen en &amp;#x27;Lo \u00faltimo&amp;#x27; (deber\u00edan quedar solo en &amp;quot;\n            f&amp;quot;&amp;#x27;Lo importante&amp;#x27;): {list(duplicados_en_ultimo)}&amp;quot;)\nE       AssertionError: Contenidos duplicados tambi\u00e9n aparecen en &amp;#x27;Lo \u00faltimo&amp;#x27; (deber\u00edan quedar solo en &amp;#x27;Lo importante&amp;#x27;): [&amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-collection-6&amp;#x27;, &amp;#x27;videolab-collection-3&amp;#x27;, &amp;#x27;videolab-collection-7&amp;#x27;, &amp;#x27;videolab-collection-2&amp;#x27;, &amp;#x27;videolab-collection-5&amp;#x27;, &amp;#x27;videolab-collection-8&amp;#x27;, &amp;#x27;un-avion-turco-bien-argentino&amp;#x27;, &amp;#x27;videolab-collection-4&amp;#x27;]\nE       assert 9 == 0\nE        +  where 9 = len({&amp;#x27;un-avion-turco-bien-argentino&amp;#x27;, &amp;#x27;videolab-collection-1&amp;#x27;, &amp;#x27;videolab-collection-2&amp;#x27;, &amp;#x27;videolab-collection-3&amp;#x27;, &amp;#x27;videolab-collection-4&amp;#x27;, &amp;#x27;videolab-collection-5&amp;#x27;, ...})\n\ntests\\generados\\test_ca20_generado.py:259: AssertionError\n--------------------------- Captured stdout teardown ---------------------------\n\nResultados, evidencias y reporte en: D:\\Artear\\Mobile\\actions-runner\\_work\\Mobile-Artear\\Mobile-Artear\\appium-mobile-web-qa\\resultados\\android\\corridas\\20261001-175449\n&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;Reporte - TNARC-4366 (Android)&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+  </body>
+</html>
