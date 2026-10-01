@@ -90,13 +90,17 @@ jobs:
           }
           $ruta = "/shorts/player/videos/test-section/2025/12/19/videolab-collection-8/"
           if ($ambiente -eq "sbx") {
-            $tnUrl = "https://$dominio$ruta"
+            $tnUrl = "https://${dominio}${ruta}"
           } else {
             if (-not $version) {
               Write-Host "::error::El ambiente '$ambiente' necesita el input 'version' (ej: 721)"
               exit 1
             }
-            $tnUrl = "https://$dominio$ruta?d=$version"
+            # OJO: "$ruta?d" sin llaves hace que PowerShell intente resolver una variable
+            # literal llamada "ruta?d" (no existe, da vacío) en vez de cortar el nombre en el
+            # "?" -- hay que usar ${ruta} para delimitar el nombre explícitamente antes de
+            # cualquier "?" u otro caracter pegado. Mismo cuidado más abajo con rutaPortada.
+            $tnUrl = "https://${dominio}${ruta}?d=${version}"
           }
           Write-Host "Ambiente: $ambiente -> TN_URL: $tnUrl"
           echo "TN_URL=$tnUrl" >> $env:GITHUB_ENV
@@ -112,10 +116,13 @@ jobs:
               $tnPortada = $portada
             } else {
               $rutaPortada = "/" + $portada.Trim('/') + "/"
-              $tnPortada = if ($ambiente -eq "sbx") { "https://$dominio$rutaPortada" } else { "https://$dominio$rutaPortada?d=$version" }
+              if ($ambiente -eq "sbx") {
+                $tnPortada = "https://${dominio}${rutaPortada}"
+              } else {
+                $tnPortada = "https://${dominio}${rutaPortada}?d=${version}"
+              }
             }
             Write-Host "Portada: $tnPortada"
-            Write-Host "::error::DIAGNOSTICO tnPortada=[$tnPortada] rutaPortada=[$rutaPortada] dominio=[$dominio] version=[$version]"
             echo "TN_PORTADA=$tnPortada" >> $env:GITHUB_ENV
           }
 
