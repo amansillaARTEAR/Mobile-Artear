@@ -162,15 +162,22 @@ def _cerrar_publicidad(player):
                 player.d.switch_to.default_content()
             except Exception:
                 pass
+    # El cálculo de coordenadas a partir de getBoundingClientRect (arriba) no acertó -- el
+    # botón "X" no está pegado al borde superior del contenedor como se asumía, hay
+    # contenido arriba dentro del mismo ad. Medido directo sobre varias capturas reales
+    # (1080x2340, mismo dispositivo del runner): el botón "X" del ad sticky del header
+    # queda siempre en (944, 339) en píxeles de pantalla. Se usa ese punto fijo en vez de
+    # seguir intentando derivarlo del DOM, y solo se toca si JS_MEDIR_AD_HEADER confirma
+    # que el ad sigue presente (para no tocar contenido real por error si no hay ad).
+    PUNTO_CIERRE_AD_HEADER = (944, 339)
     for _ in range(2):
         info = player.d.execute_script(JS_MEDIR_AD_HEADER)
         if not info:
             break
-        dpr = info["dpr"] or 1
-        x = (info["right"] - 35) * dpr
-        y = (info["top"] + 35) * dpr
         try:
-            player.d.execute_script("mobile: clickGesture", {"x": x, "y": y})
+            player.d.execute_script(
+                "mobile: clickGesture",
+                {"x": PUNTO_CIERRE_AD_HEADER[0], "y": PUNTO_CIERRE_AD_HEADER[1]})
             cerrados += 1
             time.sleep(1)
         except Exception:
