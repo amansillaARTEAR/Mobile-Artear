@@ -80,11 +80,24 @@ return { enfocado, grupos: listaGrupos.map(g => ({
 """
 
 
+def _cerrar_publicidad_inicial(player):
+    """Cierra el aviso que aparece apenas carga la portada (banner del header), con un
+    toque en su botón "X" -- medido directo sobre el dispositivo del runner: (944, 339) en
+    píxeles de pantalla. Best-effort: si no hay publicidad ahí, el toque no afecta nada más
+    porque el brick nota longform que se valida está más abajo, fuera de esa zona."""
+    try:
+        player.d.execute_script("mobile: clickGesture", {"x": 944, "y": 339})
+    except Exception:
+        pass
+
+
 def _grupos_longform(player, criterio):
     url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
+    _cerrar_publicidad_inicial(player)
+    time.sleep(1)
     resultado = player.d.execute_script(JS_ENFOCAR_GRUPO_LONGFORM, criterio)
     if resultado["enfocado"]:
         time.sleep(1)  # deja asentar el scroll antes de capturar
