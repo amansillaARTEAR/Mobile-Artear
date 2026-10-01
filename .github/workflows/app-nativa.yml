@@ -14,10 +14,16 @@ on:
         required: false
         type: string
         default: ""
+      seccion:
+        description: "Opcional: sección/pantalla de la app a validar (ej: Deportes, Portada). Si se deja vacío, cada test usa su propio default (hoy, la pantalla de inicio)."
+        required: false
+        type: string
+        default: ""
 
 env:
   PYTHONUNBUFFERED: "1"
   CI: "true"
+  TN_SECCION: "${{ inputs.seccion }}"
   # Carpeta donde se copian los .apk a mano en este runner. Es la misma carpeta que usa
   # correr.ps1 para las corridas manuales (D:\Artear\Mobile\appium-native-app-qa\apks) --
   # NO la carpeta apks\ del checkout de este job, que siempre está vacía (gitignored).

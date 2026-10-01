@@ -20,6 +20,11 @@ on:
         required: false
         type: string
         default: ""
+      portada:
+        description: "Opcional: página/portada a validar (ej: ALEM-DEV, o la ruta completa de una nota). Si se deja vacío, cada test usa su propia URL por defecto."
+        required: false
+        type: string
+        default: ""
 
 env:
   PYTHONUNBUFFERED: "1"
@@ -95,6 +100,23 @@ jobs:
           }
           Write-Host "Ambiente: $ambiente -> TN_URL: $tnUrl"
           echo "TN_URL=$tnUrl" >> $env:GITHUB_ENV
+
+          # Portada a validar (CA19 y los que vengan de portada/nota, no del player) -- antes
+          # estaba hardcodeada adentro de cada archivo de test; ahora se arma acá con el mismo
+          # dominio/versión del ambiente elegido, y cada test la lee de config.PORTADA_URL.
+          $portada = "${{ inputs.portada }}"
+          if ($portada) {
+            # Si ya vino como URL completa (empieza con http), se usa tal cual; si no, se arma
+            # con el dominio/versión del ambiente, igual que TN_URL arriba.
+            if ($portada -match '^https?://') {
+              $tnPortada = $portada
+            } else {
+              $rutaPortada = "/" + $portada.Trim('/') + "/"
+              $tnPortada = if ($ambiente -eq "sbx") { "https://$dominio$rutaPortada" } else { "https://$dominio$rutaPortada?d=$version" }
+            }
+            Write-Host "Portada: $tnPortada"
+            echo "TN_PORTADA=$tnPortada" >> $env:GITHUB_ENV
+          }
 
       - name: Correr suite
         shell: powershell

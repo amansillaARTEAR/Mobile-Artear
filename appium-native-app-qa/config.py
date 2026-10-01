@@ -10,6 +10,11 @@ CARPETA_IPAS = RAIZ / "ipas"
 # "android" (dispositivo físico local) o "ios" (AWS Device Farm)
 PLATAFORMA = os.getenv("TN_PLATAFORMA", "android").lower()
 
+# Sección/pantalla de la app a validar (ej: "Deportes", "Portada") -- se arma en el workflow
+# a partir del input "seccion" (ver app-nativa.yml). Vacío si no se indicó: cada test decide
+# su propio default en ese caso (hoy, la pantalla de inicio). Usar con App.ir_a_seccion().
+SECCION = os.getenv("TN_SECCION", "")
+
 
 def app_a_probar() -> Path:
     """App indicada en TN_APP (o TN_APK/TN_IPA por compatibilidad) o, si no, la más

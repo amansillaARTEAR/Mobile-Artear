@@ -87,6 +87,13 @@ def app(driver, salida):
     info.update({"app": APP.name, "identificador": a.paquete,
                  "dispositivo": caps.get("deviceModel") or caps.get("deviceName"),
                  "sistema": f'{PLATAFORMA.capitalize()} {caps.get("platformVersion", "")}'.strip()})
+    if config_mod.SECCION:
+        # Input "seccion" del workflow (ver app-nativa.yml): si se indicó, toda la corrida
+        # arranca ya parada ahí en vez de en el inicio -- así los tests no tienen que llamar
+        # a ir_a_seccion() cada uno por su cuenta. Best-effort: si no la encuentra, sigue
+        # igual desde el inicio (y queda registrado en el resumen para que se note).
+        info["seccion"] = config_mod.SECCION
+        info["seccion_encontrada"] = a.ir_a_seccion(config_mod.SECCION)
     return a
 
 

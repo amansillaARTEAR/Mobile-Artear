@@ -4,10 +4,14 @@
 
 import time
 
+import config
+
 # Este ticket es sobre el brick nota con estilo "longform" en una PORTADA/nota editorial
 # (no sobre el player de shorts/videos), así que CA1a/CA1b navegan directo a la portada real
 # donde el usuario confirmó que el brick longform está configurado:
-# https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764
+# https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764 -- este es el default si no se
+# indicó el input "portada" al disparar el workflow (ver config.PORTADA_URL); si se indicó,
+# se usa esa en su lugar, para poder validar el mismo CA en otra portada sin tocar código.
 #
 # Regla del ticket: el brick nota longform muestra la imagen en horizontal, EXCEPTO cuando
 # está acompañado de 1 brick nota de tamaño mayor (ahí va vertical -- CA1a) o acompañado de
@@ -92,7 +96,7 @@ def _cerrar_publicidad_inicial(player):
 
 
 def _grupos_longform(player, criterio):
-    url = "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
+    url = config.PORTADA_URL or "https://artear-tn-dev.cdn.arcpublishing.com/ALEM-DEV/?d=4764"
     player._web()
     player.d.get(url)
     time.sleep(3)
@@ -115,7 +119,7 @@ def test_ca19_ca1a(player, registro):
     registro["detalle"].update({"portada": url, "grupos_encontrados": grupos, "grupo_ca1a": objetivo})
     registro["evidencias"].append(player.captura(
         "CA1a", "portada",
-        f"CA1a · Portada ALEM-DEV ?d=4764 · grupo longform+1 mayor (scroll al grupo: {enfocado}): {objetivo}"))
+        f"CA1a · Portada {url} · grupo longform+1 mayor (scroll al grupo: {enfocado}): {objetivo}"))
     assert objetivo is not None, (
         "No se encontró en la portada un brick nota longform acompañado de exactamente "
         f"1 brick nota de tamaño mayor. Grupos con longform relevados: {grupos}")
@@ -135,7 +139,7 @@ def test_ca19_ca1b(player, registro):
     registro["detalle"].update({"portada": url, "grupos_encontrados": grupos, "grupo_ca1b": objetivo})
     registro["evidencias"].append(player.captura(
         "CA1b", "portada",
-        f"CA1b · Portada ALEM-DEV ?d=4764 · grupo longform+4 bricks nota (scroll al grupo: {enfocado}): {objetivo}"))
+        f"CA1b · Portada {url} · grupo longform+4 bricks nota (scroll al grupo: {enfocado}): {objetivo}"))
     assert objetivo is not None, (
         "No se encontró en la portada un brick nota longform acompañado de 4 bricks nota. "
         f"Grupos con longform relevados: {grupos}")

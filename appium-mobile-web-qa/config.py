@@ -10,6 +10,12 @@ URL = os.getenv(
 )
 VERSION_ESPERADA = os.getenv("TN_VERSION", "4743")
 
+# Portada/nota a validar en los tests que no son sobre el player (ej. CA19, brick nota en
+# una portada editorial) -- se arma en el workflow a partir del input "portada" (ver
+# webmobile.yml) con el dominio/versión del ambiente elegido. Vacío si no se indicó: cada
+# test decide su propio default en ese caso (para no romper corridas manuales/viejas).
+PORTADA_URL = os.getenv("TN_PORTADA", "")
+
 # Etiqueta amarilla con el caso y los valores medidos dentro de cada captura (TN_ETIQUETAS=1 para activarla)
 ETIQUETAS = os.getenv("TN_ETIQUETAS", "0") == "1"
 

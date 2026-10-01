@@ -258,6 +258,29 @@ class App:
         """Elementos tocables de la barra superior."""
         return self._zona(0.0, 0.12)
 
+    def ir_a_seccion(self, nombre, timeout=10) -> bool:
+        """Navega a una sección/pantalla de la app por nombre (ej. "Deportes", "Portada"),
+        para validar un CA ahí en vez de en la pantalla de inicio -- pensado para usarse con
+        config.SECCION (ver app-nativa.yml, input "seccion"). Busca primero en la navbar
+        (lo más común: una pestaña inferior) y si no está ahí, en cualquier parte de la
+        pantalla actual (ej. un ítem de un menú/drawer ya abierto). Es best-effort: no abre
+        menúes para buscarla, así que si la sección vive adentro de un menú que hay que
+        desplegar antes, hay que desplegarlo en el test antes de llamar a este método.
+        Devuelve False (sin lanzar error) si no encontró nada clickeable con ese nombre."""
+        if not nombre:
+            return False
+        nombre_norm = nombre.strip().lower()
+        candidatos = [i["el"] for i in self.navbar() if nombre_norm in i["etiqueta"].lower()]
+        if not candidatos:
+            candidatos = self.buscar(nombre)
+        if not candidatos:
+            return False
+        try:
+            candidatos[0].click()
+        except WebDriverException:
+            return False
+        return self.esperar_contenido(timeout)
+
     # ---------- evidencias ----------
     def captura(self, caso, paso, descripcion):
         ruta = self.salida / "evidencias" / f"{caso}_{paso}.png"
