@@ -386,3 +386,20 @@ def test_reg15_estabilidad_final(app, registro):
     registro["evidencias"].append(app.captura("REG15", "final", "Estado final"))
     registro["detalle"]["crashes_o_anr"] = errores
     assert app.en_primer_plano() and not errores, f"La app no quedó estable: {errores}"
+
+
+def test_reg16_tags_nota(app, registro):
+    """REG-16: (exploratorio) una nota muestra sus tags al final y tocar uno abre su listado."""
+    _ir_a_inicio(app)
+    tam = app.d.get_window_size()
+    app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))  # nota principal
+    time.sleep(16)  # incluye la espera del interstitial, como en REG-06
+    registro["evidencias"].append(app.captura("REG16", "0_nota", "Nota abierta"))
+    vistos = []
+    for i in range(1, 15):
+        _swipe(app, "down", 0.6)
+        time.sleep(1)
+        vistos.append(sorted(_textos_visibles(app)))
+        if i % 2 == 0:
+            registro["evidencias"].append(app.captura("REG16", f"{i:02d}_scroll", f"Nota, scroll {i}"))
+    registro["detalle"]["textos_por_scroll"] = vistos
