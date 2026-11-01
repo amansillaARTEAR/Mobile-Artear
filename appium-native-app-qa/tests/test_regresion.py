@@ -50,12 +50,40 @@ def _tocar_texto(app, texto, espera=3):
     return True
 
 
-def _buscar_scrolleando(app, texto, max_scrolls=25, direccion="down"):
-    """Scrollea hasta que `texto` aparece en pantalla. Devuelve la lista de elementos o []."""
+_MAY = "ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÜÑ"
+_MIN = "abcdefghijklmnopqrstuvwxyzaeiouun"
+
+
+def _buscar_ci(app, texto):
+    """Como app.buscar() pero sin distinguir mayúsculas ni tildes (ej. títulos en MAYÚSCULAS)."""
+    app.cerrar_dialogo_permisos()
+    t = texto.translate(str.maketrans(_MAY, _MIN)).lower()
+    norm = lambda attr: f"translate(@{attr},'{_MAY}','{_MIN}')"
+    xp = f"//*[@displayed='true' and (contains({norm('text')},'{t}') or contains({norm('content-desc')},'{t}'))]"
+    try:
+        return app.d.find_elements("xpath", xp)
+    except Exception:
+        return []
+
+
+def _textos_visibles(app):
+    """Textos cortos visibles en pantalla (para diagnosticar qué títulos muestra la app)."""
+    try:
+        els = app.d.find_elements("xpath", "//android.widget.TextView[@displayed='true']")
+        return {e.text.strip() for e in els if e.text and len(e.text.strip()) <= 40}
+    except Exception:
+        return set()
+
+
+def _buscar_scrolleando(app, texto, max_scrolls=25, direccion="down", vistos=None):
+    """Scrollea hasta que `texto` aparece en pantalla. Devuelve la lista de elementos o [].
+    Si se pasa `vistos` (set), acumula los textos cortos que fue viendo, para diagnóstico."""
     for _ in range(max_scrolls):
-        els = app.buscar(texto)
+        els = _buscar_ci(app, texto)
         if els:
             return els
+        if vistos is not None:
+            vistos |= _textos_visibles(app)
         if not app.scroll(direccion, porcentaje=0.7, zona_top=0.2, zona_alto=0.5):
             break
         time.sleep(1)
@@ -76,6 +104,12 @@ def _abrir_seccion(app, nombre):
     for _ in range(4):  # la lista puede quedar scrolleada de antes
         app.scroll("up", porcentaje=0.9, zona_top=0.2, zona_alto=0.5)
     els = _buscar_scrolleando(app, nombre, max_scrolls=6)
+    if not els:  # algunas (ej. «TN en las redes») aparecen recién tras «Ver más categorías»
+        mas = _buscar_scrolleando(app, "Ver más categorías", max_scrolls=6)
+        if mas:
+            mas[0].click()
+            time.sleep(2)
+            els = _buscar_scrolleando(app, nombre, max_scrolls=6)
     if not els:
         return False
     els[0].click()
@@ -96,15 +130,19 @@ def test_reg01_navbar(app, registro):
 
 def test_reg02_home_modulos(app, registro):
     """REG-02: la Home carga y muestra sus módulos principales al scrollear, sin crash."""
-    _ir_a_inicio(app)
-    encontrados = {}
+    encontrados, vistos = {}, set()
     for i, modulo in enumerate(MODULOS_HOME, 1):
-        els = _buscar_scrolleando(app, modulo, max_scrolls=40)
+        _ir_a_inicio(app)  # cada módulo se busca desde arriba (el orden en la Home puede variar)
+        _tab(app, "Inicio")  # 2do toque: vuelve la Home al tope
+        els = _buscar_scrolleando(app, modulo, max_scrolls=25, vistos=vistos)
         encontrados[modulo] = bool(els)
         if els:
             registro["evidencias"].append(app.captura("REG02", f"{i}_{modulo[:12]}", f"Módulo «{modulo}»"))
+        else:
+            registro["evidencias"].append(app.captura("REG02", f"{i}_no_encontrado", f"Sin «{modulo}»"))
     errores = app.errores_nuevos()
-    registro["detalle"].update({"modulos": encontrados, "crashes_o_anr": errores})
+    registro["detalle"].update({"modulos": encontrados, "crashes_o_anr": errores,
+                                "textos_vistos": sorted(vistos)[:150]})
     assert not errores, f"Crash o ANR: {errores}"
     assert all(encontrados.values()), f"Módulos no encontrados: {[m for m, v in encontrados.items() if not v]}"
 
@@ -191,7 +229,7 @@ def test_reg07_ajustes_notificaciones(app, registro):
     """REG-07: Ajustes lista los temas de notificaciones y la versión de la app."""
     _ir_a_inicio(app)
     assert _tab(app, "Ajustes"), "No se encontró «Ajustes» en el navbar"
-    temas = {t: bool(_buscar_scrolleando(app, t, max_scrolls=3)) for t in TEMAS_NOTIFICACIONES}
+    temas = {t: bool(_buscar_scrolleando(app, t, max_scrolls=8)) for t in TEMAS_NOTIFICACIONES}
     version = _buscar_scrolleando(app, "Versión", max_scrolls=5)
     registro["detalle"].update({"temas": temas, "version": app.etiqueta(version[0]) if version else None})
     registro["evidencias"].append(app.captura("REG07", "ajustes", "Ajustes: temas y versión"))
@@ -248,7 +286,8 @@ def test_reg10_redes(app, registro):
 def test_reg11_juegos(app, registro):
     """REG-11: el módulo TN Juegos muestra los juegos en el carrusel lateral."""
     _ir_a_inicio(app)
-    assert _buscar_scrolleando(app, "TN Juegos", max_scrolls=40), "No se encontró el módulo «TN Juegos»"
+    _tab(app, "Inicio")
+    assert _buscar_scrolleando(app, "Juegos", max_scrolls=25), "No se encontró el módulo «TN Juegos»"
     app.scroll("down", porcentaje=0.3, zona_top=0.3, zona_alto=0.3)
     vistos = set()
     for i in range(6):
