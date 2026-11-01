@@ -236,7 +236,8 @@ def test_reg06_nota_compartir_y_volver(app, registro):
     if compartir:
         compartir[-1]["el"].click()
         time.sleep(3)
-        hoja = bool(app.buscar("Compartir"))
+        # La hoja nativa de iOS no dice "Compartir" (viene en el idioma del sistema: "Copy", etc.)
+        hoja = any(app.buscar(t) for t in ("Compartir", "Copiar", "Copy"))
         registro["evidencias"].append(app.captura("REG06", "2_compartir", "Hoja de compartir"))
         _atras(app)
     _atras(app)
