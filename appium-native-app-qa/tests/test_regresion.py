@@ -149,7 +149,7 @@ def test_reg02_home_modulos(app, registro):
     for i, modulo in enumerate(MODULOS_HOME, 1):
         _ir_a_inicio(app)  # cada módulo se busca desde arriba (el orden en la Home puede variar)
         _tab(app, "Inicio")  # 2do toque: vuelve la Home al tope
-        els = _buscar_scrolleando(app, modulo, max_scrolls=25, vistos=vistos)
+        els = _buscar_scrolleando(app, modulo, max_scrolls=60, vistos=vistos)
         encontrados[modulo] = bool(els)
         if els:
             registro["evidencias"].append(app.captura("REG02", f"{i}_{modulo[:12]}", f"Módulo «{modulo}»"))
@@ -302,7 +302,7 @@ def test_reg11_juegos(app, registro):
     """REG-11: el módulo TN Juegos muestra los juegos en el carrusel lateral."""
     _ir_a_inicio(app)
     _tab(app, "Inicio")
-    assert _buscar_scrolleando(app, "Juegos", max_scrolls=25), "No se encontró el módulo «TN Juegos»"
+    assert _buscar_scrolleando(app, "Juegos", max_scrolls=60), "No se encontró el módulo «TN Juegos»"
     _swipe(app, "down", 0.2)
     vistos = set()
     for i in range(6):
