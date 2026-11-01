@@ -79,7 +79,7 @@ def _textos_visibles(app):
             import html as _html, re as _re
             fuente = app.d.page_source
             textos = (_html.unescape(t).strip() for t in _re.findall(
-                r'<XCUIElementTypeStaticText[^>]*?label="([^"]*)"', fuente))
+                r'<XCUIElementTypeStaticText[^>]*?label="([^"]*)"', fuente))
             return {t for t in textos if t and len(t) <= 40}
         els = app.d.find_elements("xpath", "//android.widget.TextView[@displayed='true']")
         return {e.text.strip() for e in els if e.text and len(e.text.strip()) <= 40}
