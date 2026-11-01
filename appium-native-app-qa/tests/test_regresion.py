@@ -393,18 +393,31 @@ def test_reg15_estabilidad_final(app, registro):
     assert app.en_primer_plano() and not errores, f"La app no quedó estable: {errores}"
 
 
-def test_reg16_tags_nota(app, registro):
-    """REG-16: (exploratorio) una nota muestra sus tags al final y tocar uno abre su listado."""
-    _ir_a_inicio(app)
+def _abrir_nota_comun(app, registro, intentos=6):
+    """Abre una nota de la Home que NO sea un liveblog («Minuto a minuto») ni tenga el player de
+    vivo. Prueba una nota por intento, scrolleando la Home un poco más cada vez. Devuelve True si
+    quedó parada en una nota común."""
     tam = app.d.get_window_size()
-    app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))  # nota principal
-    time.sleep(16)  # incluye la espera del interstitial, como en REG-06
-    registro["evidencias"].append(app.captura("REG16", "0_nota", "Nota abierta"))
-    vistos = []
-    for i in range(1, 15):
+    for n in range(intentos):
+        _ir_a_inicio(app)
+        _tab(app, "Inicio")
+        for _ in range(n):
+            _swipe(app, "down", 0.4)
+        app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))
+        time.sleep(14)  # incluye la espera del interstitial, como en REG-06
+        if not app.buscar("Minuto a minuto") and not app.buscar("EN VIVO"):
+            return True
+        registro["detalle"].setdefault("notas_descartadas", []).append(n + 1)
+        _atras(app)
+    return False
+
+
+def test_reg16_tags_nota(app, registro):
+    """REG-16: (exploratorio) una nota común muestra sus tags al final y tocar uno abre su listado."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    registro["evidencias"].append(app.captura("REG16", "00_nota", "Nota abierta"))
+    for i in range(1, 17):
         _swipe(app, "down", 0.6)
         time.sleep(1)
-        vistos.append(sorted(_textos_visibles(app)))
         if i % 2 == 0:
             registro["evidencias"].append(app.captura("REG16", f"{i:02d}_scroll", f"Nota, scroll {i}"))
-    registro["detalle"]["textos_por_scroll"] = vistos
