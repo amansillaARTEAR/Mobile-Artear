@@ -25,6 +25,9 @@ def app_a_probar() -> Path:
         return Path(ruta_directa).resolve()
     carpeta, patron = (CARPETA_IPAS, "*.ipa") if PLATAFORMA == "ios" else (CARPETA_APKS, "*.apk")
     apps = sorted(carpeta.glob(patron), key=lambda p: p.stat().st_mtime)
+    if not apps and PLATAFORMA == "ios" and _en_la_nube():
+        # La sesión de AWS Device Farm ya trae la app instalada: no hace falta un .ipa local.
+        return Path("TN-iOS-DeviceFarm")
     if not apps:
         raise FileNotFoundError(f"No hay ningún {patron} en {carpeta}. Copiá ahí la app a probar.")
     return apps[-1]
@@ -71,16 +74,23 @@ def _caps_ios(app: Path) -> dict:
         "appium:udid": os.getenv("IOS_UDID"),
         "appium:bundleId": os.getenv("IOS_BUNDLE_ID"),  # opcional: app ya instalada, en vez de instalar el .ipa
         "appium:noReset": False,
+        "appium:autoAcceptAlerts": True,              # equivalente iOS de autoGrantPermissions
         "appium:newCommandTimeout": 300,
     }
+
+
+def _en_la_nube() -> bool:
+    return not APPIUM_URL.startswith(("http://127.0.0.1", "http://localhost"))
 
 
 def caps(app: Path) -> dict:
     base = _caps_ios(app) if PLATAFORMA == "ios" else _caps_android(app)
     c = {k: v for k, v in {**base, **EXTRA_CAPS}.items() if v not in (None, "")}
-    if not APPIUM_URL.startswith(("http://127.0.0.1", "http://localhost")):
+    if _en_la_nube():
         # Granja en la nube (AWS Device Farm): el dispositivo lo define la sesión remota
         # y estas capabilities no están soportadas.
         for clave in ("appium:udid", "appium:platformVersion"):
             c.pop(clave, None)
+        if not app.exists():
+            c.pop("appium:app", None)  # sin .ipa local: se usa la app que ya trae la sesión
     return c

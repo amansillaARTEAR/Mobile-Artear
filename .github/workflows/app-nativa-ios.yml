@@ -1,0 +1,142 @@
+name: App Nativa (Appium iOS - AWS Device Farm)
+run-name: "App Nativa iOS — ${{ inputs.filtro != '' && inputs.filtro || 'suite completa' }} por @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      appium_endpoint:
+        description: "URL del endpoint de Appium de la sesión de AWS Device Farm (creada a mano en la consola de AWS, menú 'Appium URL')"
+        required: true
+        type: string
+      filtro:
+        description: "Opcional: expresión -k de pytest para correr solo algunos casos (ej: reg01 or reg03)"
+        required: false
+        type: string
+        default: ""
+      bundle_id:
+        description: "Opcional: bundle id de la app instalada en la sesión (ver las capabilities de la sesión de Device Farm)"
+        required: false
+        type: string
+        default: ""
+
+env:
+  PYTHONUNBUFFERED: "1"
+  CI: "true"
+  TN_PLATAFORMA: "ios"
+
+permissions:
+  contents: write
+
+jobs:
+  correr-suite:
+    runs-on: [self-hosted, windows]
+    defaults:
+      run:
+        working-directory: appium-native-app-qa
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Crear entorno virtual e instalar dependencias
+        shell: powershell
+        run: |
+          py -m venv .venv
+          .\.venv\Scripts\pip install -r requirements.txt
+
+      - name: Correr suite contra el endpoint de AWS Device Farm
+        shell: powershell
+        env:
+          APPIUM_URL: ${{ inputs.appium_endpoint }}
+          IOS_BUNDLE_ID: ${{ inputs.bundle_id }}
+        run: |
+          # Sin Appium local ni adb: el dispositivo y el servidor Appium son los de la sesión remota.
+          $pyArgs = @("-m", "pytest")
+          if ("${{ inputs.filtro }}") { $pyArgs += @("-k", "${{ inputs.filtro }}") }
+          & .\.venv\Scripts\python.exe @pyArgs 2>&1 | Tee-Object -FilePath pytest_output.log
+          $ec = $LASTEXITCODE
+          if ($ec -ne 0) {
+            $tail = ((Get-Content pytest_output.log -Tail 60) -join " | ") -replace "%", "%25" -replace "`r", "" -replace "`n", " | "
+            Write-Host "::error::pytest fallo (exit $ec): $tail"
+          }
+          exit $ec
+
+      - name: Subir resultados como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-appnativa-ios-${{ github.run_id }}
+          path: appium-native-app-qa/resultados/ios/
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Publicar reporte (rama reportes-appnativa-ios)
+        if: always()
+        shell: powershell
+        working-directory: ${{ github.workspace }}
+        run: |
+          # git escribe mensajes normales a stderr y con $ErrorActionPreference = Stop
+          # PowerShell los toma como excepción fatal; se usa Continue para este step.
+          $ErrorActionPreference = "Continue"
+
+          $ultimaCorrida = Get-ChildItem "appium-native-app-qa\resultados\ios\corridas" -Directory -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime | Select-Object -Last 1
+          if (-not $ultimaCorrida -or -not (Test-Path (Join-Path $ultimaCorrida.FullName "reporte.html"))) {
+            Write-Host "No hay reporte.html para publicar (la corrida no llegó a generarlo)."
+            exit 0
+          }
+
+          $rama = "reportes-appnativa-ios"
+          $raizReportes = "reportes/appnativa/ios"
+          $raizRuns = "$raizReportes/runs"
+          # Cada corrida queda en su propia carpeta (runs/<run_id>/), igual que Android; se
+          # conservan solo las últimas para que la rama no crezca sin límite.
+          $maxCorridasGuardadas = 10
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin $rama 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            git checkout -B $rama "origin/$rama"
+          } else {
+            git checkout --orphan $rama
+            git rm -rf . --quiet 2>$null
+          }
+
+          $destino = "$raizRuns/${{ github.run_id }}"
+          New-Item -ItemType Directory -Path $destino -Force | Out-Null
+          Copy-Item (Join-Path $ultimaCorrida.FullName "reporte.html") $destino
+          $evidencias = Join-Path $ultimaCorrida.FullName "evidencias"
+          if (Test-Path $evidencias) {
+            Copy-Item $evidencias (Join-Path $destino "evidencias") -Recurse
+          }
+
+          # meta.json con la app probada (la guarda la fixture "app" en resultados.json,
+          # bajo _sesion.detalle.app) -- el dashboard lo usa como nombre del reporte.
+          try {
+            $resultadosJson = Get-Content (Join-Path $ultimaCorrida.FullName "resultados.json") -Raw -ErrorAction Stop | ConvertFrom-Json
+            $app = $resultadosJson._sesion.detalle.app
+            if ($app) {
+              @{ apk = $app } | ConvertTo-Json -Compress | Set-Content (Join-Path $destino "meta.json") -Encoding utf8
+            }
+          } catch {
+            Write-Host "No se pudo armar meta.json (no es grave, el dashboard tiene un fallback): $($_.Exception.Message)"
+          }
+
+          if (Test-Path $raizRuns) {
+            $carpetas = Get-ChildItem $raizRuns -Directory | Sort-Object { [int64]$_.Name } -Descending
+            $carpetas | Select-Object -Skip $maxCorridasGuardadas | ForEach-Object {
+              git rm -rf --quiet -- "$raizRuns/$($_.Name)" 2>$null
+            }
+          }
+
+          git add -A -- $raizReportes
+          $huboCambios = (git status --porcelain) -ne $null
+          if ($huboCambios) {
+            git commit -m "Reporte App Nativa iOS - run ${{ github.run_id }}" | Out-Null
+            git push origin $rama --force
+            Write-Host "Reporte publicado en la rama $rama"
+          } else {
+            Write-Host "El reporte no cambió, nada que publicar"
+          }
+
+          git checkout main

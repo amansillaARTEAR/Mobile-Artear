@@ -1,5 +1,5 @@
 # Componente: Regresión completa
-"""Regresión completa de la app TN (Android).
+"""Regresión completa de la app TN (Android e iOS).
 
 Recorre la app como un usuario: navbar, Home y sus módulos, todas las secciones, vivo,
 radio, notas (abrir, compartir, volver), notificaciones (Campana y Ajustes), redes,
@@ -10,6 +10,8 @@ texto cambia en la app hay que ajustar las constantes de arriba.
 """
 import os
 import time
+
+import pytest
 
 NAVBAR = ("Inicio", "Secciones", "Ajustes")
 MODULOS_HOME = ("Últimas noticias", "TN Shorts", "TN Juegos", "Los tenés que ver")
@@ -56,6 +58,8 @@ _MIN = "abcdefghijklmnopqrstuvwxyzaeiouun"
 
 def _buscar_ci(app, texto):
     """Como app.buscar() pero sin distinguir mayúsculas ni tildes (ej. títulos en MAYÚSCULAS)."""
+    if app.ios:
+        return app.buscar(texto)
     app.cerrar_dialogo_permisos()
     t = texto.translate(str.maketrans(_MAY, _MIN)).lower()
     norm = lambda attr: f"translate(@{attr},'{_MAY}','{_MIN}')"
@@ -69,6 +73,9 @@ def _buscar_ci(app, texto):
 def _textos_visibles(app):
     """Textos cortos visibles en pantalla (para diagnosticar qué títulos muestra la app)."""
     try:
+        if app.ios:
+            els = app.d.find_elements("-ios predicate string", "type == 'XCUIElementTypeStaticText' AND visible == 1")
+            return {e.text.strip() for e in els if e.text and len(e.text.strip()) <= 40}
         els = app.d.find_elements("xpath", "//android.widget.TextView[@displayed='true']")
         return {e.text.strip() for e in els if e.text and len(e.text.strip()) <= 40}
     except Exception:
@@ -84,7 +91,7 @@ def _swipe(app, direccion="down", fraccion=0.4):
     if direccion != "down":
         a, b = b, a
     try:
-        app.d.swipe(x, a, x, b, 700)
+        app.deslizar(x, a, x, b, 700)
         return True
     except Exception:
         return False
@@ -107,11 +114,8 @@ def _buscar_scrolleando(app, texto, max_scrolls=25, direccion="down", vistos=Non
 
 def _atras(app, veces=1):
     for _ in range(veces):
-        try:
-            app.d.back()
-        except Exception:
+        if not app.atras():  # Android: botón atrás; iOS: "‹" del topbar o swipe desde el borde
             break
-        time.sleep(1.5)
 
 
 def _abrir_seccion(app, nombre):
@@ -200,10 +204,10 @@ def test_reg05_radio(app, registro):
     pantalla = bool(app.buscar("Escuchá en vivo"))
     registro["evidencias"].append(app.captura("REG05", "1_pantalla", "Pantalla TN radio"))
     tam = app.d.get_window_size()
-    app.d.tap([(tam["width"] // 2, int(tam["height"] * 0.45))])  # botón play central
+    app.tocar(tam["width"] // 2, int(tam["height"] * 0.45))  # botón play central
     time.sleep(6)
     registro["evidencias"].append(app.captura("REG05", "2_play", "Después de tocar play"))
-    app.d.tap([(tam["width"] // 2, int(tam["height"] * 0.45))])  # pausa
+    app.tocar(tam["width"] // 2, int(tam["height"] * 0.45))  # pausa
     errores = app.errores_nuevos()
     registro["detalle"].update({"pantalla_radio": pantalla, "crashes_o_anr": errores})
     _atras(app)
@@ -216,7 +220,7 @@ def test_reg06_nota_compartir_y_volver(app, registro):
     _ir_a_inicio(app)
     app.marcar_inicio()
     tam = app.d.get_window_size()
-    app.d.tap([(tam["width"] // 2, int(tam["height"] * 0.55))])  # nota principal
+    app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))  # nota principal
     time.sleep(6)
     # Si aparece el interstitial no se cierra con Atrás (eso cierra también la nota): se
     # espera a que se cierre solo.
@@ -257,17 +261,22 @@ def test_reg08_toggle_notificacion(app, registro):
     _tab(app, "Ajustes")
     for _ in range(3):
         _swipe(app, "up", 0.5)
-    switches = app.d.find_elements("xpath", "//*[@checkable='true' and @displayed='true']")
+    if app.ios:  # XCUIElementTypeSwitch: el estado está en "value" ("1" / "0")
+        switches = app.d.find_elements("-ios predicate string", "type == 'XCUIElementTypeSwitch' AND visible == 1")
+        estado = lambda s: "true" if s.get_attribute("value") in ("1", "true") else "false"
+    else:
+        switches = app.d.find_elements("xpath", "//*[@checkable='true' and @displayed='true']")
+        estado = lambda s: s.get_attribute("checked")
     assert switches, "No se encontraron switches de notificaciones"
     sw = switches[0]
-    antes = sw.get_attribute("checked")
+    antes = estado(sw)
     sw.click()
     time.sleep(2)
-    despues = sw.get_attribute("checked")
+    despues = estado(sw)
     registro["evidencias"].append(app.captura("REG08", "1_cambiado", f"Switch: {antes} → {despues}"))
     sw.click()  # restaura
     time.sleep(2)
-    restaurado = sw.get_attribute("checked")
+    restaurado = estado(sw)
     registro["evidencias"].append(app.captura("REG08", "2_restaurado", f"Switch restaurado: {restaurado}"))
     registro["detalle"].update({"antes": antes, "despues": despues, "restaurado": restaurado})
     assert antes != despues, "El switch no cambió de estado"
@@ -311,13 +320,16 @@ def test_reg11_juegos(app, registro):
         tam = app.d.get_window_size()
         juego = app.buscar(next(iter(JUEGOS)))  # ubica la fila del carrusel
         y = juego[0].rect["y"] + 20 if juego else int(tam["height"] * 0.5)
-        app.d.swipe(int(tam["width"] * 0.85), y, int(tam["width"] * 0.15), y, 400)
+        app.deslizar(int(tam["width"] * 0.85), y, int(tam["width"] * 0.15), y, 400)
         time.sleep(1)
     registro["detalle"]["juegos_vistos"] = sorted(vistos)
     assert set(JUEGOS) <= vistos, f"Juegos no vistos: {sorted(set(JUEGOS) - vistos)}"
 
 
 def _deeplink(app, registro, caso, url):
+    if app.ios:
+        # En AWS Device Farm la app se re-firma y los universal links abren Safari en vez de la app.
+        pytest.skip("Deeplinks no concluyentes en Device Farm (iOS)")
     app.d.execute_script("mobile: deepLink", {"url": url, "package": app.paquete})
     time.sleep(8)
     en_app = app.en_primer_plano()

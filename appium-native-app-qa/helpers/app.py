@@ -8,18 +8,33 @@ from selenium.common.exceptions import WebDriverException
 
 EN_PRIMER_PLANO = 4  # estado que devuelve query_app_state cuando la app está visible
 
+# Tipos de elemento XCUITest que cuentan como "tocables" en iOS (no hay atributo clickable).
+_TIPOS_TOCABLES_IOS = ("XCUIElementTypeButton", "XCUIElementTypeCell", "XCUIElementTypeLink",
+                       "XCUIElementTypeSwitch", "XCUIElementTypeTab")
+
+
+def _pred(texto) -> str:
+    """Escapa un texto para usarlo dentro de un NSPredicate de iOS."""
+    return str(texto).replace("\\", "\\\\").replace("'", "\\'")
+
 
 class App:
     def __init__(self, driver, salida):
         self.d = driver
         self.salida = salida
-        try:
-            self.paquete = driver.current_package          # Android
-        except WebDriverException:
+        self.ios = str(driver.capabilities.get("platformName", "")).lower() == "ios"
+        if self.ios:
             caps = driver.capabilities
-            self.paquete = caps.get("bundleId") or caps.get("CFBundleIdentifier") or ""  # iOS
+            self.paquete = caps.get("bundleId") or caps.get("CFBundleIdentifier") or ""
+            if not self.paquete:
+                try:
+                    self.paquete = driver.execute_script("mobile: activeAppInfo").get("bundleId", "")
+                except WebDriverException:
+                    self.paquete = ""
+        else:
+            self.paquete = driver.current_package
         try:
-            self.actividad_inicial = driver.current_activity  # no existe en iOS
+            self.actividad_inicial = None if self.ios else driver.current_activity  # no existe en iOS
         except WebDriverException:
             self.actividad_inicial = None
         self._logcat()  # descarta el log previo al inicio (no-op en iOS, no hay logcat)
@@ -51,7 +66,17 @@ class App:
         NO filtramos por @package: según el fabricante/ROM el diálogo lo puede dibujar
         com.android.permissioncontroller, un paquete propio del fabricante, o directamente
         "android" -- filtrar por uno de esos nombres puede no matchear en otro dispositivo.
-        El texto del botón es la parte estable."""
+        El texto del botón es la parte estable.
+
+        En iOS el diálogo es una alerta del sistema: se resuelve con "mobile: alert"
+        (accept/dismiss); si no hay alerta el driver tira error y devolvemos False."""
+        if self.ios:
+            try:
+                self.d.execute_script("mobile: alert", {"action": "accept" if permitir else "dismiss"})
+                time.sleep(1)
+                return True
+            except WebDriverException:
+                return False
         # Contempla el dispositivo en español ("Permitir"/"No permitir") y por si algún día
         # corre con el idioma del sistema en inglés ("Allow"/"Don't allow") -- sin distinguir
         # mayúsculas/minúsculas, porque algunos fabricantes lo muestran en versalitas.
@@ -95,7 +120,10 @@ class App:
             return []
 
     def errores_nuevos(self) -> list:
-        """Crashes (FATAL EXCEPTION) y ANR de la app desde la última consulta."""
+        """Crashes (FATAL EXCEPTION) y ANR de la app desde la última consulta.
+        En iOS no hay logcat (Device Farm no expone syslog por Appium): devuelve []."""
+        if self.ios:
+            return []
         lineas = [e.get("message", "") for e in self._logcat()]
         errores = []
         for i, linea in enumerate(lineas):
@@ -119,7 +147,11 @@ class App:
         momento del reinicio."""
         self.cerrar_dialogo_permisos()
         try:
-            els = self.d.find_elements(AppiumBy.XPATH, "//*[@clickable='true' and @displayed='true']")
+            if self.ios:
+                tipos = ", ".join(f"'{t}'" for t in _TIPOS_TOCABLES_IOS)
+                els = self.d.find_elements(AppiumBy.IOS_PREDICATE, f"type IN {{{tipos}}} AND visible == 1")
+            else:
+                els = self.d.find_elements(AppiumBy.XPATH, "//*[@clickable='true' and @displayed='true']")
         except WebDriverException:
             return []
         utiles = [e for e in els if self.etiqueta(e)]
@@ -127,12 +159,13 @@ class App:
 
     @staticmethod
     def etiqueta(el) -> str:
-        for attr in ("text", "content-desc", "resource-id"):
+        # Android: text / content-desc / resource-id. iOS (XCUITest): label / name / value.
+        for attr in ("text", "content-desc", "resource-id", "label", "name", "value"):
             try:
                 v = (el.get_attribute(attr) or "").strip()
             except WebDriverException:
                 v = ""
-            if v and v.lower() not in ("null", "none"):
+            if v and v.lower() not in ("null", "none") and not v.startswith("XCUIElementType"):
                 return v.split("/")[-1] if attr == "resource-id" else v
         return ""
 
@@ -163,13 +196,51 @@ class App:
         for _ in range(max_atras):
             if self.en_inicio():
                 return True
-            try:
-                self.d.back()                      # botón atrás por software (Android)
-            except WebDriverException:
-                break                               # iOS no tiene botón atrás de hardware/software genérico
-            time.sleep(1.5)
+            if not self.atras():
+                break
             self.volver_a_la_app()
         return self.en_inicio()
+
+    def atras(self, espera=1.5) -> bool:
+        """Vuelve a la pantalla anterior. Android: botón atrás. iOS: no hay botón atrás genérico,
+        así que toca el "‹" del topbar (arriba a la izquierda) y, si no lo encuentra, hace el
+        gesto de swipe desde el borde izquierdo."""
+        try:
+            if not self.ios:
+                self.d.back()
+            else:
+                tam = self.d.get_window_size()
+                botones = self.d.find_elements(
+                    AppiumBy.IOS_PREDICATE,
+                    "type == 'XCUIElementTypeButton' AND visible == 1 AND "
+                    "(label CONTAINS[cd] 'back' OR label CONTAINS[cd] 'atras' OR label CONTAINS[cd] 'volver' "
+                    "OR label CONTAINS[cd] 'cerrar' OR label CONTAINS[cd] 'close' OR label == '‹' OR name == 'Back')")
+                arriba = [b for b in botones
+                          if b.rect["y"] < tam["height"] * 0.15 and b.rect["x"] < tam["width"] * 0.35]
+                if arriba:
+                    arriba[0].click()
+                else:
+                    y = int(tam["height"] * 0.5)
+                    self.deslizar(2, y, int(tam["width"] * 0.7), y, 300)
+        except WebDriverException:
+            return False
+        time.sleep(espera)
+        return True
+
+    def deslizar(self, x1, y1, x2, y2, ms=500):
+        """Arrastra el dedo de (x1,y1) a (x2,y2) en `ms` milisegundos (Android e iOS)."""
+        if self.ios:
+            self.d.execute_script("mobile: dragFromToForDuration", {
+                "fromX": x1, "fromY": y1, "toX": x2, "toY": y2, "duration": max(ms / 1000, 0.1)})
+        else:
+            self.d.swipe(x1, y1, x2, y2, ms)
+
+    def tocar(self, x, y):
+        """Toca las coordenadas (x,y) de la pantalla (Android e iOS)."""
+        if self.ios:
+            self.d.execute_script("mobile: tap", {"x": x, "y": y})
+        else:
+            self.d.tap([(x, y)])
 
     def reiniciar(self) -> float:
         """Cierra la app y la abre en frío. Devuelve los segundos hasta que muestra contenido."""
@@ -189,10 +260,11 @@ class App:
         vio esto" queda pegado para siempre y esos escenarios dejan de poder probarse.
         Usa la extensión "mobile: clearApp" del driver (no requiere --allow-insecure); en drivers
         que no la soportan (ej. iOS todavía sin este caso de uso) hace un reinicio normal."""
-        try:
-            self.d.execute_script("mobile: clearApp", {"appId": self.paquete})
-        except WebDriverException:
-            pass  # driver sin soporte para limpiar datos: seguimos con un reinicio normal
+        if not self.ios:  # "mobile: clearApp" no existe en iOS: ahí es un reinicio normal
+            try:
+                self.d.execute_script("mobile: clearApp", {"appId": self.paquete})
+            except WebDriverException:
+                pass  # driver sin soporte para limpiar datos: seguimos con un reinicio normal
         return self.reiniciar()
 
     def scroll(self, direccion="down", porcentaje=0.6, zona_top=0.12, zona_alto=0.3) -> bool:
@@ -212,6 +284,14 @@ class App:
         Si hay que asegurarse de no tocar un elemento puntual (ej. un tooltip ya detectado),
         pasale una zona angosta por arriba de su borde superior."""
         size = self.d.get_window_size()
+        if self.ios:
+            x = size["width"] // 2
+            a, b = int(size["height"] * (zona_top + zona_alto)), int(size["height"] * zona_top)
+            try:
+                self.deslizar(x, a if direccion == "down" else b, x, b if direccion == "down" else a, 600)
+                return True
+            except WebDriverException:
+                return False
         try:
             self.d.execute_script("mobile: swipeGesture", {
                 "left": int(size["width"] * 0.1), "top": int(size["height"] * zona_top),
@@ -234,6 +314,12 @@ class App:
         self.cerrar_dialogo_permisos()
         xp = (f"//*[@displayed='true' and (contains(@text,{texto!r}) or contains(@content-desc,{texto!r}))]")
         try:
+            if self.ios:  # sin distinguir mayúsculas ni tildes ([cd])
+                t = _pred(texto)
+                return self.d.find_elements(
+                    AppiumBy.IOS_PREDICATE,
+                    f"visible == 1 AND (label CONTAINS[cd] '{t}' OR name CONTAINS[cd] '{t}' "
+                    f"OR value CONTAINS[cd] '{t}')")
             return self.d.find_elements(AppiumBy.XPATH, xp)
         except WebDriverException:
             return []
