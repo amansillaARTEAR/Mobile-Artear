@@ -117,7 +117,7 @@ jobs:
             $resultadosJson = Get-Content (Join-Path $ultimaCorrida.FullName "resultados.json") -Raw -ErrorAction Stop | ConvertFrom-Json
             $app = $resultadosJson._sesion.detalle.app
             if ($app) {
-              @{ apk = $app } | ConvertTo-Json -Compress | Set-Content (Join-Path $destino "meta.json") -Encoding utf8
+              @{ apk = $app; filtro = "${{ inputs.filtro }}" } | ConvertTo-Json -Compress | Set-Content (Join-Path $destino "meta.json") -Encoding utf8
             }
           } catch {
             Write-Host "No se pudo armar meta.json (no es grave, el dashboard tiene un fallback): $($_.Exception.Message)"
