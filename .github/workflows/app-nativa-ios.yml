@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: ""
+      app:
+        description: "Nombre de la build que se prueba (ej: TN-10.10.0-50005410.ipa o el ticket, ej: AMR-2087); es el nombre con que se publica el reporte"
+        required: false
+        type: string
+        default: ""
       bundle_id:
         description: "Opcional: bundle id de la app instalada en la sesión (ver las capabilities de la sesión de Device Farm)"
         required: false
@@ -47,6 +52,7 @@ jobs:
         env:
           APPIUM_URL: ${{ inputs.appium_endpoint }}
           IOS_BUNDLE_ID: ${{ inputs.bundle_id }}
+          TN_APP_NOMBRE: ${{ inputs.app }}
         run: |
           # Sin Appium local ni adb: el dispositivo y el servidor Appium son los de la sesión remota.
           # Solo la regresión completa: el resto de los tests del repo son de Android u otros tickets.

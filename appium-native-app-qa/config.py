@@ -27,7 +27,7 @@ def app_a_probar() -> Path:
     apps = sorted(carpeta.glob(patron), key=lambda p: p.stat().st_mtime)
     if not apps and PLATAFORMA == "ios" and _en_la_nube():
         # La sesión de AWS Device Farm ya trae la app instalada: no hace falta un .ipa local.
-        return Path("TN-iOS-DeviceFarm")
+        return Path(os.getenv("TN_APP_NOMBRE") or "TN-iOS-DeviceFarm")
     if not apps:
         raise FileNotFoundError(f"No hay ningún {patron} en {carpeta}. Copiá ahí la app a probar.")
     return apps[-1]
