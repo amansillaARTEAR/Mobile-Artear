@@ -49,7 +49,8 @@ jobs:
           IOS_BUNDLE_ID: ${{ inputs.bundle_id }}
         run: |
           # Sin Appium local ni adb: el dispositivo y el servidor Appium son los de la sesión remota.
-          $pyArgs = @("-m", "pytest")
+          # Solo la regresión completa: el resto de los tests del repo son de Android u otros tickets.
+          $pyArgs = @("-m", "pytest", "tests/test_regresion.py")
           if ("${{ inputs.filtro }}") { $pyArgs += @("-k", "${{ inputs.filtro }}") }
           & .\.venv\Scripts\python.exe @pyArgs 2>&1 | Tee-Object -FilePath pytest_output.log
           $ec = $LASTEXITCODE
