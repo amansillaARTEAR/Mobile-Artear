@@ -75,6 +75,21 @@ def _textos_visibles(app):
         return set()
 
 
+def _swipe(app, direccion="down", fraccion=0.4):
+    """Desliza la pantalla con un swipe W3C (dedo de 70% a 30% del alto para "down").
+    Reemplaza a App.scroll(): el gesto "mobile: swipeGesture" no movía la Home ni Ajustes."""
+    tam = app.d.get_window_size()
+    x = tam["width"] // 2
+    a, b = int(tam["height"] * (0.5 + fraccion / 2)), int(tam["height"] * (0.5 - fraccion / 2))
+    if direccion != "down":
+        a, b = b, a
+    try:
+        app.d.swipe(x, a, x, b, 700)
+        return True
+    except Exception:
+        return False
+
+
 def _buscar_scrolleando(app, texto, max_scrolls=25, direccion="down", vistos=None):
     """Scrollea hasta que `texto` aparece en pantalla. Devuelve la lista de elementos o [].
     Si se pasa `vistos` (set), acumula los textos cortos que fue viendo, para diagnóstico."""
@@ -84,7 +99,7 @@ def _buscar_scrolleando(app, texto, max_scrolls=25, direccion="down", vistos=Non
             return els
         if vistos is not None:
             vistos |= _textos_visibles(app)
-        if not app.scroll(direccion, porcentaje=0.7, zona_top=0.2, zona_alto=0.5):
+        if not _swipe(app, direccion):
             break
         time.sleep(1)
     return []
@@ -102,7 +117,7 @@ def _atras(app, veces=1):
 def _abrir_seccion(app, nombre):
     _tab(app, "Secciones")
     for _ in range(4):  # la lista puede quedar scrolleada de antes
-        app.scroll("up", porcentaje=0.9, zona_top=0.2, zona_alto=0.5)
+        _swipe(app, "up", 0.5)
     els = _buscar_scrolleando(app, nombre, max_scrolls=6)
     if not els:  # algunas (ej. «TN en las redes») aparecen recién tras «Ver más categorías»
         mas = _buscar_scrolleando(app, "Ver más categorías", max_scrolls=6)
@@ -241,7 +256,7 @@ def test_reg08_toggle_notificacion(app, registro):
     """REG-08: activar y desactivar un tema de notificaciones cambia el switch y se restaura."""
     _tab(app, "Ajustes")
     for _ in range(3):
-        app.scroll("up", porcentaje=0.9, zona_top=0.2, zona_alto=0.5)
+        _swipe(app, "up", 0.5)
     switches = app.d.find_elements("xpath", "//*[@checkable='true' and @displayed='true']")
     assert switches, "No se encontraron switches de notificaciones"
     sw = switches[0]
@@ -288,7 +303,7 @@ def test_reg11_juegos(app, registro):
     _ir_a_inicio(app)
     _tab(app, "Inicio")
     assert _buscar_scrolleando(app, "Juegos", max_scrolls=25), "No se encontró el módulo «TN Juegos»"
-    app.scroll("down", porcentaje=0.3, zona_top=0.3, zona_alto=0.3)
+    _swipe(app, "down", 0.2)
     vistos = set()
     for i in range(6):
         vistos |= {j for j in JUEGOS if app.buscar(j)}
