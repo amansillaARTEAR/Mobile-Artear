@@ -186,7 +186,12 @@ def test_reg04_vivo(app, registro):
     """REG-04: «EN VIVO» del topbar abre el player en vivo y se cierra volviendo a la app."""
     _ir_a_inicio(app)
     assert _tocar_texto(app, "EN VIVO", espera=8), "No se encontró el botón «EN VIVO» en el topbar"
-    live = bool(app.buscar("LIVE"))
+    if app.ios:
+        # El player de iOS no muestra la etiqueta LIVE: se da por abierto si el navbar
+        # desapareció (el player ocupa toda la pantalla).
+        live = not app.navbar()
+    else:
+        live = bool(app.buscar("LIVE"))
     registro["evidencias"].append(app.captura("REG04", "1_player", "Player en vivo"))
     time.sleep(10)
     registro["evidencias"].append(app.captura("REG04", "2_reproduce", "Player 10 s después"))
@@ -194,7 +199,7 @@ def test_reg04_vivo(app, registro):
     volvio = app.esperar_contenido()
     errores = app.errores_nuevos()
     registro["detalle"].update({"etiqueta_live": live, "volvio": volvio, "crashes_o_anr": errores})
-    assert live, "El player no muestra la etiqueta LIVE"
+    assert live, "El player no se abrió (no se ve LIVE / el navbar sigue visible)"
     assert volvio and not errores, f"No volvió bien del vivo o hubo errores: {errores}"
 
 
@@ -262,7 +267,15 @@ def test_reg08_toggle_notificacion(app, registro):
     for _ in range(3):
         _swipe(app, "up", 0.5)
     if app.ios:  # XCUIElementTypeSwitch: el estado está en "value" ("1" / "0")
-        switches = app.d.find_elements("-ios predicate string", "type == 'XCUIElementTypeSwitch' AND visible == 1")
+        switches = app.d.find_elements("-ios predicate string", "type == 'XCUIElementTypeSwitch'")
+        if not switches:  # toggles custom: el estado igual viene como value "0"/"1"
+            switches = app.d.find_elements("-ios predicate string", "value IN {'0', '1'}")
+        if not switches:
+            tipos = {}
+            for e in app.d.find_elements("xpath", "//*"):
+                t = e.get_attribute("type")
+                tipos[t] = tipos.get(t, 0) + 1
+            registro["detalle"]["tipos_en_pantalla"] = tipos
         estado = lambda s: "true" if s.get_attribute("value") in ("1", "true") else "false"
     else:
         switches = app.d.find_elements("xpath", "//*[@checkable='true' and @displayed='true']")
