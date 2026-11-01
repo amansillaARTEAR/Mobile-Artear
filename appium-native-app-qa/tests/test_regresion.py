@@ -266,30 +266,39 @@ def test_reg08_toggle_notificacion(app, registro):
     _tab(app, "Ajustes")
     for _ in range(3):
         _swipe(app, "up", 0.5)
-    if app.ios:  # XCUIElementTypeSwitch: el estado está en "value" ("1" / "0")
-        switches = app.d.find_elements("-ios predicate string", "type == 'XCUIElementTypeSwitch'")
-        if not switches:  # toggles custom: el estado igual viene como value "0"/"1"
-            switches = app.d.find_elements("-ios predicate string", "value IN {'0', '1'}")
-        if not switches:
-            tipos = {}
-            for e in app.d.find_elements("xpath", "//*"):
-                t = e.get_attribute("type")
-                tipos[t] = tipos.get(t, 0) + 1
-            registro["detalle"]["tipos_en_pantalla"] = tipos
-        estado = lambda s: "true" if s.get_attribute("value") in ("1", "true") else "false"
+    if app.ios:
+        # Los toggles de iOS pueden ser custom (el estado igual viene en "value" "0"/"1"). Después
+        # de tocar uno la pantalla se refresca (ej. alerta de permiso de notificaciones), así que
+        # el elemento se vuelve a buscar cada vez en vez de reusar una referencia vieja.
+        def hallar():
+            for q in ("type == 'XCUIElementTypeSwitch'", "value IN {'0', '1'}"):
+                els = app.d.find_elements("-ios predicate string", q)
+                if els:
+                    return els[0]
+            return None
+        estado = lambda: "true" if (hallar().get_attribute("value") in ("1", "true")) else "false"
+        tocar = lambda: hallar().click()
+        sw = hallar()
+        if sw is not None:
+            registro["detalle"]["tipo_switch"] = sw.get_attribute("type")
     else:
-        switches = app.d.find_elements("xpath", "//*[@checkable='true' and @displayed='true']")
-        estado = lambda s: s.get_attribute("checked")
-    assert switches, "No se encontraron switches de notificaciones"
-    sw = switches[0]
-    antes = estado(sw)
-    sw.click()
+        def hallar():
+            els = app.d.find_elements("xpath", "//*[@checkable='true' and @displayed='true']")
+            return els[0] if els else None
+        estado = lambda: hallar().get_attribute("checked")
+        tocar = lambda: hallar().click()
+        sw = hallar()
+    assert sw is not None, "No se encontraron switches de notificaciones"
+    antes = estado()
+    tocar()
     time.sleep(2)
-    despues = estado(sw)
+    app.cerrar_dialogo_permisos()
+    despues = estado()
     registro["evidencias"].append(app.captura("REG08", "1_cambiado", f"Switch: {antes} → {despues}"))
-    sw.click()  # restaura
+    tocar()  # restaura
     time.sleep(2)
-    restaurado = estado(sw)
+    app.cerrar_dialogo_permisos()
+    restaurado = estado()
     registro["evidencias"].append(app.captura("REG08", "2_restaurado", f"Switch restaurado: {restaurado}"))
     registro["detalle"].update({"antes": antes, "despues": despues, "restaurado": restaurado})
     assert antes != despues, "El switch no cambió de estado"
