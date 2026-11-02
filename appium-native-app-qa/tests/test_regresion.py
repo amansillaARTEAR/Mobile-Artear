@@ -435,7 +435,7 @@ def _scrollear_hasta_el_final(app, registro, caso, max_scrolls=40):
         huella = hashlib.md5(app.d.get_screenshot_as_base64().encode()).hexdigest()
         iguales = iguales + 1 if huella == ultima else 0
         ultima = huella
-        hallados = [t for t in ("Lee también", "Tags", "Temas", "Etiquetas") if app.buscar(t)]
+        hallados = [t for t in ("Lee también", "Tags", "Temas", "Etiquetas") if _buscar_ci(app, t)]
         if hallados:
             registro["detalle"].setdefault("apariciones", {})[str(i)] = hallados
             registro["evidencias"].append(app.captura(caso, f"{i:02d}_{hallados[0][:4]}", f"Scroll {i}: se ve {hallados}"))
