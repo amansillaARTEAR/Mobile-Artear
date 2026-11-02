@@ -519,7 +519,13 @@ def _notas_visibles(app):
     """Titulares de notas visibles: textos largos. En Android las notas de un listado no son
     tocables con texto (son TextView sueltos), en iOS sí son botones."""
     if app.ios:
-        return [app.etiqueta(e) for e in app.clickeables() if len(app.etiqueta(e)) > 25]
+        # En iOS los titulares de un listado son texto (no botones): textos largos visibles.
+        try:
+            els = app.d.find_elements("-ios predicate string",
+                                      "type == 'XCUIElementTypeStaticText' AND visible == 1 AND label MATCHES '.{26,}'")
+            return [e.get_attribute("label") for e in els]
+        except Exception:
+            return []
     try:
         els = app.d.find_elements("xpath", "//android.widget.TextView[@displayed='true']")
         return [e.text for e in els if e.text and len(e.text.strip()) > 25]
