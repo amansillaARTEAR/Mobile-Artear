@@ -568,12 +568,18 @@ def test_reg16_tags_nota(app, registro):
     if hay_desborde:
         x_antes = {app.etiqueta(e): e.rect["x"] for e in pildoras}
         y_fila = int(pildoras[0].rect["y"] + pildoras[0].rect["height"] / 2)
-        _flick(app, int(ancho * 0.85), y_fila, int(ancho * 0.15), y_fila)
-        time.sleep(1.5)
-        pildoras = leer_pildoras()
-        x_despues = {app.etiqueta(e): e.rect["x"] for e in pildoras}
-        movidas = [t for t in x_despues if t in x_antes and abs(x_despues[t] - x_antes[t]) > 20]
-        nuevas = [t for t in x_despues if t not in x_antes]
+        movidas, nuevas, x_despues = [], [], {}
+        # El gesto es intermitente en iOS: se prueba con un flick y, si la fila no se movió, con un arrastre.
+        for gesto in (lambda: _flick(app, int(ancho * 0.85), y_fila, int(ancho * 0.15), y_fila),
+                      lambda: app.deslizar(int(ancho * 0.85), y_fila, int(ancho * 0.15), y_fila, 500)):
+            gesto()
+            time.sleep(1.5)
+            pildoras = leer_pildoras()
+            x_despues = {app.etiqueta(e): e.rect["x"] for e in pildoras}
+            movidas = [t for t in x_despues if t in x_antes and abs(x_despues[t] - x_antes[t]) > 20]
+            nuevas = [t for t in x_despues if t not in x_antes]
+            if movidas or nuevas:
+                break
         registro["detalle"]["tags_tras_scroll_lateral"] = list(x_despues)
         registro["evidencias"].append(app.captura("REG16", "2_scroll_lateral", f"Scroll lateral de tags: {list(x_despues)}"))
         assert movidas or nuevas, "El scroll lateral no movió la fila de tags"
