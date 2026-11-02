@@ -448,13 +448,22 @@ def _cerrar_te_puede_interesar(app, intentos=4):
     pantalla) y la «X» cambia de altura, así que se vuelve a ubicar el título y se toca de nuevo
     hasta que el panel desaparece."""
     cerro = False
-    ancho = app.d.get_window_size()["width"]
-    for _ in range(intentos):
+    tam = app.d.get_window_size()
+    ancho, alto = tam["width"], tam["height"]
+    for _ in range(intentos + 4):
         try:
             titulo = _buscar_ci(app, "Te puede interesar")
             if not titulo:
                 return cerro
             t = titulo[0].rect
+            if t["y"] + t["height"] > alto * 0.88:
+                # Recién asoma: está translúcida y medio tapada por la barra del sistema, y no se
+                # puede cerrar hasta que termina de renderizar. Se espera / se sube un poco.
+                time.sleep(1.5)
+                if _buscar_ci(app, "Te puede interesar")[0].rect["y"] + t["height"] > alto * 0.88:
+                    app.deslizar(ancho // 2, int(alto * 0.55), ancho // 2, int(alto * 0.4), 800)
+                    time.sleep(1)
+                continue
             app.tocar(int(ancho * 0.927), int(t["y"] + t["height"] / 2))
         except Exception:
             time.sleep(0.5)  # el panel se está moviendo: se vuelve a intentar
@@ -749,3 +758,75 @@ def test_reg20_mas_sobre(app, registro):
     volvio = app.esperar_contenido()
     assert cambio, "Al tocar una nota de «Más sobre» no se abrió otra nota"
     assert volvio and app.en_primer_plano(), "No se pudo volver a la nota original"
+
+
+def test_reg21_flowcard_te_puede_interesar(app, registro):
+    """REG-21: la flowcard «Te puede interesar» aparece al scrollear la nota, se cierra con la «X» y se registra cuándo aparece."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    tam = app.d.get_window_size()
+    registro["evidencias"].append(app.captura("REG21", "0_nota", "Nota recién abierta (sin flowcard)"))
+    assert not _buscar_ci(app, "Te puede interesar"), "La flowcard ya está visible antes de scrollear"
+
+    def bajar():
+        # Mismo gesto que _scroll_nota, pero sin cerrar la flowcard (acá es justo lo que se observa).
+        if app.ios:
+            return _flick(app, tam["width"] // 2, int(tam["height"] * 0.8), tam["width"] // 2, int(tam["height"] * 0.25))
+        x = tam["width"] // 2
+        app.deslizar(x, int(tam["height"] * 0.62), x, int(tam["height"] * 0.2), 1200)
+        return True
+
+    pasos = 0
+    for pasos in range(1, 61):
+        bajar()
+        time.sleep(1)
+        if _buscar_ci(app, "Te puede interesar"):
+            break
+    else:
+        pasos = None
+    registro["detalle"]["scrolls_hasta_que_aparece"] = pasos
+    registro["detalle"]["pantallas_aprox"] = round(pasos * 0.42, 1) if pasos else None
+    registro["evidencias"].append(app.captura("REG21", "1_aparece", f"Flowcard visible tras {pasos} scrolls"))
+    assert pasos, "La flowcard «Te puede interesar» no apareció en 60 scrolls"
+
+    # Al aparecer solo asoma un pedazo; se registra cuántos scrolls más hacen falta para que esté completa.
+    alto = tam["height"]
+    extra = 0
+    for extra in range(0, 8):
+        t = _buscar_ci(app, "Te puede interesar")
+        if t and t[0].rect["y"] + t[0].rect["height"] <= alto * 0.88:
+            break
+        bajar()
+        time.sleep(1)
+    registro["detalle"]["scrolls_extra_hasta_completa"] = extra
+    registro["evidencias"].append(app.captura("REG21", "1b_completa", f"Flowcard completa (+{extra} scrolls)"))
+    cerro = False
+    if not app.ios:
+        for _ in range(4):
+            _cerrar_te_puede_interesar(app)
+            time.sleep(1)
+            if not _buscar_ci(app, "Te puede interesar"):
+                cerro = True
+                break
+    else:
+        # iOS: la «X» está en la misma fila del título, a la derecha.
+        for _ in range(4):
+            t = _buscar_ci(app, "Te puede interesar")
+            if not t:
+                cerro = True
+                break
+            r = t[0].rect
+            app.tocar(int(tam["width"] * 0.927), int(r["y"] + r["height"] / 2))
+            time.sleep(1)
+    registro["evidencias"].append(app.captura("REG21", "2_cerrada", "Después de cerrarla"))
+    registro["detalle"]["se_cierra"] = cerro
+
+    reaparece = False
+    for _ in range(8):
+        bajar()
+        time.sleep(1)
+        if _buscar_ci(app, "Te puede interesar"):
+            reaparece = True
+            break
+    registro["detalle"]["reaparece_al_seguir"] = reaparece
+    registro["evidencias"].append(app.captura("REG21", "3_despues", f"8 scrolls más; reaparece: {reaparece}"))
+    assert cerro, "La flowcard no se cerró con la «X»"
