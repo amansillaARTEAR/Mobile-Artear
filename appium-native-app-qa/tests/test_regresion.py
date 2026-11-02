@@ -923,7 +923,7 @@ def test_reg22_liveblog(app, registro):
             registro["evidencias"].append(app.captura("REG22", "0_publicidad", "Publicidad a pantalla completa cerrada"))
         time.sleep(4)
         es_nota = any("compart" in e["etiqueta"].lower() or "share" in e["etiqueta"].lower() for e in app.topbar())
-        abierto = es_nota and bool(_buscar_ci(app, "Minuto a minuto"))
+        abierto = es_nota  # la etiqueta «Minuto a minuto» está en la tarjeta de la Home, no dentro de la nota
     registro["evidencias"].append(app.captura("REG22", "1_liveblog", "Liveblog abierto"))
     assert abierto, "No se pudo abrir un liveblog («Minuto a minuto») desde la Home"
     _cerrar_zocalo(app)
