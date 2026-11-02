@@ -112,7 +112,7 @@ def _buscar_scrolleando(app, texto, max_scrolls=25, direccion="down", vistos=Non
         els = _buscar_ci(app, texto)
         if els:
             return els
-        if vistos is not None:
+        if vistos is not None and not app.ios:  # en iOS leer todos los textos por scroll tarda minutos (Device Farm)
             vistos |= _textos_visibles(app)
         if not _swipe(app, direccion):
             break
