@@ -441,32 +441,64 @@ def _scroll_nota(app):
     return _swipe(app, "down", 0.6)
 
 
-def _scrollear_hasta_el_final(app, registro, caso, max_scrolls=40):
-    """Baja la nota hasta que la pantalla deja de cambiar (llegó al final). Deja una captura
-    cada 3 scrolls. Devuelve la cantidad de scrolls que hizo."""
-    import hashlib
-    ultima, iguales = None, 0
-    for i in range(1, max_scrolls + 1):
+def _scrollear_hasta(app, texto, max_scrolls=40):
+    """Baja la nota hasta que `texto` aparece en pantalla (sin distinguir mayúsculas/tildes).
+    Devuelve la lista de elementos encontrados, o [] si llegó al límite sin verlo."""
+    for _ in range(max_scrolls):
+        els = _buscar_ci(app, texto)
+        if els:
+            return els
         _scroll_nota(app)
-        time.sleep(1.5)
-        huella = hashlib.md5(app.d.get_screenshot_as_base64().encode()).hexdigest()
-        iguales = iguales + 1 if huella == ultima else 0
-        ultima = huella
-        hallados = [t for t in ("Lee también", "Tags", "Temas", "Etiquetas") if _buscar_ci(app, t)]
-        if hallados:
-            registro["detalle"].setdefault("apariciones", {})[str(i)] = hallados
-            registro["evidencias"].append(app.captura(caso, f"{i:02d}_{hallados[0][:4]}", f"Scroll {i}: se ve {hallados}"))
-        elif i % 3 == 0:
-            registro["evidencias"].append(app.captura(caso, f"{i:02d}_scroll", f"Nota, scroll {i}"))
-        if iguales >= 2:
-            return i
-    return max_scrolls
+        time.sleep(1)
+    return []
+
+
+def _huella(app):
+    import hashlib
+    return hashlib.md5(app.d.get_screenshot_as_base64().encode()).hexdigest()
 
 
 def test_reg16_tags_nota(app, registro):
-    """REG-16: (exploratorio) una nota común muestra sus tags al final y tocar uno abre su listado."""
+    """REG-16: una nota común muestra «Temas de la nota» con sus tags (píldoras) y al tocar uno abre su listado."""
     assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
-    registro["evidencias"].append(app.captura("REG16", "00_nota", "Nota abierta"))
-    n = _scrollear_hasta_el_final(app, registro, "REG16")
-    registro["evidencias"].append(app.captura("REG16", "99_final", "Final de la nota"))
-    registro["detalle"]["scrolls_hasta_el_final"] = n
+    titulo = _scrollear_hasta(app, "Temas de la nota")
+    registro["evidencias"].append(app.captura("REG16", "1_temas", "Sección «Temas de la nota»"))
+    assert titulo, "La nota no muestra la sección «Temas de la nota»"
+    # Las píldoras son los tocables que están justo debajo del título de la sección.
+    alto = app.d.get_window_size()["height"]
+    y_titulo = titulo[0].rect["y"]
+    pildoras = [e for e in app.clickeables()
+                if y_titulo < e.rect["y"] < y_titulo + alto * 0.25 and app.etiqueta(e)]
+    tags = [app.etiqueta(e) for e in pildoras]
+    registro["detalle"]["tags"] = tags
+    assert pildoras, "«Temas de la nota» no tiene ningún tag"
+    tag = tags[0]
+    pildoras[0].click()
+    time.sleep(6)
+    abrio = bool(_buscar_ci(app, tag))
+    registro["evidencias"].append(app.captura("REG16", "2_listado", f"Listado del tag «{tag}»"))
+    registro["detalle"].update({"tag_tocado": tag, "abrio_listado": abrio})
+    _atras(app)
+    volvio = app.esperar_contenido()
+    registro["evidencias"].append(app.captura("REG16", "3_vuelta", "De vuelta en la nota"))
+    assert abrio, f"Al tocar el tag «{tag}» no se abrió su listado"
+    assert volvio and app.en_primer_plano(), "No se pudo volver de la nota después de tocar el tag"
+
+
+def test_reg17_lee_tambien(app, registro):
+    """REG-17: el link «Lee también» de una nota común abre otra nota y se vuelve a la original."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    link = _scrollear_hasta(app, "Lee también")
+    registro["evidencias"].append(app.captura("REG17", "1_lee_tambien", "«Lee también» en la nota"))
+    assert link, "La nota no muestra ningún «Lee también»"
+    antes = _huella(app)
+    link[0].click()
+    time.sleep(8)
+    cambio = _huella(app) != antes
+    registro["evidencias"].append(app.captura("REG17", "2_otra_nota", "Nota abierta desde «Lee también»"))
+    registro["detalle"]["abrio_otra_nota"] = cambio
+    _atras(app)
+    volvio = app.esperar_contenido()
+    registro["evidencias"].append(app.captura("REG17", "3_vuelta", "De vuelta en la nota original"))
+    assert cambio, "Al tocar «Lee también» no se abrió otra nota"
+    assert volvio and app.en_primer_plano(), "No se pudo volver a la nota original"
