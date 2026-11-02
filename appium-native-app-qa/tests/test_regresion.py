@@ -405,7 +405,10 @@ def _abrir_nota_comun(app, registro, intentos=6):
             _swipe(app, "down", 0.4)
         app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))
         time.sleep(14)  # incluye la espera del interstitial, como en REG-06
-        if not app.buscar("Minuto a minuto") and not app.buscar("EN VIVO"):
+        # Es una nota si el topbar tiene el botón de compartir (un aviso o un player no lo tienen) y
+        # no es un liveblog.
+        es_nota = any("compart" in e["etiqueta"].lower() or "share" in e["etiqueta"].lower() for e in app.topbar())
+        if es_nota and not app.buscar("Minuto a minuto") and not app.buscar("EN VIVO"):
             return True
         registro["detalle"].setdefault("notas_descartadas", []).append(n + 1)
         _atras(app)
@@ -434,15 +437,68 @@ def _flick(app, x1, y1, x2, y2):
         return False
 
 
+def _cerrar_te_puede_interesar(app, intentos=4):
+    """En Android, al bajar por una nota aparece el panel «Te puede interesar» pegado abajo, que tapa
+    buena parte de la pantalla y se queda con los gestos (la nota deja de scrollear). Se cierra con
+    su «X» (el tocable de la misma fila del título, a la derecha). El panel cambia de estado (asoma
+    abajo, se abre a mitad de pantalla) y la «X» cambia de lugar, así que hay que tocarla más de una
+    vez, volviéndola a buscar cada vez, hasta que el panel desaparece."""
+    cerro = False
+    for _ in range(intentos):
+        try:
+            titulo = _buscar_ci(app, "Te puede interesar")
+            if not titulo:
+                return cerro
+            t = titulo[0].rect
+            centro = t["y"] + t["height"] / 2
+            todos = app.d.find_elements("xpath", "//*[@clickable='true' and @displayed='true']")
+            derecha = [e for e in todos
+                       if abs(e.rect["y"] + e.rect["height"] / 2 - centro) < 60 and e.rect["x"] >= t["x"] + t["width"] - 5]
+            if not derecha:
+                return cerro
+            r = max(derecha, key=lambda e: e.rect["x"]).rect
+            app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+        except Exception:
+            time.sleep(0.5)  # el panel se está moviendo: se vuelve a intentar
+            continue
+        cerro = True
+        time.sleep(1)
+    return cerro
+
+
 def _scroll_nota(app):
     """Baja casi una pantalla dentro de una nota (dedo de 80% a 25% del alto)."""
     tam = app.d.get_window_size()
+    if not app.ios:
+        # Android: arrastre corto y lento (sin inercia) para no saltearse secciones cortas como
+        # «Temas de la nota», que con un gesto rápido quedan entre dos pantallas.
+        _cerrar_te_puede_interesar(app)
+        x = tam["width"] // 2
+        app.deslizar(x, int(tam["height"] * 0.75), x, int(tam["height"] * 0.25), 1200)
+        return True
     return _flick(app, tam["width"] // 2, int(tam["height"] * 0.8), tam["width"] // 2, int(tam["height"] * 0.25))
 
 
-def _scrollear_hasta(app, texto, max_scrolls=40):
+def _scrollear_hasta(app, texto, max_scrolls=60):
     """Baja la nota hasta que `texto` aparece en pantalla (sin distinguir mayúsculas/tildes).
     Devuelve la lista de elementos encontrados, o [] si llegó al límite sin verlo."""
+    if not app.ios:
+        # Android: scroll nativo de UiAutomator hasta que el texto aparece (mucho más rápido que
+        # bajar de a pasos). Se cierra antes el panel «Te puede interesar», que trababa el scroll.
+        import re
+        _cerrar_te_puede_interesar(app)
+        patron = "(?i).*" + re.sub(r"[aáeéiíoóuú]", lambda m: "[" + {"a": "aá", "e": "eé", "i": "ií", "o": "oó", "u": "uú"}[
+            m.group(0).translate(str.maketrans("áéíóú", "aeiou"))] + "]", texto.lower()) + ".*"
+        try:
+            app.d.find_element(
+                "-android uiautomator",
+                'new UiScrollable(new UiSelector().scrollable(true)).setMaxSearchSwipes(%d)'
+                '.scrollIntoView(new UiSelector().textMatches("%s"))' % (max_scrolls, patron))
+        except Exception:
+            pass  # no lo encontró por esta vía: se intenta igual el recorrido manual de abajo
+        els = _buscar_ci(app, texto)
+        if els:
+            return els
     for _ in range(max_scrolls):
         els = _buscar_ci(app, texto)
         if els:
@@ -450,6 +506,18 @@ def _scrollear_hasta(app, texto, max_scrolls=40):
         _scroll_nota(app)
         time.sleep(1)
     return []
+
+
+def _notas_visibles(app):
+    """Titulares de notas visibles: textos largos. En Android las notas de un listado no son
+    tocables con texto (son TextView sueltos), en iOS sí son botones."""
+    if app.ios:
+        return [app.etiqueta(e) for e in app.clickeables() if len(app.etiqueta(e)) > 25]
+    try:
+        els = app.d.find_elements("xpath", "//android.widget.TextView[@displayed='true']")
+        return [e.text for e in els if e.text and len(e.text.strip()) > 25]
+    except Exception:
+        return []
 
 
 def _huella(app):
@@ -505,7 +573,7 @@ def test_reg16_tags_nota(app, registro):
     # El listado del tag es una pantalla propia de la app: el nombre del tag va en el título (arriba)
     # y debajo hay notas de ese tema (tarjetas tocables con un titular largo).
     en_titulo = any(e.rect["y"] < alto * 0.15 for e in _buscar_ci(app, tag))
-    notas = [app.etiqueta(e) for e in app.clickeables() if len(app.etiqueta(e)) > 25]
+    notas = _notas_visibles(app)
     abrio = _huella(app) != antes and en_titulo and bool(notas)
     registro["detalle"].update({"titulo_con_el_tag": en_titulo, "notas_en_el_listado": len(notas)})
     registro["evidencias"].append(app.captura("REG16", "3_listado", f"Listado del tag «{tag}»"))
@@ -531,7 +599,8 @@ def test_reg17_lee_tambien(app, registro):
     registro["detalle"]["tarjetas"] = [app.etiqueta(e) for e in tarjetas]
     assert tarjetas, "«Leé también» no tiene ninguna nota debajo"
     antes = _huella(app)
-    tarjetas[0].click()
+    r = tarjetas[0].rect
+    app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))  # por coordenadas: el click del elemento falla en Android
     time.sleep(8)
     cambio = _huella(app) != antes
     registro["evidencias"].append(app.captura("REG17", "2_otra_nota", "Nota abierta desde «Lee también»"))
@@ -574,29 +643,43 @@ def _tiempo_reproductor(app):
 def test_reg18_audionota(app, registro):
     """REG-18: el botón de audionota (auriculares) abre el reproductor «Escuchando artículo» con el primer toque y el audio avanza."""
     assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
-    seguir = _buscar_ci(app, "Seguir")
+    seguir = _scrollear_hasta(app, "Seguir", max_scrolls=15)
     assert seguir, "La nota no muestra la fila con el botón de audionota y «Seguir»"
     botones = _botones_en_la_fila(app, seguir[0])
     assert botones, "No se encontró el botón de audionota (auriculares) junto a «Seguir»"
     registro["evidencias"].append(app.captura("REG18", "1_nota", "Nota con el botón de audionota"))
     botones[0].click()  # un solo toque: es justo lo que se valida
-    time.sleep(5)
-    abrio = bool(_buscar_ci(app, "Escuchando"))
+    inicio = time.time()
+    abrio = False
+    while time.time() - inicio < 12:  # el reproductor puede tardar en cargar la primera vez
+        time.sleep(1)
+        if _buscar_ci(app, "Escuchando"):
+            abrio = True
+            break
+    registro["detalle"]["segundos_hasta_reproductor"] = round(time.time() - inicio, 1) if abrio else None
     registro["evidencias"].append(app.captura("REG18", "2_reproductor", "Reproductor tras el primer toque"))
     registro["detalle"]["reproductor_con_un_toque"] = abrio
+    if not abrio:
+        # Evidencia para el reporte de bug: ¿el botón es el correcto y responde recién al segundo toque?
+        botones[0].click()
+        time.sleep(5)
+        registro["detalle"]["reproductor_con_dos_toques"] = bool(_buscar_ci(app, "Escuchando"))
+        registro["evidencias"].append(app.captura("REG18", "2b_segundo_toque", "Reproductor tras el segundo toque"))
     assert abrio, "Con el primer toque no se abrió el reproductor de la audionota"
     t1 = _tiempo_reproductor(app)
     time.sleep(6)
     t2 = _tiempo_reproductor(app)
     registro["evidencias"].append(app.captura("REG18", "3_avanza", f"Audio: {t1} → {t2}"))
     registro["detalle"].update({"tiempo_inicial": t1, "tiempo_despues": t2})
+    if not (t1 and t2):
+        registro["detalle"]["textos_en_pantalla"] = sorted(_textos_visibles(app))[:30]
     assert t1 and t2 and t1 != t2, f"El audio no avanza ({t1} → {t2})"
 
 
 def test_reg19_seguir_en_google(app, registro):
     """REG-19: «Seguir» (Google) sale de la app y abre la página de Google para agregar TN como fuente preferida."""
     assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
-    seguir = _buscar_ci(app, "Seguir")
+    seguir = _scrollear_hasta(app, "Seguir", max_scrolls=15)
     assert seguir, "La nota no muestra el botón «Seguir» de Google"
     registro["evidencias"].append(app.captura("REG19", "1_nota", "Nota con «Seguir»"))
     seguir[0].click()
