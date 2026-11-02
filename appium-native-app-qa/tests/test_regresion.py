@@ -416,11 +416,28 @@ def _scroll_nota(app):
     """Baja una "página" dentro de una nota. En iOS el arrastre simple no mueve la nota, así que
     se usa el gesto nativo "mobile: swipe"."""
     if app.ios:
+        # Flick W3C rápido (dedo de 80% a 25% del alto en 200 ms): "mobile: swipe" avanzaba apenas
+        # unas líneas por gesto y una nota larga no llegaba nunca a los tags del final.
         try:
-            app.d.execute_script("mobile: swipe", {"direction": "up"})
+            from selenium.webdriver.common.actions import interaction
+            from selenium.webdriver.common.actions.action_builder import ActionBuilder
+            from selenium.webdriver.common.actions.pointer_input import PointerInput
+            tam = app.d.get_window_size()
+            x, y1, y2 = tam["width"] // 2, int(tam["height"] * 0.8), int(tam["height"] * 0.25)
+            ab = ActionBuilder(app.d, mouse=PointerInput(interaction.POINTER_TOUCH, "finger"))
+            ab.pointer_action.move_to_location(x, y1)
+            ab.pointer_action.pointer_down()
+            ab.pointer_action.pause(0.05)
+            ab.pointer_action.move_to_location(x, y2)
+            ab.pointer_action.release()
+            ab.perform()
             return True
         except Exception:
-            return False
+            try:
+                app.d.execute_script("mobile: swipe", {"direction": "up", "velocity": 2500})
+                return True
+            except Exception:
+                return False
     return _swipe(app, "down", 0.6)
 
 
