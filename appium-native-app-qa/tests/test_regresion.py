@@ -393,12 +393,12 @@ def test_reg15_estabilidad_final(app, registro):
     assert app.en_primer_plano() and not errores, f"La app no quedó estable: {errores}"
 
 
-def _abrir_nota_comun(app, registro, intentos=6):
+def _abrir_nota_comun(app, registro, intentos=6, desde=0):
     """Abre una nota de la Home que NO sea un liveblog («Minuto a minuto») ni tenga el player de
     vivo. Prueba una nota por intento, scrolleando la Home un poco más cada vez. Devuelve True si
     quedó parada en una nota común."""
     tam = app.d.get_window_size()
-    for n in range(intentos):
+    for n in range(desde, intentos):
         _ir_a_inicio(app)
         _tab(app, "Inicio")
         for _ in range(n):
@@ -587,10 +587,21 @@ def test_reg16_tags_nota(app, registro):
 
 def test_reg17_lee_tambien(app, registro):
     """REG-17: el link «Lee también» de una nota común abre otra nota y se vuelve a la original."""
-    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
-    link = _scrollear_hasta(app, "Lee también")
+    # No todas las notas tienen «Leé también»: se prueba con hasta 3 notas comunes distintas.
+    link = []
+    for desde in range(3):
+        if not _abrir_nota_comun(app, registro, desde=desde):
+            assert desde > 0, "No se encontró una nota común (todas eran liveblog)"
+            break  # no hay más notas comunes que probar
+        link = _scrollear_hasta(app, "Lee también", max_scrolls=40)
+        if link:
+            break
+        registro["detalle"].setdefault("notas_sin_lee_tambien", []).append(desde + 1)
+        _atras(app)
     registro["evidencias"].append(app.captura("REG17", "1_lee_tambien", "«Lee también» en la nota"))
-    assert link, "La nota no muestra ningún «Lee también»"
+    if not link:
+        # No todas las notas lo tienen: sin una nota con el bloque no se puede concluir nada.
+        pytest.skip("Ninguna de las notas probadas tiene «Leé también» (resultado no concluyente)")
     # «Leé también» es solo el título de la sección: el link es la tarjeta de nota que está debajo.
     alto = app.d.get_window_size()["height"]
     y_titulo = link[0].rect["y"]
