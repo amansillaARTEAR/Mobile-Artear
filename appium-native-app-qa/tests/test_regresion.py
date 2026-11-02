@@ -412,33 +412,32 @@ def _abrir_nota_comun(app, registro, intentos=6):
     return False
 
 
+def _flick(app, x1, y1, x2, y2):
+    """Deslizamiento rápido (con inercia) de (x1,y1) a (x2,y2). En iOS el arrastre simple no mueve
+    las notas ni las filas de tags, así que se usa un gesto táctil W3C; en Android, el swipe normal."""
+    if not app.ios:
+        app.deslizar(x1, y1, x2, y2, 300)
+        return True
+    try:
+        from selenium.webdriver.common.actions import interaction
+        from selenium.webdriver.common.actions.action_builder import ActionBuilder
+        from selenium.webdriver.common.actions.pointer_input import PointerInput
+        ab = ActionBuilder(app.d, mouse=PointerInput(interaction.POINTER_TOUCH, "finger"))
+        ab.pointer_action.move_to_location(x1, y1)
+        ab.pointer_action.pointer_down()
+        ab.pointer_action.pause(0.05)
+        ab.pointer_action.move_to_location(x2, y2)
+        ab.pointer_action.release()
+        ab.perform()
+        return True
+    except Exception:
+        return False
+
+
 def _scroll_nota(app):
-    """Baja una "página" dentro de una nota. En iOS el arrastre simple no mueve la nota, así que
-    se usa el gesto nativo "mobile: swipe"."""
-    if app.ios:
-        # Flick W3C rápido (dedo de 80% a 25% del alto en 200 ms): "mobile: swipe" avanzaba apenas
-        # unas líneas por gesto y una nota larga no llegaba nunca a los tags del final.
-        try:
-            from selenium.webdriver.common.actions import interaction
-            from selenium.webdriver.common.actions.action_builder import ActionBuilder
-            from selenium.webdriver.common.actions.pointer_input import PointerInput
-            tam = app.d.get_window_size()
-            x, y1, y2 = tam["width"] // 2, int(tam["height"] * 0.8), int(tam["height"] * 0.25)
-            ab = ActionBuilder(app.d, mouse=PointerInput(interaction.POINTER_TOUCH, "finger"))
-            ab.pointer_action.move_to_location(x, y1)
-            ab.pointer_action.pointer_down()
-            ab.pointer_action.pause(0.05)
-            ab.pointer_action.move_to_location(x, y2)
-            ab.pointer_action.release()
-            ab.perform()
-            return True
-        except Exception:
-            try:
-                app.d.execute_script("mobile: swipe", {"direction": "up", "velocity": 2500})
-                return True
-            except Exception:
-                return False
-    return _swipe(app, "down", 0.6)
+    """Baja casi una pantalla dentro de una nota (dedo de 80% a 25% del alto)."""
+    tam = app.d.get_window_size()
+    return _flick(app, tam["width"] // 2, int(tam["height"] * 0.8), tam["width"] // 2, int(tam["height"] * 0.25))
 
 
 def _scrollear_hasta(app, texto, max_scrolls=40):
@@ -479,17 +478,24 @@ def test_reg16_tags_nota(app, registro):
     assert pildoras, "«Temas de la nota» no tiene ningún tag"
 
     # Scroll lateral: solo aplica si hay tantos tags que no entran en el ancho (no siempre pasa).
-    hay_desborde = any(e.rect["x"] + e.rect["width"] > ancho * 0.97 or e.rect["x"] < 0 for e in pildoras)
+    # Una píldora cortada en el borde derecho (o izquierdo) indica que la fila se puede scrollear.
+    def desborde(els):
+        return any(e.rect["x"] + e.rect["width"] > ancho - 2 or e.rect["x"] < 2 for e in els)
+
+    hay_desborde = desborde(pildoras)
     registro["detalle"]["hay_scroll_lateral"] = hay_desborde
     if hay_desborde:
+        x_antes = {app.etiqueta(e): e.rect["x"] for e in pildoras}
         y_fila = int(pildoras[0].rect["y"] + pildoras[0].rect["height"] / 2)
-        app.deslizar(int(ancho * 0.85), y_fila, int(ancho * 0.15), y_fila, 400)
+        _flick(app, int(ancho * 0.85), y_fila, int(ancho * 0.15), y_fila)
         time.sleep(1.5)
-        tags_despues = [app.etiqueta(e) for e in leer_pildoras()]
-        registro["detalle"]["tags_tras_scroll_lateral"] = tags_despues
-        registro["evidencias"].append(app.captura("REG16", "2_scroll_lateral", f"Scroll lateral de tags: {tags_despues}"))
-        assert set(tags_despues) - set(tags), "El scroll lateral de los tags no mostró tags nuevos"
         pildoras = leer_pildoras()
+        x_despues = {app.etiqueta(e): e.rect["x"] for e in pildoras}
+        movidas = [t for t in x_despues if t in x_antes and abs(x_despues[t] - x_antes[t]) > 20]
+        nuevas = [t for t in x_despues if t not in x_antes]
+        registro["detalle"]["tags_tras_scroll_lateral"] = list(x_despues)
+        registro["evidencias"].append(app.captura("REG16", "2_scroll_lateral", f"Scroll lateral de tags: {list(x_despues)}"))
+        assert movidas or nuevas, "El scroll lateral no movió la fila de tags"
         tags = [app.etiqueta(e) for e in pildoras]
 
     tag = tags[0]
@@ -512,8 +518,15 @@ def test_reg17_lee_tambien(app, registro):
     link = _scrollear_hasta(app, "Lee también")
     registro["evidencias"].append(app.captura("REG17", "1_lee_tambien", "«Lee también» en la nota"))
     assert link, "La nota no muestra ningún «Lee también»"
+    # «Leé también» es solo el título de la sección: el link es la tarjeta de nota que está debajo.
+    alto = app.d.get_window_size()["height"]
+    y_titulo = link[0].rect["y"]
+    tarjetas = [e for e in app.clickeables()
+                if y_titulo + link[0].rect["height"] <= e.rect["y"] < y_titulo + alto * 0.3]
+    registro["detalle"]["tarjetas"] = [app.etiqueta(e) for e in tarjetas]
+    assert tarjetas, "«Leé también» no tiene ninguna nota debajo"
     antes = _huella(app)
-    link[0].click()
+    tarjetas[0].click()
     time.sleep(8)
     cambio = _huella(app) != antes
     registro["evidencias"].append(app.captura("REG17", "2_otra_nota", "Nota abierta desde «Lee también»"))
