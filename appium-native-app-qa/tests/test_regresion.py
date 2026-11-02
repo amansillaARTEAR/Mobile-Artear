@@ -459,29 +459,50 @@ def _huella(app):
 
 
 def test_reg16_tags_nota(app, registro):
-    """REG-16: una nota común muestra «Temas de la nota» con sus tags (píldoras) y al tocar uno abre su listado."""
+    """REG-16: «Temas de la nota» muestra los tags (píldoras), scrollean al costado si hay muchos y al tocar uno abre su listado."""
     assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
     titulo = _scrollear_hasta(app, "Temas de la nota")
     registro["evidencias"].append(app.captura("REG16", "1_temas", "Sección «Temas de la nota»"))
     assert titulo, "La nota no muestra la sección «Temas de la nota»"
     # Las píldoras son los tocables que están justo debajo del título de la sección.
-    alto = app.d.get_window_size()["height"]
+    tam = app.d.get_window_size()
+    ancho, alto = tam["width"], tam["height"]
     y_titulo = titulo[0].rect["y"]
-    pildoras = [e for e in app.clickeables()
+
+    def leer_pildoras():
+        return [e for e in app.clickeables()
                 if y_titulo < e.rect["y"] < y_titulo + alto * 0.25 and app.etiqueta(e)]
+
+    pildoras = leer_pildoras()
     tags = [app.etiqueta(e) for e in pildoras]
     registro["detalle"]["tags"] = tags
     assert pildoras, "«Temas de la nota» no tiene ningún tag"
+
+    # Scroll lateral: solo aplica si hay tantos tags que no entran en el ancho (no siempre pasa).
+    hay_desborde = any(e.rect["x"] + e.rect["width"] > ancho * 0.97 or e.rect["x"] < 0 for e in pildoras)
+    registro["detalle"]["hay_scroll_lateral"] = hay_desborde
+    if hay_desborde:
+        y_fila = int(pildoras[0].rect["y"] + pildoras[0].rect["height"] / 2)
+        app.deslizar(int(ancho * 0.85), y_fila, int(ancho * 0.15), y_fila, 400)
+        time.sleep(1.5)
+        tags_despues = [app.etiqueta(e) for e in leer_pildoras()]
+        registro["detalle"]["tags_tras_scroll_lateral"] = tags_despues
+        registro["evidencias"].append(app.captura("REG16", "2_scroll_lateral", f"Scroll lateral de tags: {tags_despues}"))
+        assert set(tags_despues) - set(tags), "El scroll lateral de los tags no mostró tags nuevos"
+        pildoras = leer_pildoras()
+        tags = [app.etiqueta(e) for e in pildoras]
+
     tag = tags[0]
+    antes = _huella(app)
     pildoras[0].click()
     time.sleep(6)
-    abrio = bool(_buscar_ci(app, tag))
-    registro["evidencias"].append(app.captura("REG16", "2_listado", f"Listado del tag «{tag}»"))
+    abrio = _huella(app) != antes and bool(_buscar_ci(app, tag))
+    registro["evidencias"].append(app.captura("REG16", "3_listado", f"Listado del tag «{tag}»"))
     registro["detalle"].update({"tag_tocado": tag, "abrio_listado": abrio})
     _atras(app)
     volvio = app.esperar_contenido()
-    registro["evidencias"].append(app.captura("REG16", "3_vuelta", "De vuelta en la nota"))
-    assert abrio, f"Al tocar el tag «{tag}» no se abrió su listado"
+    registro["evidencias"].append(app.captura("REG16", "4_vuelta", "De vuelta en la nota"))
+    assert abrio, f"Al tocar el tag «{tag}» no se abrió el listado de ese tag"
     assert volvio and app.en_primer_plano(), "No se pudo volver de la nota después de tocar el tag"
 
 
