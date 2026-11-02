@@ -502,7 +502,12 @@ def test_reg16_tags_nota(app, registro):
     antes = _huella(app)
     pildoras[0].click()
     time.sleep(6)
-    abrio = _huella(app) != antes and bool(_buscar_ci(app, tag))
+    # El listado del tag es una pantalla propia de la app: el nombre del tag va en el título (arriba)
+    # y debajo hay notas de ese tema (tarjetas tocables con un titular largo).
+    en_titulo = any(e.rect["y"] < alto * 0.15 for e in _buscar_ci(app, tag))
+    notas = [app.etiqueta(e) for e in app.clickeables() if len(app.etiqueta(e)) > 25]
+    abrio = _huella(app) != antes and en_titulo and bool(notas)
+    registro["detalle"].update({"titulo_con_el_tag": en_titulo, "notas_en_el_listado": len(notas)})
     registro["evidencias"].append(app.captura("REG16", "3_listado", f"Listado del tag «{tag}»"))
     registro["detalle"].update({"tag_tocado": tag, "abrio_listado": abrio})
     _atras(app)
