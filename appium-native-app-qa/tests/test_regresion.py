@@ -358,10 +358,13 @@ def test_reg11_juegos(app, registro):
 
 
 def _deeplink(app, registro, caso, url):
-    if app.ios:
+    if app.ios and not os.getenv("IOS_USB"):
         # En AWS Device Farm la app se re-firma y los universal links abren Safari en vez de la app.
         pytest.skip("Deeplinks no concluyentes en Device Farm (iOS)")
-    app.d.execute_script("mobile: deepLink", {"url": url, "package": app.paquete})
+    if app.ios:
+        app.d.execute_script("mobile: deepLink", {"url": url, "bundleId": app.paquete})
+    else:
+        app.d.execute_script("mobile: deepLink", {"url": url, "package": app.paquete})
     time.sleep(8)
     en_app = app.en_primer_plano()
     registro["evidencias"].append(app.captura(caso, "deeplink", f"Deeplink: {url}"))

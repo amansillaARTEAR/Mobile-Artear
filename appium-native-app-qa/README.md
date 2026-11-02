@@ -77,3 +77,28 @@ Para ver qué se borraría: `python limpieza.py --simular`. Plazo configurable c
 - `TN_EXPLORAR_N`: cantidad de elementos que toca la exploración básica (5).
 - `TN_RETENCION_HORAS`: horas que se conservan los resultados (48).
 - `APPIUM_URL` y `EXTRA_CAPS`: para correr en una granja en la nube (AWS Device Farm).
+
+## iPhone conectado por cable (Windows, sin Mac)
+
+Corre la regresión (`tests/test_regresion.py`) en un iPhone físico enchufado a esta PC. Usa **Mobile View**
+(`D:\Artear\mirror-app`) para dejar listo el iPhone (go-ios + WebDriverAgent) y un Appium aparte con el driver iOS.
+
+**Una sola vez**
+1. Mobile View con el iPhone funcionando (ver su README: go-ios, WebDriverAgent firmado, modo desarrollador).
+2. Appium con el driver iOS en su propia carpeta (no toca el Appium de Android):
+   ```
+   set APPIUM_HOME=D:\Artear\Mobile\appium-ios-home
+   appium driver install --source=npm appium-xcuitest-driver@10
+   ```
+   (con Appium 3.8 la última versión del driver no es compatible; la 10 sí).
+3. La app de TN instalada en el iPhone: `com.cmd.tn` (producción) o `com.cmd.tn-stg` (TN Dev).
+
+**Correr**
+- Desde el dashboard (App Nativa → iOS → «iPhone por cable»), o
+- A mano: `set APPIUM_HOME=D:\Artear\Mobile\appium-ios-home`, `appium --port 4724` y
+  `python correr_ios_usb.py tests/test_regresion.py -k reg01` (con `IOS_BUNDLE_ID=com.cmd.tn`).
+
+**Notas**
+- Los deeplinks (REG-12 a 14) sí corren acá (en Device Farm se omiten).
+- La firma gratuita de WebDriverAgent dura 7 días; si vence, volver a firmarlo con Sideloadly.
+- Mobile View y la regresión comparten el WebDriverAgent: si Mobile View ya lo dejó corriendo, se usa tal cual.

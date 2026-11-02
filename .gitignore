@@ -10,3 +10,6 @@ appium-native-app-qa/apks/*.apk
 appium-native-app-qa/ipas/*.ipa
 
 appium-mobile-web-qa/Mobile/
+
+# Appium con el driver iOS (instalado a mano, ver appium-native-app-qa/README.md)
+appium-ios-home/

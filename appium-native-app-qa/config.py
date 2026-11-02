@@ -10,6 +10,11 @@ CARPETA_IPAS = RAIZ / "ipas"
 # "android" (dispositivo físico local) o "ios" (AWS Device Farm)
 PLATAFORMA = os.getenv("TN_PLATAFORMA", "android").lower()
 
+# iPhone físico conectado por cable a esta PC (Mobile View deja listo go-ios + WebDriverAgent y Appium se
+# conecta a ese WDA con webDriverAgentUrl). Lo activa correr_ios_usb.py.
+IOS_USB = os.getenv("IOS_USB", "") == "1"
+IOS_WDA_URL = os.getenv("IOS_WDA_URL", "http://127.0.0.1:8100")
+
 # Sección/pantalla de la app a validar (ej: "Deportes", "Portada") -- se arma en el workflow
 # a partir del input "seccion" (ver app-nativa.yml). Vacío si no se indicó: cada test decide
 # su propio default en ese caso (hoy, la pantalla de inicio). Usar con App.ir_a_seccion().
@@ -19,6 +24,9 @@ SECCION = os.getenv("TN_SECCION", "")
 def app_a_probar() -> Path:
     """App indicada en TN_APP (o TN_APK/TN_IPA por compatibilidad) o, si no, la más
     reciente de la carpeta correspondiente (apks\\ para Android, ipas\\ para iOS)."""
+    if PLATAFORMA == "ios" and IOS_USB:
+        # La app ya está instalada en el iPhone: no hace falta un .ipa; el nombre solo rotula el reporte.
+        return Path(os.getenv("TN_APP_NOMBRE") or "iPhone USB")
     variable_especifica = "TN_IPA" if PLATAFORMA == "ios" else "TN_APK"
     ruta_directa = os.getenv("TN_APP") or os.getenv(variable_especifica)
     if ruta_directa:
@@ -72,8 +80,9 @@ def _caps_ios(app: Path) -> dict:
         "appium:deviceName": os.getenv("IOS_DEVICE", "iPhone"),
         "appium:platformVersion": os.getenv("IOS_VERSION"),
         "appium:udid": os.getenv("IOS_UDID"),
-        "appium:bundleId": os.getenv("IOS_BUNDLE_ID"),  # opcional: app ya instalada, en vez de instalar el .ipa
-        "appium:noReset": False,
+        "appium:bundleId": os.getenv("IOS_BUNDLE_ID") or ("com.cmd.tn" if IOS_USB else None),  # app ya instalada
+        "appium:webDriverAgentUrl": IOS_WDA_URL if IOS_USB else None,   # usa el WDA que ya corre en el iPhone (USB)
+        "appium:noReset": True if IOS_USB else False,   # por cable es el iPhone propio: no se reinstala ni se borra la app
         "appium:autoAcceptAlerts": True,              # equivalente iOS de autoGrantPermissions
         "appium:newCommandTimeout": 300,
     }
@@ -86,6 +95,8 @@ def _en_la_nube() -> bool:
 def caps(app: Path) -> dict:
     base = _caps_ios(app) if PLATAFORMA == "ios" else _caps_android(app)
     c = {k: v for k, v in {**base, **EXTRA_CAPS}.items() if v not in (None, "")}
+    if not app.exists():
+        c.pop("appium:app", None)  # sin archivo local: se usa la app que ya está instalada en el dispositivo
     if _en_la_nube():
         # Granja en la nube (AWS Device Farm): el dispositivo lo define la sesión remota
         # y estas capabilities no están soportadas.
