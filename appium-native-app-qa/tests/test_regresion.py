@@ -866,3 +866,94 @@ def test_reg21_flowcard_te_puede_interesar(app, registro):
     registro["detalle"]["reaparece_al_seguir"] = reaparece
     registro["evidencias"].append(app.captura("REG21", "3_despues", f"8 scrolls más; reaparece: {reaparece}"))
     assert cerro, "La flowcard no se cerró con la «X»"
+
+
+def _cerrar_publicidad_pantalla_completa(app):
+    """Al abrir una nota puede aparecer una publicidad a pantalla completa con una «X» para cerrarla.
+    Busca un botón de cierre; devuelve True si tocó alguno."""
+    try:
+        if app.ios:
+            botones = app.d.find_elements("-ios predicate string",
+                                          "type == 'XCUIElementTypeButton' AND visible == 1 AND "
+                                          "(label CONTAINS[cd] 'close' OR label CONTAINS[cd] 'cerrar' OR "
+                                          "label CONTAINS[cd] 'dismiss' OR name CONTAINS[cd] 'close' OR label == '✕' OR label == 'X')")
+        else:
+            botones = app.d.find_elements("xpath", "//*[@clickable='true' and @displayed='true' and "
+                                          "(contains(translate(@content-desc,'CLOSE','close'),'close') or "
+                                          "contains(translate(@content-desc,'CERRAR','cerrar'),'cerrar'))]")
+        arriba = [b for b in botones if b.rect["y"] > app.d.get_window_size()["height"] * 0.1]
+        if not arriba:
+            return False
+        arriba[0].click()
+        time.sleep(2)
+        return True
+    except Exception:
+        return False
+
+
+def test_reg22_liveblog(app, registro):
+    """REG-22: un liveblog se abre (cerrando la publicidad a pantalla completa), muestra «Minuto a minuto» y actualizaciones con horario, sus temas cargan otro liveblog y los links abren una nota."""
+    import re
+    tam = app.d.get_window_size()
+    abierto = False
+    for n in range(6):
+        _ir_a_inicio(app)
+        _tab(app, "Inicio")
+        for _ in range(n):
+            _swipe(app, "down", 0.4)
+        app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))
+        time.sleep(8)
+        if _cerrar_publicidad_pantalla_completa(app):
+            registro["detalle"]["publicidad_pantalla_completa_cerrada"] = True
+            registro["evidencias"].append(app.captura("REG22", f"0_publicidad_{n}", "Publicidad a pantalla completa cerrada"))
+        time.sleep(4)
+        if _buscar_ci(app, "Minuto a minuto"):
+            abierto = True
+            break
+        _atras(app)
+    registro["evidencias"].append(app.captura("REG22", "1_liveblog", "Liveblog abierto"))
+    assert abierto, "No se encontró ninguna nota de tipo liveblog («Minuto a minuto») en la Home"
+    _cerrar_zocalo(app)
+
+    # Actualizaciones con horario («01 de noviembre 2026, 22:55hs»).
+    for _ in range(3):
+        _scroll_nota(app)
+    horarios = [t for t in _textos_visibles(app) if re.search(r"\d{1,2}:\d{2}\s?hs", t)]
+    registro["detalle"]["horarios_visibles"] = horarios[:5]
+    registro["evidencias"].append(app.captura("REG22", "2_actualizaciones", "Actualizaciones del liveblog"))
+    assert horarios, "El liveblog no muestra actualizaciones con horario"
+
+    # Fila de temas de arriba: tocar uno carga otro liveblog (sin quedarse en blanco).
+    for _ in range(12):
+        _swipe(app, "up", 0.6)
+    temas = [e for e in app.clickeables()
+             if tam["height"] * 0.12 < e.rect["y"] < tam["height"] * 0.3 and len(app.etiqueta(e)) >= 10]
+    registro["detalle"]["temas"] = [app.etiqueta(e) for e in temas][:6]
+    if temas:
+        antes = _huella(app)
+        temas[0].click()
+        time.sleep(10)
+        cambio = _huella(app) != antes
+        titulos = _notas_visibles(app)
+        registro["detalle"].update({"tema_cambio_pantalla": cambio, "textos_largos_tras_tema": len(titulos)})
+        registro["evidencias"].append(app.captura("REG22", "3_tema", f"Tras tocar el tema «{app.etiqueta(temas[0])}»"))
+        assert cambio and titulos, "Al tocar un tema del liveblog la pantalla no cargó otro contenido (¿en blanco?)"
+        _atras(app)
+    else:
+        registro["detalle"]["temas"] = "no se encontró la fila de temas"
+        registro["evidencias"].append(app.captura("REG22", "3_sin_temas", "No se encontró la fila de temas"))
+
+    # Link de una actualización: abre una nota y se vuelve al liveblog.
+    for _ in range(4):
+        _scroll_nota(app)
+    links = [e for e in app.clickeables() if len(app.etiqueta(e)) > 30 and e.rect["y"] > tam["height"] * 0.2]
+    if links:
+        antes = _huella(app)
+        links[0].click()
+        time.sleep(8)
+        cambio = _huella(app) != antes
+        registro["detalle"]["link_abrio_otra_nota"] = cambio
+        registro["evidencias"].append(app.captura("REG22", "4_link", "Nota abierta desde una actualización"))
+        _atras(app)
+        assert cambio, "Al tocar un link de una actualización no se abrió otra nota"
+    assert app.en_primer_plano(), "La app no quedó abierta"
