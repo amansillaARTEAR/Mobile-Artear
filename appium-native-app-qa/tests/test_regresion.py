@@ -412,12 +412,40 @@ def _abrir_nota_comun(app, registro, intentos=6):
     return False
 
 
+def _scroll_nota(app):
+    """Baja una "página" dentro de una nota. En iOS el arrastre simple no mueve la nota, así que
+    se usa el gesto nativo "mobile: swipe"."""
+    if app.ios:
+        try:
+            app.d.execute_script("mobile: swipe", {"direction": "up"})
+            return True
+        except Exception:
+            return False
+    return _swipe(app, "down", 0.6)
+
+
+def _scrollear_hasta_el_final(app, registro, caso, max_scrolls=40):
+    """Baja la nota hasta que la pantalla deja de cambiar (llegó al final). Deja una captura
+    cada 3 scrolls. Devuelve la cantidad de scrolls que hizo."""
+    import hashlib
+    ultima, iguales = None, 0
+    for i in range(1, max_scrolls + 1):
+        _scroll_nota(app)
+        time.sleep(1.5)
+        huella = hashlib.md5(app.d.get_screenshot_as_base64().encode()).hexdigest()
+        iguales = iguales + 1 if huella == ultima else 0
+        ultima = huella
+        if i % 3 == 0:
+            registro["evidencias"].append(app.captura(caso, f"{i:02d}_scroll", f"Nota, scroll {i}"))
+        if iguales >= 2:
+            return i
+    return max_scrolls
+
+
 def test_reg16_tags_nota(app, registro):
     """REG-16: (exploratorio) una nota común muestra sus tags al final y tocar uno abre su listado."""
     assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
     registro["evidencias"].append(app.captura("REG16", "00_nota", "Nota abierta"))
-    for i in range(1, 17):
-        _swipe(app, "down", 0.6)
-        time.sleep(1)
-        if i % 2 == 0:
-            registro["evidencias"].append(app.captura("REG16", f"{i:02d}_scroll", f"Nota, scroll {i}"))
+    n = _scrollear_hasta_el_final(app, registro, "REG16")
+    registro["evidencias"].append(app.captura("REG16", "99_final", "Final de la nota"))
+    registro["detalle"]["scrolls_hasta_el_final"] = n
