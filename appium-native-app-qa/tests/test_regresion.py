@@ -412,7 +412,7 @@ def _abrir_nota_comun(app, registro, intentos=6, desde=0):
         # no es un liveblog.
         es_nota = any("compart" in e["etiqueta"].lower() or "share" in e["etiqueta"].lower() for e in app.topbar())
         if es_nota and not app.buscar("Minuto a minuto") and not app.buscar("EN VIVO"):
-            _cerrar_publicidad_fija(app)
+            _cerrar_zocalo(app)
             return True
         registro["detalle"].setdefault("notas_descartadas", []).append(n + 1)
         _atras(app)
@@ -474,8 +474,8 @@ def _cerrar_te_puede_interesar(app, intentos=4):
     return cerro
 
 
-def _cerrar_publicidad_fija(app):
-    """En iOS, las notas muestran abajo una publicidad fija (franja blanca) con una flechita «⌄» a la
+def _cerrar_zocalo(app):
+    """En iOS, las notas muestran abajo el zócalo (publicidad fija, franja blanca) con una flechita «⌄» a la
     izquierda para cerrarla; tapa parte de la pantalla y de los gestos. Dentro de una nota no hay navbar,
     así que cualquier botón chico en la esquina inferior izquierda es esa flechita."""
     if not app.ios:
@@ -499,7 +499,7 @@ def _cerrar_publicidad_fija(app):
 def _scroll_nota(app):
     """Baja casi una pantalla dentro de una nota (dedo de 80% a 25% del alto)."""
     tam = app.d.get_window_size()
-    _cerrar_publicidad_fija(app)
+    _cerrar_zocalo(app)
     if not app.ios:
         # Android: arrastre corto y lento (sin inercia) para no saltearse secciones cortas como
         # «Temas de la nota», que con un gesto rápido quedan entre dos pantallas.
