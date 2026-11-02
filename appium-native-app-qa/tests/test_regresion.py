@@ -901,23 +901,24 @@ def test_reg22_liveblog(app, registro):
     import re
     tam = app.d.get_window_size()
     abierto = False
-    for n in range(6):
-        _ir_a_inicio(app)
-        _tab(app, "Inicio")
-        for _ in range(n):
-            _swipe(app, "down", 0.4)
-        app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))
+    _ir_a_inicio(app)
+    _tab(app, "Inicio")
+    # Se busca en la Home la tarjeta con la etiqueta «Minuto a minuto» y se toca su título (justo debajo).
+    # Ojo: la Home también muestra esa etiqueta, así que se exige haber entrado a una nota (botón de compartir).
+    etiqueta = _buscar_scrolleando(app, "Minuto a minuto", max_scrolls=15)
+    registro["detalle"]["liveblog_en_la_home"] = bool(etiqueta)
+    if etiqueta:
+        r = etiqueta[0].rect
+        app.tocar(tam["width"] // 2, int(r["y"] + r["height"] + tam["height"] * 0.06))
         time.sleep(8)
         if _cerrar_publicidad_pantalla_completa(app):
             registro["detalle"]["publicidad_pantalla_completa_cerrada"] = True
-            registro["evidencias"].append(app.captura("REG22", f"0_publicidad_{n}", "Publicidad a pantalla completa cerrada"))
+            registro["evidencias"].append(app.captura("REG22", "0_publicidad", "Publicidad a pantalla completa cerrada"))
         time.sleep(4)
-        if _buscar_ci(app, "Minuto a minuto"):
-            abierto = True
-            break
-        _atras(app)
+        es_nota = any("compart" in e["etiqueta"].lower() or "share" in e["etiqueta"].lower() for e in app.topbar())
+        abierto = es_nota and bool(_buscar_ci(app, "Minuto a minuto"))
     registro["evidencias"].append(app.captura("REG22", "1_liveblog", "Liveblog abierto"))
-    assert abierto, "No se encontró ninguna nota de tipo liveblog («Minuto a minuto») en la Home"
+    assert abierto, "No se pudo abrir un liveblog («Minuto a minuto») desde la Home"
     _cerrar_zocalo(app)
 
     # Actualizaciones con horario («01 de noviembre 2026, 22:55hs»).
