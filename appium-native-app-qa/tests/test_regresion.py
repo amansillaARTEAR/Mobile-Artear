@@ -487,7 +487,12 @@ def _cerrar_zocalo(app):
                   if b.rect["y"] > tam["height"] * 0.85 and b.rect["x"] < tam["width"] * 0.25
                   and b.rect["width"] < 200 and b.rect["height"] < 200]
         if not flecha:
-            return False
+            # La flechita no figura como botón: dentro de una nota (sin navbar) se toca esa esquina.
+            if app.navbar():
+                return False
+            app.tocar(int(tam["width"] * 0.07), int(tam["height"] * 0.92))
+            time.sleep(1)
+            return True
         r = flecha[0].rect
         app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
         time.sleep(1)
