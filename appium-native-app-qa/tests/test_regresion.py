@@ -23,6 +23,9 @@ REDES = ("Facebook", "X", "Instagram", "Youtube", "TikTok", "Telegram")
 JUEGOS = ("Crucigrama", "One Up", "Rompecabezas", "Letras Locas", "Lluvia de objetos")
 # La nota se puede cambiar con TN_DEEPLINK_NOTA (las notas viejas pueden dejar de existir).
 DEEPLINK_NOTA = os.getenv("TN_DEEPLINK_NOTA", "https://tn.com.ar/opinion/2026/11/01/milei-apura-a-sus-funcionarios-por-la-suspension-de-las-paso-y-el-presupuesto-porque-necesita-votos-que-no-estan/")
+# Nota conocida que tiene «Leé también» (se busca por título en la Home; si ya no está, REG-17 prueba
+# con las notas que haya). Se puede cambiar con TN_NOTA_TITULO.
+NOTA_CON_LEE_TAMBIEN = os.getenv("TN_NOTA_TITULO", "El Gobierno negocia con sus aliados")
 DEEPLINK_SECCION = "https://tn.com.ar/deportes/"
 DEEPLINK_VIVO = "https://tn.com.ar/envivo/24hs/"
 
@@ -440,24 +443,19 @@ def _flick(app, x1, y1, x2, y2):
 def _cerrar_te_puede_interesar(app, intentos=4):
     """En Android, al bajar por una nota aparece el panel «Te puede interesar» pegado abajo, que tapa
     buena parte de la pantalla y se queda con los gestos (la nota deja de scrollear). Se cierra con
-    su «X» (el tocable de la misma fila del título, a la derecha). El panel cambia de estado (asoma
-    abajo, se abre a mitad de pantalla) y la «X» cambia de lugar, así que hay que tocarla más de una
-    vez, volviéndola a buscar cada vez, hasta que el panel desaparece."""
+    su «X», que está siempre en el extremo derecho de la fila del título pero NO figura como tocable
+    para Android: se toca por coordenadas. El panel cambia de estado (asoma abajo, se abre a mitad de
+    pantalla) y la «X» cambia de altura, así que se vuelve a ubicar el título y se toca de nuevo
+    hasta que el panel desaparece."""
     cerro = False
+    ancho = app.d.get_window_size()["width"]
     for _ in range(intentos):
         try:
             titulo = _buscar_ci(app, "Te puede interesar")
             if not titulo:
                 return cerro
             t = titulo[0].rect
-            centro = t["y"] + t["height"] / 2
-            todos = app.d.find_elements("xpath", "//*[@clickable='true' and @displayed='true']")
-            derecha = [e for e in todos
-                       if abs(e.rect["y"] + e.rect["height"] / 2 - centro) < 60 and e.rect["x"] >= t["x"] + t["width"] - 5]
-            if not derecha:
-                return cerro
-            r = max(derecha, key=lambda e: e.rect["x"]).rect
-            app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+            app.tocar(int(ancho * 0.927), int(t["y"] + t["height"] / 2))
         except Exception:
             time.sleep(0.5)  # el panel se está moviendo: se vuelve a intentar
             continue
@@ -474,7 +472,7 @@ def _scroll_nota(app):
         # «Temas de la nota», que con un gesto rápido quedan entre dos pantallas.
         _cerrar_te_puede_interesar(app)
         x = tam["width"] // 2
-        app.deslizar(x, int(tam["height"] * 0.75), x, int(tam["height"] * 0.25), 1200)
+        app.deslizar(x, int(tam["height"] * 0.62), x, int(tam["height"] * 0.2), 1200)  # arranca arriba del panel
         return True
     return _flick(app, tam["width"] // 2, int(tam["height"] * 0.8), tam["width"] // 2, int(tam["height"] * 0.25))
 
@@ -587,9 +585,20 @@ def test_reg16_tags_nota(app, registro):
 
 def test_reg17_lee_tambien(app, registro):
     """REG-17: el link «Lee también» de una nota común abre otra nota y se vuelve a la original."""
-    # No todas las notas tienen «Leé también»: se prueba con hasta 3 notas comunes distintas.
+    # No todas las notas tienen «Leé también»: primero se intenta con una nota conocida (por título) y,
+    # si ya no está en la Home, con hasta 3 notas comunes distintas.
     link = []
-    for desde in range(3):
+    _ir_a_inicio(app)
+    _tab(app, "Inicio")
+    conocida = _buscar_scrolleando(app, NOTA_CON_LEE_TAMBIEN, max_scrolls=15)
+    if conocida:
+        conocida[0].click()
+        time.sleep(14)
+        link = _scrollear_hasta(app, "Lee también", max_scrolls=40)
+        registro["detalle"]["nota_conocida"] = bool(link)
+        if not link:
+            _atras(app)
+    for desde in range(3 if link else 0, 3):
         if not _abrir_nota_comun(app, registro, desde=desde):
             assert desde > 0, "No se encontró una nota común (todas eran liveblog)"
             break  # no hay más notas comunes que probar
