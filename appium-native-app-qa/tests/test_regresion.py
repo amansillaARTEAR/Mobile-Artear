@@ -937,24 +937,41 @@ def test_reg22_liveblog(app, registro):
     assert horarios, "El liveblog no muestra actualizaciones con horario"
 
     # Fila de temas de arriba: tocar uno carga otro liveblog (sin quedarse en blanco).
-    for _ in range(12):
-        _swipe(app, "up", 0.6)
-    temas = [e for e in app.clickeables()
-             if tam["height"] * 0.12 < e.rect["y"] < tam["height"] * 0.3 and len(app.etiqueta(e)) >= 10]
-    registro["detalle"]["temas"] = [app.etiqueta(e) for e in temas][:6]
-    if temas:
-        antes = _huella(app)
-        temas[0].click()
-        time.sleep(10)
-        cambio = _huella(app) != antes
-        titulos = _notas_visibles(app)
-        registro["detalle"].update({"tema_cambio_pantalla": cambio, "textos_largos_tras_tema": len(titulos)})
-        registro["evidencias"].append(app.captura("REG22", "3_tema", f"Tras tocar el tema «{app.etiqueta(temas[0])}»"))
-        assert cambio and titulos, "Al tocar un tema del liveblog la pantalla no cargó otro contenido (¿en blanco?)"
-        _atras(app)
-    else:
-        registro["detalle"]["temas"] = "no se encontró la fila de temas"
-        registro["evidencias"].append(app.captura("REG22", "3_sin_temas", "No se encontró la fila de temas"))
+    for _ in range(12):  # volver al tope del liveblog con el gesto que sí mueve las notas
+        _flick(app, tam["width"] // 2, int(tam["height"] * 0.3), tam["width"] // 2, int(tam["height"] * 0.8))
+        time.sleep(0.5)
+
+    def leer_temas():
+        # Los temas son textos/botones cortos en una franja justo debajo del topbar (no siempre figuran como botones).
+        if app.ios:
+            els = app.d.find_elements("-ios predicate string",
+                                      "visible == 1 AND type IN {'XCUIElementTypeButton','XCUIElementTypeStaticText','XCUIElementTypeOther'}")
+        else:
+            els = app.d.find_elements("xpath", "//*[@displayed='true' and string-length(@text) > 0]")
+        res = []
+        for e in els:
+            r = e.rect
+            et = app.etiqueta(e) or (e.text or "")
+            if tam["height"] * 0.1 < r["y"] < tam["height"] * 0.3 and 10 <= len(et) <= 60 and r["width"] < tam["width"] * 0.85:
+                res.append((et, e))
+        return res
+
+    temas = leer_temas()
+    registro["detalle"]["temas"] = [t for t, _ in temas][:6]
+    registro["evidencias"].append(app.captura("REG22", "3_temas", "Fila de temas del liveblog"))
+    assert temas, "No se encontró la fila de temas del liveblog"
+    antes = _huella(app)
+    nombre_tema, el_tema = temas[0]
+    r = el_tema.rect
+    app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+    time.sleep(10)
+    cambio = _huella(app) != antes
+    contenido = _notas_visibles(app)
+    registro["detalle"].update({"tema_tocado": nombre_tema, "tema_cambio_pantalla": cambio, "textos_largos_tras_tema": len(contenido)})
+    registro["evidencias"].append(app.captura("REG22", "4_tema_cargado", f"Tras tocar el tema «{nombre_tema}»"))
+    assert cambio and contenido, f"Al tocar el tema «{nombre_tema}» la pantalla no cargó otro contenido (¿en blanco?)"
+    _atras(app)
+    time.sleep(2)
 
     # Link de una actualización: abre una nota y se vuelve al liveblog.
     for _ in range(4):
@@ -966,7 +983,7 @@ def test_reg22_liveblog(app, registro):
         time.sleep(8)
         cambio = _huella(app) != antes
         registro["detalle"]["link_abrio_otra_nota"] = cambio
-        registro["evidencias"].append(app.captura("REG22", "4_link", "Nota abierta desde una actualización"))
+        registro["evidencias"].append(app.captura("REG22", "5_link", "Nota abierta desde una actualización"))
         _atras(app)
         assert cambio, "Al tocar un link de una actualización no se abrió otra nota"
     assert app.en_primer_plano(), "La app no quedó abierta"
