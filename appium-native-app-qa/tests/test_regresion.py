@@ -957,13 +957,26 @@ def test_reg22_liveblog(app, registro):
         return res
 
     temas = leer_temas()
+    punto = None
+    if temas:
+        r = temas[0][1].rect
+        punto = (int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+    elif app.ios:
+        # En iOS la fila de temas es contenido web que no figura en el árbol de accesibilidad: se ubica por
+        # el título del liveblog, que sí figura (la fila está justo encima, ~5% del alto).
+        titulos = [e for e in app.d.find_elements("-ios predicate string",
+                                                  "type == 'XCUIElementTypeOther' AND visible == 1 AND label.length > 40")
+                   if e.rect["y"] > tam["height"] * 0.12]
+        if titulos:
+            y_titulo = min(e.rect["y"] for e in titulos)
+            punto = (int(tam["width"] * 0.3), int(y_titulo - tam["height"] * 0.05))
+            temas = [("primer tema de la fila (por posición)", None)]
     registro["detalle"]["temas"] = [t for t, _ in temas][:6]
     registro["evidencias"].append(app.captura("REG22", "3_temas", "Fila de temas del liveblog"))
-    assert temas, "No se encontró la fila de temas del liveblog"
+    assert punto, "No se encontró la fila de temas del liveblog"
     antes = _huella(app)
-    nombre_tema, el_tema = temas[0]
-    r = el_tema.rect
-    app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+    nombre_tema = temas[0][0]
+    app.tocar(*punto)
     time.sleep(10)
     cambio = _huella(app) != antes
     contenido = _notas_visibles(app)
