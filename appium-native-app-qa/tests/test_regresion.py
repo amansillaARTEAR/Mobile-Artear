@@ -541,3 +541,100 @@ def test_reg17_lee_tambien(app, registro):
     registro["evidencias"].append(app.captura("REG17", "3_vuelta", "De vuelta en la nota original"))
     assert cambio, "Al tocar «Lee también» no se abrió otra nota"
     assert volvio and app.en_primer_plano(), "No se pudo volver a la nota original"
+
+
+def _botones_en_la_fila(app, elemento):
+    """Tocables (con o sin texto) que están en la misma fila que `elemento` y a su izquierda.
+    Sirve para el botón de auriculares de la nota, que no tiene texto y va al lado de «Seguir»."""
+    r = elemento.rect
+    centro = r["y"] + r["height"] / 2
+    try:
+        if app.ios:
+            todos = app.d.find_elements("-ios predicate string",
+                                        "type IN {'XCUIElementTypeButton','XCUIElementTypeOther'} AND visible == 1")
+        else:
+            todos = app.d.find_elements("xpath", "//*[@clickable='true' and @displayed='true']")
+    except Exception:
+        return []
+    fila = [e for e in todos
+            if abs(e.rect["y"] + e.rect["height"] / 2 - centro) < 40 and e.rect["x"] + e.rect["width"] <= r["x"]
+            and 20 < e.rect["width"] < 200]
+    return sorted(fila, key=lambda e: e.rect["x"])
+
+
+def _tiempo_reproductor(app):
+    """Primer contador mm:ss visible (posición del audio), o None."""
+    import re
+    for t in sorted(_textos_visibles(app)):
+        if re.fullmatch(r"\d{1,2}:\d{2}", t):
+            return t
+    return None
+
+
+def test_reg18_audionota(app, registro):
+    """REG-18: el botón de audionota (auriculares) abre el reproductor «Escuchando artículo» con el primer toque y el audio avanza."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    seguir = _buscar_ci(app, "Seguir")
+    assert seguir, "La nota no muestra la fila con el botón de audionota y «Seguir»"
+    botones = _botones_en_la_fila(app, seguir[0])
+    assert botones, "No se encontró el botón de audionota (auriculares) junto a «Seguir»"
+    registro["evidencias"].append(app.captura("REG18", "1_nota", "Nota con el botón de audionota"))
+    botones[0].click()  # un solo toque: es justo lo que se valida
+    time.sleep(5)
+    abrio = bool(_buscar_ci(app, "Escuchando"))
+    registro["evidencias"].append(app.captura("REG18", "2_reproductor", "Reproductor tras el primer toque"))
+    registro["detalle"]["reproductor_con_un_toque"] = abrio
+    assert abrio, "Con el primer toque no se abrió el reproductor de la audionota"
+    t1 = _tiempo_reproductor(app)
+    time.sleep(6)
+    t2 = _tiempo_reproductor(app)
+    registro["evidencias"].append(app.captura("REG18", "3_avanza", f"Audio: {t1} → {t2}"))
+    registro["detalle"].update({"tiempo_inicial": t1, "tiempo_despues": t2})
+    assert t1 and t2 and t1 != t2, f"El audio no avanza ({t1} → {t2})"
+
+
+def test_reg19_seguir_en_google(app, registro):
+    """REG-19: «Seguir» (Google) sale de la app y abre la página de Google para agregar TN como fuente preferida."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    seguir = _buscar_ci(app, "Seguir")
+    assert seguir, "La nota no muestra el botón «Seguir» de Google"
+    registro["evidencias"].append(app.captura("REG19", "1_nota", "Nota con «Seguir»"))
+    seguir[0].click()
+    time.sleep(8)
+    salio = not app.en_primer_plano()
+    google = False
+    if salio and not app.ios:  # en Android se puede leer el navegador; en iOS la sesión queda atada a la app
+        google = bool(_buscar_ci(app, "google.com"))
+        registro["detalle"]["texto_pantalla"] = sorted(_textos_visibles(app))[:40]
+    registro["evidencias"].append(app.captura("REG19", "2_google", "Destino de «Seguir»"))
+    registro["detalle"].update({"salio_de_la_app": salio, "en_google": google})
+    try:
+        app.volver_a_la_app()
+    except Exception:
+        pass
+    assert salio, "«Seguir» no abrió el navegador"
+    assert app.ios or google, "El navegador no abrió una página de google.com"
+
+
+def test_reg20_mas_sobre(app, registro):
+    """REG-20: «Más sobre <sección>» al final de la nota muestra notas relacionadas y al tocar una abre otra nota."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    titulo = _scrollear_hasta(app, "Más sobre")
+    registro["evidencias"].append(app.captura("REG20", "1_mas_sobre", "Bloque «Más sobre»"))
+    assert titulo, "La nota no muestra el bloque «Más sobre»"
+    alto = app.d.get_window_size()["height"]
+    y = titulo[0].rect["y"]
+    tarjetas = [e for e in app.clickeables()
+                if y + titulo[0].rect["height"] <= e.rect["y"] < y + alto * 0.5 and len(app.etiqueta(e)) > 25]
+    registro["detalle"]["tarjetas"] = [app.etiqueta(e) for e in tarjetas]
+    assert tarjetas, "«Más sobre» no lista ninguna nota"
+    antes = _huella(app)
+    tarjetas[0].click()
+    time.sleep(8)
+    cambio = _huella(app) != antes
+    registro["evidencias"].append(app.captura("REG20", "2_otra_nota", "Nota abierta desde «Más sobre»"))
+    registro["detalle"]["abrio_otra_nota"] = cambio
+    _atras(app)
+    volvio = app.esperar_contenido()
+    assert cambio, "Al tocar una nota de «Más sobre» no se abrió otra nota"
+    assert volvio and app.en_primer_plano(), "No se pudo volver a la nota original"
