@@ -908,8 +908,15 @@ def test_reg22_liveblog(app, registro):
     etiqueta = _buscar_scrolleando(app, "Minuto a minuto", max_scrolls=15)
     registro["detalle"]["liveblog_en_la_home"] = bool(etiqueta)
     if etiqueta:
+        # Si la etiqueta quedó pegada abajo (sobre el navbar), se baja la Home hasta dejar la tarjeta a media pantalla.
+        for _ in range(4):
+            if etiqueta[0].rect["y"] < tam["height"] * 0.55:
+                break
+            _swipe(app, "down", 0.3)
+            time.sleep(1)
+            etiqueta = _buscar_ci(app, "Minuto a minuto") or etiqueta
         r = etiqueta[0].rect
-        app.tocar(tam["width"] // 2, int(r["y"] + r["height"] + tam["height"] * 0.06))
+        app.tocar(tam["width"] // 2, int(min(r["y"] + r["height"] + tam["height"] * 0.06, tam["height"] * 0.8)))
         time.sleep(8)
         if _cerrar_publicidad_pantalla_completa(app):
             registro["detalle"]["publicidad_pantalla_completa_cerrada"] = True
