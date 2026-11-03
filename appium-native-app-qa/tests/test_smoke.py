@@ -11,6 +11,10 @@ import config
 
 def test_01_instala_y_abre(app, registro):
     """SMK-01: el APK se instala y la app abre en primer plano."""
+    if app.ios:
+        # La app ya está instalada y puede haber quedado en cualquier pantalla de una corrida anterior
+        # (ej. el reproductor): se reabre para que la "pantalla inicial" sea de verdad la Home.
+        app.reiniciar()
     en_primer_plano = app.esperar_primer_plano()
     con_contenido = app.esperar_contenido(timeout=30)
     time.sleep(3)

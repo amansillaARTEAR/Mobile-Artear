@@ -241,8 +241,17 @@ class App:
                 arriba = [b for b in botones
                           if b.rect["y"] < tam["height"] * 0.15 and b.rect["x"] < tam["width"] * 0.35]
                 if not arriba:
-                    # Pantallas como el reproductor en vivo cierran con una "X" sin etiqueta: se toma el
-                    # botón chico de la esquina superior izquierda, sea cual sea su nombre.
+                    # El reproductor en vivo cierra con una "X" que XCUITest expone como elemento genérico
+                    # (type Other, name "close-button"), no como botón: se busca por nombre, de cualquier tipo.
+                    cierres = self.d.find_elements(
+                        AppiumBy.IOS_PREDICATE,
+                        "visible == 1 AND (name CONTAINS[cd] 'close' OR label CONTAINS[cd] 'close' "
+                        "OR name CONTAINS[cd] 'cerrar')")
+                    arriba = [c for c in cierres
+                              if c.rect["width"] < 120 and c.rect["height"] < 120
+                              and c.rect["y"] < tam["height"] * 0.25]
+                if not arriba:
+                    # Último recurso: el botón chico de la esquina superior izquierda, sea cual sea su nombre.
                     todos = self.d.find_elements(
                         AppiumBy.IOS_PREDICATE, "type == 'XCUIElementTypeButton' AND visible == 1")
                     arriba = [b for b in todos
