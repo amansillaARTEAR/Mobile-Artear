@@ -19,6 +19,12 @@ on:
         required: false
         type: string
         default: "com.cmd.tn"
+      suite:
+        description: "Qué suite correr: regresion (REG-xx) o smoke (los mismos casos SMK que en Android)"
+        required: false
+        type: choice
+        options: [regresion, smoke]
+        default: "regresion"
 
 env:
   PYTHONUNBUFFERED: "1"
@@ -74,7 +80,8 @@ jobs:
           APPIUM_URL: "http://127.0.0.1:4724"
         run: |
           # correr_ios_usb.py deja listo el iPhone (go-ios + WebDriverAgent, de Mobile View) y corre pytest.
-          $pyArgs = @("correr_ios_usb.py", "tests/test_regresion.py")
+          $archivo = if ("${{ inputs.suite }}" -eq "smoke") { "tests/test_smoke.py" } else { "tests/test_regresion.py" }
+          $pyArgs = @("correr_ios_usb.py", $archivo)
           if ("${{ inputs.filtro }}") { $pyArgs += @("-k", "${{ inputs.filtro }}") }
           & .\.venv\Scripts\python.exe @pyArgs 2>&1 | Tee-Object -FilePath pytest_output.log
           $ec = $LASTEXITCODE
