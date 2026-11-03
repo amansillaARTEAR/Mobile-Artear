@@ -4,6 +4,9 @@ Reutiliza Mobile View (la carpeta indicada en MOBILE_VIEW_DIR, por defecto D:/Ar
 (go-ios, túnel, WebDriverAgent y puertos 8100/9100) y acá Appium (driver XCUITest) se conecta a ese WDA con
 `appium:webDriverAgentUrl`. Si Mobile View ya lo dejó corriendo, se usa tal cual.
 
+Mientras corre deja un archivo de "corrida en curso" (ios_control.tomar_corrida): Mobile View puede seguir abierto
+mostrando la pantalla del iPhone, pero no manda toques ni reabre su sesión de WDA (WDA acepta una sola sesión).
+
 Uso:  python correr_ios_usb.py [argumentos de pytest...]
 Requiere un Appium con el driver xcuitest en APPIUM_URL (por defecto http://127.0.0.1:4724).
 """
@@ -27,9 +30,14 @@ def main():
     except OSError:
         cfg = {}
     sesion = ios_control.SesionIos(cfg, avisar=lambda t: print("[iPhone]", t, flush=True))
+    tomar = getattr(ios_control, "tomar_corrida", None)   # Mobile View viejo: sin aviso, como antes
+    soltar = getattr(ios_control, "soltar_corrida", lambda: None)
+    if tomar:
+        tomar()
     try:
         sesion.iniciar()
     except ios_control.IosError as e:
+        soltar()
         print("No se pudo preparar el iPhone:", e, flush=True)
         return 2
     print(f"[iPhone] listo: {sesion.nombre} {sesion.modelo} ({sesion.udid})", flush=True)
@@ -39,6 +47,7 @@ def main():
         return subprocess.run([sys.executable, "-m", "pytest", *sys.argv[1:]], env=env).returncode
     finally:
         sesion.detener()
+        soltar()
 
 
 if __name__ == "__main__":
