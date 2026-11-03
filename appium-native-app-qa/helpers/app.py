@@ -191,10 +191,29 @@ class App:
                 return False
         return len(self.firma() & base) >= 0.7 * len(base)
 
+    def _tab_inicio(self) -> bool:
+        """iOS: vuelve a la pestaña "Inicio" del navbar (tocarla de nuevo lleva la Home al tope).
+        En iOS no hay botón "Atrás": tras tocar otra pestaña la única forma de volver es esta."""
+        for _ in range(2):
+            tab = next((i for i in self.navbar()
+                        if any(t in i["etiqueta"].lower() for t in ("inicio", "home"))), None)
+            if not tab:
+                return False
+            try:
+                tab["el"].click()
+            except WebDriverException:
+                return False
+            time.sleep(2)
+            if self.en_inicio():
+                return True
+        return False
+
     def volver_al_inicio(self, max_atras=4) -> bool:
         self.volver_a_la_app()
         for _ in range(max_atras):
             if self.en_inicio():
+                return True
+            if self.ios and self._tab_inicio():
                 return True
             if not self.atras():
                 break
