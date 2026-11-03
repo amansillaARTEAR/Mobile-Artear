@@ -236,6 +236,14 @@ class App:
                     "OR label CONTAINS[cd] 'cerrar' OR label CONTAINS[cd] 'close' OR label == '‹' OR name == 'Back')")
                 arriba = [b for b in botones
                           if b.rect["y"] < tam["height"] * 0.15 and b.rect["x"] < tam["width"] * 0.35]
+                if not arriba:
+                    # Pantallas como el reproductor en vivo cierran con una "X" sin etiqueta: se toma el
+                    # botón chico de la esquina superior izquierda, sea cual sea su nombre.
+                    todos = self.d.find_elements(
+                        AppiumBy.IOS_PREDICATE, "type == 'XCUIElementTypeButton' AND visible == 1")
+                    arriba = [b for b in todos
+                              if b.rect["y"] < tam["height"] * 0.15 and b.rect["x"] < tam["width"] * 0.25
+                              and b.rect["width"] < 120 and b.rect["height"] < 120]
                 if arriba:
                     arriba[0].click()
                 else:
