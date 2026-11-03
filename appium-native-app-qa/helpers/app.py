@@ -218,6 +218,10 @@ class App:
             if not self.atras():
                 break
             self.volver_a_la_app()
+        if not self.en_inicio() and self.ios:
+            # En iOS no hay "Atrás" y algunas pantallas (reproductor en vivo, etc.) no se dejan cerrar
+            # de forma genérica: lo seguro es reabrir la app, que arranca de nuevo en la pantalla inicial.
+            self.reiniciar()
         return self.en_inicio()
 
     def atras(self, espera=1.5) -> bool:
