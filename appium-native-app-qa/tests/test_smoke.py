@@ -1,4 +1,4 @@
-"""Smoke genérico para cualquier APK.
+"""Smoke genérico para cualquier APK (y, en iOS, para la app instalada).
 
 Valida lo básico que toda build debería cumplir antes de probar funcionalidad:
 instalación, arranque, estabilidad, ciclo de vida y navegación inicial.
@@ -110,3 +110,24 @@ def test_06_exploracion_basica(app, registro):
     assert visitados, "No se encontraron elementos tocables en la pantalla inicial"
     assert not fallas, f"Elementos que cerraron la app o produjeron errores: {fallas}"
     assert not perdidos, f"No se pudo volver al inicio con «Atrás» después de: {perdidos}"
+
+
+def test_07_scroll_de_la_home(app, registro):
+    """SMK-07: scrollear 5 veces la pantalla inicial no produce crashes y la app sigue abierta."""
+    if not getattr(app, "firma_inicio", None):
+        app.esperar_contenido()
+        app.marcar_inicio()
+    assert app.volver_al_inicio(), "No se pudo volver a la pantalla inicial antes de scrollear"
+    scrolls = 0
+    for i in range(1, 6):
+        if not app.scroll("down"):
+            break
+        scrolls += 1
+        time.sleep(1)
+        registro["evidencias"].append(app.captura("SMK07", f"{i}", f"Scroll {i} de 5"))
+    errores = app.errores_nuevos()
+    registro["detalle"].update({"scrolls_hechos": scrolls, "sigue_abierta": app.en_primer_plano(),
+                                "crashes_o_anr": errores})
+    assert scrolls == 5, f"Solo se pudo scrollear {scrolls} de 5 veces"
+    assert app.en_primer_plano(), "La app se cerró al scrollear"
+    assert not errores, f"Crash o ANR: {errores}"
