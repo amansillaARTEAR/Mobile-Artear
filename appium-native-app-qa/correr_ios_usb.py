@@ -41,6 +41,10 @@ def main():
         print("No se pudo preparar el iPhone:", e, flush=True)
         return 2
     print(f"[iPhone] listo: {sesion.nombre} {sesion.modelo} ({sesion.udid})", flush=True)
+    try:   # Mobile View baja snapshotMaxDepth a 1 (solo usa coordenadas); Appium necesita el árbol completo
+        sesion.wda._http("POST", f"/session/{sesion.wda.sesion}/appium/settings", {"settings": {"snapshotMaxDepth": 50}})
+    except Exception:  # noqa: BLE001  (WDA sin esa opción: no pasa nada)
+        pass
     env = dict(os.environ, IOS_USB="1", TN_PLATAFORMA="ios", IOS_UDID=sesion.udid,
                APPIUM_URL=os.getenv("APPIUM_URL", "http://127.0.0.1:4724"))
     try:
