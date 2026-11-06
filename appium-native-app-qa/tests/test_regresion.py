@@ -1003,3 +1003,148 @@ def test_reg22_liveblog(app, registro):
         _atras(app)
         assert cambio, "Al tocar un link de una actualización no se abrió otra nota"
     assert app.en_primer_plano(), "La app no quedó abierta"
+
+
+# ---------------------------------------------------------------- casos sumados (de la suite WebdriverIO de Android)
+def _abrir_notificaciones(app):
+    """Toca la campana del topbar y devuelve True si quedó la pantalla de Notificaciones."""
+    _ir_a_inicio(app)
+    campana = app.buscar("Campana Notificaciones")
+    if campana:
+        campana[0].click()
+    else:
+        top = app.topbar()
+        if not top:
+            return False
+        top[0]["el"].click()
+    time.sleep(3)
+    return bool(app.buscar("Ajustes de notificaciones"))
+
+
+def _cerrar_pantalla(app):
+    """Cierra una pantalla que se abre encima: «Cerrar» (iOS, modal) o Atrás."""
+    cerrar = app.buscar("Cerrar") if app.ios else []
+    if cerrar:
+        cerrar[0].click()
+        time.sleep(2)
+    else:
+        _atras(app)
+
+
+def test_reg23_pantalla_notificaciones(app, registro):
+    """REG-23: la pantalla de Notificaciones muestra el botón de ajustes y, según haya avisos o no, la lista o el estado vacío completo."""
+    assert _abrir_notificaciones(app), "La campana no abrió la pantalla de Notificaciones"
+    registro["evidencias"].append(app.captura("REG23", "1_pantalla", "Pantalla de Notificaciones"))
+    vacio = bool(app.buscar("No tenés notificaciones nuevas"))
+    if vacio:
+        # Sin avisos: texto, bajada y los dos botones.
+        partes = {"bajada": bool(app.buscar("Configurá tus alertas")),
+                  "Seleccionar temas": bool(app.buscar("Seleccionar temas")),
+                  "Volver al inicio": bool(app.buscar("Volver al inicio"))}
+    else:
+        # Con avisos: cada uno dice «Hace N horas» (en Android, al menos hay elementos tocables además del topbar).
+        partes = {"lista de avisos": bool(app.buscar("Hace ")) or len(app.clickeables()) > 2}
+    registro["detalle"].update({"estado": "vacío" if vacio else "con avisos", "partes": partes})
+    _atras(app)
+    assert all(partes.values()), f"Faltan elementos en Notificaciones: {[k for k, v in partes.items() if not v]}"
+
+
+def test_reg24_ajustes_desde_notificaciones(app, registro):
+    """REG-24: desde Notificaciones, el ícono de ajustes (y «Seleccionar temas» si no hay avisos) abre «Ajustes de notificaciones» con sus temas."""
+    assert _abrir_notificaciones(app), "La campana no abrió la pantalla de Notificaciones"
+    vias = {}
+
+    def probar(nombre, boton):
+        boton.click()
+        time.sleep(3)
+        titulo = bool(app.buscar("Ajustes de notificaciones"))
+        temas = {t: bool(_buscar_scrolleando(app, t, max_scrolls=3)) for t in TEMAS_NOTIFICACIONES[:3]}
+        registro["evidencias"].append(app.captura("REG24", nombre, f"Ajustes de notificaciones (desde {nombre})"))
+        vias[nombre] = titulo and all(temas.values())
+        _cerrar_pantalla(app)
+
+    icono = app.buscar("Ajustes de notificaciones")
+    assert icono, "No se encontró el botón «Ajustes de notificaciones»"
+    probar("icono", icono[0])
+    seleccionar = app.buscar("Seleccionar temas")   # solo existe cuando no hay avisos
+    if seleccionar:
+        probar("seleccionar_temas", seleccionar[0])
+    registro["detalle"]["vias"] = vias
+    _atras(app)
+    assert all(vias.values()), f"No abrieron los ajustes de notificaciones: {[k for k, v in vias.items() if not v]}"
+
+
+def test_reg25_autor_nota(app, registro):
+    """REG-25: si la nota muestra su autor («Por …»), al tocarlo abre el listado del autor y se vuelve a la nota."""
+    tam = app.d.get_window_size()
+    autor = None
+    for n in range(4):   # no todas las notas traen autor: se prueba con hasta 4 notas distintas
+        if not _abrir_nota_comun(app, registro, intentos=n + 1, desde=n):
+            continue
+        for _ in range(3):
+            autores = [e for e in app.clickeables() if app.etiqueta(e).startswith("Por ") and len(app.etiqueta(e)) < 40]
+            if autores:
+                autor = autores[0]
+                break
+            _scroll_nota(app)
+        if autor:
+            break
+        _atras(app)
+    if not autor:
+        pytest.skip("Ninguna de las notas probadas muestra autor")
+    nombre = app.etiqueta(autor)
+    registro["detalle"]["autor"] = nombre
+    registro["evidencias"].append(app.captura("REG25", "1_nota", f"Nota con autor «{nombre}»"))
+    antes = _huella(app)
+    autor.click()
+    time.sleep(8)
+    cambio = _huella(app) != antes
+    contenido = _notas_visibles(app)
+    registro["evidencias"].append(app.captura("REG25", "2_listado", "Listado del autor"))
+    registro["detalle"].update({"cambio_pantalla": cambio, "textos_largos": len(contenido)})
+    _atras(app)
+    assert cambio and contenido, f"Al tocar el autor «{nombre}» no se abrió su listado"
+
+
+def test_reg26_bajada_nota(app, registro):
+    """REG-26: la nota muestra su título y, debajo, la bajada (un texto largo propio, distinto del título)."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    textos = []
+    for t in _notas_visibles(app):   # textos largos visibles en la primera pantalla de la nota
+        t = (t or "").strip()
+        if t and t not in textos:
+            textos.append(t)
+    # El título es el más corto de los largos; la bajada, otro texto de más de 40 caracteres.
+    bajada = [t for t in textos[1:] if len(t) >= 40]
+    registro["detalle"]["textos_largos"] = [t[:60] for t in textos[:6]]
+    registro["evidencias"].append(app.captura("REG26", "1_nota", "Título y bajada de la nota"))
+    _atras(app)
+    assert len(textos) >= 2 and bajada, f"La nota no muestra una bajada debajo del título (textos: {len(textos)})"
+
+
+def test_reg27_topbar_nota(app, registro):
+    """REG-27: la barra superior de la nota muestra los botones Atrás y Compartir nota."""
+    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
+    partes = {"Atrás": bool(app.buscar("Atrás")), "Compartir nota": bool(app.buscar("Compartir"))}
+    registro["detalle"]["topbar"] = partes
+    registro["evidencias"].append(app.captura("REG27", "1_topbar", "Topbar de la nota"))
+    _atras(app)
+    assert all(partes.values()), f"Faltan botones en el topbar de la nota: {[k for k, v in partes.items() if not v]}"
+
+
+def test_reg28_categorias_secciones(app, registro):
+    """REG-28: la pantalla Secciones lista todas las categorías y termina con el botón «Ver más categorías»."""
+    _ir_a_inicio(app)
+    assert _tab(app, "Secciones"), "No se encontró «Secciones» en el navbar"
+    for _ in range(4):
+        _swipe(app, "up", 0.5)   # la lista puede haber quedado scrolleada de antes
+    # «Selección del editor» es el título de la lista en la beta; en producción se llama «Secciones»: solo se registra.
+    seleccion_editor = bool(_buscar_ci(app, "Selección del editor"))
+    registro["evidencias"].append(app.captura("REG28", "1_arriba", "Secciones (arriba)"))
+    categorias = {c: bool(_buscar_scrolleando(app, c, max_scrolls=8)) for c in SECCIONES}   # en el orden en que aparecen
+    ver_mas = bool(_buscar_scrolleando(app, "Ver más categorías", max_scrolls=6))
+    registro["evidencias"].append(app.captura("REG28", "2_abajo", "Secciones (abajo)"))
+    registro["detalle"].update({"seleccion_del_editor": seleccion_editor, "categorias": categorias, "ver_mas": ver_mas})
+    faltan = [c for c, v in categorias.items() if not v]
+    assert not faltan, f"Categorías que no aparecen en Secciones: {faltan}"
+    assert ver_mas, "No se ve el botón «Ver más categorías»"
