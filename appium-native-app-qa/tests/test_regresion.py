@@ -14,7 +14,7 @@ import time
 import pytest
 
 NAVBAR = ("Inicio", "Secciones", "Ajustes")
-MODULOS_HOME = ("Últimas noticias", "TN Shorts", "TN Juegos", "Los tenés que ver")
+MODULOS_HOME = ("Últimas noticias", "TN Shorts", "Juegos", "Los tenés que ver")
 SECCIONES = ("Todo Noticias", "Política", "Deportivo", "Show", "La Viola", "Tecno", "Con Bienestar",
              "TN Estilo", "TN Autos", "TN y la Gente", "TN Campo", "TN Running")
 TEMAS_NOTIFICACIONES = ("Último momento", "Política", "Economía", "Deportes", "Show",
@@ -157,16 +157,30 @@ def test_reg01_navbar(app, registro):
 
 def test_reg02_home_modulos(app, registro):
     """REG-02: la Home carga y muestra sus módulos principales al scrollear, sin crash."""
-    encontrados, vistos = {}, set()
-    for i, modulo in enumerate(MODULOS_HOME, 1):
-        _ir_a_inicio(app)  # cada módulo se busca desde arriba (el orden en la Home puede variar)
-        _tab(app, "Inicio")  # 2do toque: vuelve la Home al tope
-        els = _buscar_scrolleando(app, modulo, max_scrolls=60, vistos=vistos)
-        encontrados[modulo] = bool(els)
-        if els:
-            registro["evidencias"].append(app.captura("REG02", f"{i}_{modulo[:12]}", f"Módulo «{modulo}»"))
-        else:
-            registro["evidencias"].append(app.captura("REG02", f"{i}_no_encontrado", f"Sin «{modulo}»"))
+    encontrados, vistos = {m: False for m in MODULOS_HOME}, set()
+    _ir_a_inicio(app)
+    _tab(app, "Inicio")  # 2do toque: vuelve la Home al tope
+    # Una sola pasada de arriba hacia abajo mirando los 4 módulos a la vez (antes se recorría la Home
+    # entera una vez por módulo, y eran más de 15 minutos en el iPhone).
+    pendientes = list(MODULOS_HOME)
+    for _ in range(60):
+        for modulo in list(pendientes):
+            if _buscar_ci(app, modulo):
+                encontrados[modulo] = True
+                pendientes.remove(modulo)
+                n = MODULOS_HOME.index(modulo) + 1
+                registro["evidencias"].append(app.captura("REG02", f"{n}_{modulo[:12]}", f"Módulo «{modulo}»"))
+        if not pendientes:
+            break
+        if not app.ios:  # en iOS leer todos los textos por scroll es muy lento
+            vistos |= _textos_visibles(app)
+        # iOS: el gesto de Appium avanza ~la mitad que el real; con 0.8 se recorre la Home en ~12 pasos.
+        if not _swipe(app, "down", 0.8 if app.ios else 0.4):
+            break
+        time.sleep(0.5 if app.ios else 1)
+    for modulo in pendientes:
+        n = MODULOS_HOME.index(modulo) + 1
+        registro["evidencias"].append(app.captura("REG02", f"{n}_no_encontrado", f"Sin «{modulo}»"))
     errores = app.errores_nuevos()
     registro["detalle"].update({"modulos": encontrados, "crashes_o_anr": errores,
                                 "textos_vistos": sorted(vistos)[:150]})

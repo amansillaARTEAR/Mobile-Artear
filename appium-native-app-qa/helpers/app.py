@@ -1,5 +1,6 @@
 """Acciones y chequeos genéricos sobre la app bajo prueba."""
 import base64
+import os
 import re
 import time
 
@@ -38,6 +39,13 @@ class App:
         except WebDriverException:
             self.actividad_inicial = None
         self._logcat()  # descarta el log previo al inicio (no-op en iOS, no hay logcat)
+        if self.ios and os.getenv("IOS_USB") == "1" and os.getenv("TN_IOS_RAPIDO", "1") != "0":
+            # En el iPhone por cable WebDriverAgent esperaba a que la pantalla "se calme" tras cada gesto:
+            # un deslizamiento tardaba ~3,4 s y un toque ~1 s. Sin esa espera bajan a ~0,5 s.
+            try:
+                self.d.update_settings({"waitForIdleTimeout": 0, "animationCoolOffTimeout": 0})
+            except WebDriverException:
+                pass
         self.cerrar_dialogo_permisos()  # por si la app lo pide ya al primer arranque de la sesión
 
     # ---------- estado ----------
@@ -71,6 +79,11 @@ class App:
         En iOS el diálogo es una alerta del sistema: se resuelve con "mobile: alert"
         (accept/dismiss); si no hay alerta el driver tira error y devolvemos False."""
         if self.ios:
+            # Cada consulta cuesta ~0,3 s y se llamaba en cada lectura de pantalla: se limita a una cada 3 s.
+            ahora = time.time()
+            if ahora - getattr(self, "_t_alerta", 0) < 3:
+                return False
+            self._t_alerta = ahora
             try:
                 self.d.execute_script("mobile: alert", {"action": "accept" if permitir else "dismiss"})
                 time.sleep(1)
