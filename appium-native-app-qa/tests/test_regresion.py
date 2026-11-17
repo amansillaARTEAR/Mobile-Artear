@@ -94,7 +94,9 @@ def _swipe(app, direccion="down", fraccion=0.4):
     """Desliza la pantalla con un swipe W3C (dedo de 70% a 30% del alto para "down").
     Reemplaza a App.scroll(): el gesto "mobile: swipeGesture" no movía la Home ni Ajustes."""
     tam = app.d.get_window_size()
-    x = tam["width"] // 2
+    # iOS: el dedo arranca en el borde derecho; en el centro caía sobre el banner publicitario (un WebView)
+    # que se "tragaba" el gesto y la Home quedaba clavada sin scrollear.
+    x = int(tam["width"] * 0.975) if app.ios else tam["width"] // 2
     a, b = int(tam["height"] * (0.5 + fraccion / 2)), int(tam["height"] * (0.5 - fraccion / 2))
     if direccion != "down":
         a, b = b, a
