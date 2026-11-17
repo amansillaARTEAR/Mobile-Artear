@@ -531,6 +531,16 @@ def _scroll_nota(app):
         x = tam["width"] // 2
         app.deslizar(x, int(tam["height"] * 0.62), x, int(tam["height"] * 0.2), 1200)  # arranca arriba del panel
         return True
+    # iOS: la flowcard «Te puede interesar» ocupa la mitad de abajo y se "traga" el gesto (la nota queda
+    # clavada); se cierra con su «X» (misma fila del título, a la derecha) antes de scrollear.
+    try:
+        t = _buscar_ci(app, "Te puede interesar")
+        if t:
+            r = t[0].rect
+            app.tocar(int(tam["width"] * 0.927), int(r["y"] + r["height"] / 2))
+            time.sleep(1)
+    except Exception:
+        pass
     return _flick(app, tam["width"] // 2, int(tam["height"] * 0.8), tam["width"] // 2, int(tam["height"] * 0.25))
 
 
