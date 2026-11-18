@@ -89,7 +89,20 @@ class App:
                 time.sleep(1)
                 return True
             except WebDriverException:
-                return False
+                pass
+            # Encuesta de la app («Tu opinión nos ayuda a mejorar»): es un modal propio que tapa la pantalla
+            # y se traga los toques y gestos; se descarta con «Más tarde».
+            try:
+                mas_tarde = self.d.find_elements(
+                    AppiumBy.IOS_PREDICATE,
+                    "type == 'XCUIElementTypeButton' AND visible == 1 AND (label == 'Más tarde' OR name == 'Más tarde')")
+                if mas_tarde:
+                    mas_tarde[0].click()
+                    time.sleep(1)
+                    return True
+            except WebDriverException:
+                pass
+            return False
         # Contempla el dispositivo en español ("Permitir"/"No permitir") y por si algún día
         # corre con el idioma del sistema en inglés ("Allow"/"Don't allow") -- sin distinguir
         # mayúsculas/minúsculas, porque algunos fabricantes lo muestran en versalitas.

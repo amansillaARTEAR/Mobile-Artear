@@ -415,6 +415,22 @@ def test_reg15_estabilidad_final(app, registro):
     assert app.en_primer_plano() and not errores, f"La app no quedó estable: {errores}"
 
 
+def _esperar_nota(app, max_s=14):
+    """Espera a que la nota termine de abrir: mira cada segundo si aparece el botón de compartir del
+    topbar y, si hay una publicidad a pantalla completa, la cierra con su «X». Sigue apenas la nota
+    está lista (antes se dormía 14 s fijos siempre). Devuelve True si la nota quedó abierta."""
+    fin = time.time() + max_s
+    while time.time() < fin:
+        try:
+            if any("compart" in e["etiqueta"].lower() or "share" in e["etiqueta"].lower() for e in app.topbar()):
+                return True
+        except Exception:
+            pass
+        _cerrar_publicidad_pantalla_completa(app)
+        time.sleep(1)
+    return False
+
+
 def _abrir_nota_comun(app, registro, intentos=6, desde=0):
     """Abre una nota de la Home que NO sea un liveblog («Minuto a minuto») ni tenga el player de
     vivo. Prueba una nota por intento, scrolleando la Home un poco más cada vez. Devuelve True si
@@ -426,7 +442,7 @@ def _abrir_nota_comun(app, registro, intentos=6, desde=0):
         for _ in range(n):
             _swipe(app, "down", 0.4)
         app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))
-        time.sleep(14)  # incluye la espera del interstitial, como en REG-06
+        _esperar_nota(app)  # cierra la publicidad a pantalla completa y sigue apenas abre la nota
         # Es una nota si el topbar tiene el botón de compartir (un aviso o un player no lo tienen) y
         # no es un liveblog.
         es_nota = any("compart" in e["etiqueta"].lower() or "share" in e["etiqueta"].lower() for e in app.topbar())
@@ -672,7 +688,7 @@ def test_reg17_lee_tambien(app, registro):
     conocida = _buscar_scrolleando(app, NOTA_CON_LEE_TAMBIEN, max_scrolls=15)
     if conocida:
         conocida[0].click()
-        time.sleep(14)
+        _esperar_nota(app)
         link = _scrollear_hasta(app, "Lee también", max_scrolls=40)
         registro["detalle"]["nota_conocida"] = bool(link)
         if not link:
@@ -711,6 +727,22 @@ def test_reg17_lee_tambien(app, registro):
     assert volvio and app.en_primer_plano(), "No se pudo volver a la nota original"
 
 
+def _cerrar_tooltip(app):
+    """iOS: cierra el globo «Agregá TN como sitio preferido» que tapa «Seguir» y el botón de audio."""
+    if not app.ios:
+        return False
+    try:
+        bs = app.d.find_elements("-ios predicate string", "type == 'XCUIElementTypeButton' AND label CONTAINS[c] 'Cerrar tooltip'")
+        if bs:
+            r = bs[0].rect
+            app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+            time.sleep(1)
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def _botones_en_la_fila(app, elemento):
     """Tocables (con o sin texto) que están en la misma fila que `elemento` y a su izquierda.
     Sirve para el botón de auriculares de la nota, que no tiene texto y va al lado de «Seguir»."""
@@ -724,10 +756,16 @@ def _botones_en_la_fila(app, elemento):
             todos = app.d.find_elements("xpath", "//*[@clickable='true' and @displayed='true']")
     except Exception:
         return []
-    fila = [e for e in todos
-            if abs(e.rect["y"] + e.rect["height"] / 2 - centro) < 40 and e.rect["x"] + e.rect["width"] <= r["x"]
-            and 20 < e.rect["width"] < 200]
-    return sorted(fila, key=lambda e: e.rect["x"])
+    fila = []
+    for e in todos:
+        try:  # en iOS la nota se anima y algún elemento puede quedar obsoleto: se lo salta
+            er = e.rect
+        except Exception:
+            continue
+        if (abs(er["y"] + er["height"] / 2 - centro) < 40 and er["x"] + er["width"] <= r["x"]
+                and 20 < er["width"] < 200):
+            fila.append((er["x"], e))
+    return [e for _, e in sorted(fila, key=lambda t: t[0])]
 
 
 def _tiempo_reproductor(app):
@@ -739,13 +777,53 @@ def _tiempo_reproductor(app):
     return None
 
 
+def _ctl_audio(app, prefijo):
+    """Control del reproductor de audio (Trinity) por su etiqueta de accesibilidad (iOS). None si no está."""
+    try:
+        els = app.d.find_elements("-ios predicate string",
+                                  f"label BEGINSWITH[c] '{prefijo}' AND visible == 1")
+        return els[0] if els else None
+    except Exception:
+        return None
+
+
+def _seg_audio(app):
+    """Segundos transcurridos del audio según el contador «mm:ss transcurridos», o None."""
+    import re
+    try:
+        els = app.d.find_elements("-ios predicate string", "label CONTAINS[c] 'transcurridos'")
+        m = re.match(r"(\d+):(\d+)", els[0].get_attribute("label")) if els else None
+        return int(m.group(1)) * 60 + int(m.group(2)) if m else None
+    except Exception:
+        return None
+
+
+def _tocar_ctl(app, ctl):
+    r = ctl.rect
+    app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+
+
 def test_reg18_audionota(app, registro):
-    """REG-18: el botón de audionota (auriculares) abre el reproductor «Escuchando artículo» con el primer toque y el audio avanza."""
-    assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
-    seguir = _scrollear_hasta(app, "Seguir", max_scrolls=15)
-    assert seguir, "La nota no muestra la fila con el botón de audionota y «Seguir»"
-    botones = _botones_en_la_fila(app, seguir[0])
-    assert botones, "No se encontró el botón de audionota (auriculares) junto a «Seguir»"
+    """REG-18: el botón de audionota (auriculares) abre el reproductor «Escuchando artículo» con el primer toque y el
+    audio avanza; además pausa/reanuda, adelanta/retrocede 10 s y cambia la velocidad.
+    Regla de negocio (TNARC-4011): solo tienen audio las notas de Política, Economía, Sociedad, Policiales y Opinión,
+    de menos de una semana y sin el tag TNS. Por eso se prueban varias notas hasta hallar una con el botón."""
+    seguir, botones = [], []
+    for n in range(0, 8):
+        if not _abrir_nota_comun(app, registro, intentos=n + 1, desde=n):
+            continue
+        seguir = _scrollear_hasta(app, "Seguir", max_scrolls=15)
+        if seguir and _cerrar_tooltip(app):
+            seguir = _buscar_ci(app, "Seguir") or seguir
+        botones = _botones_en_la_fila(app, seguir[0]) if seguir else []
+        if botones:
+            registro["detalle"]["nota_con_audio"] = n + 1
+            break
+        registro["detalle"].setdefault("notas_sin_audio", []).append(n + 1)
+    if not botones:
+        import pytest
+        pytest.skip("Ninguna de las notas probadas tiene botón de audionota (solo Política, Economía, Sociedad, "
+                    "Policiales y Opinión con menos de una semana, sin tag TNS)")
     registro["evidencias"].append(app.captura("REG18", "1_nota", "Nota con el botón de audionota"))
     r = botones[0].rect
     cx, cy = int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2)
@@ -770,17 +848,78 @@ def test_reg18_audionota(app, registro):
         registro["detalle"]["reproductor_con_dos_toques"] = bool(_buscar_ci(app, "Escuchando"))
         registro["evidencias"].append(app.captura("REG18", "2b_segundo_toque", "Reproductor tras el segundo toque"))
     assert abrio, "Con el primer toque no se abrió el reproductor de la audionota"
-    t1 = _tiempo_reproductor(app)
-    time.sleep(6)
-    t2 = _tiempo_reproductor(app)
-    registro["evidencias"].append(app.captura("REG18", "3_avanza", f"Audio: {t1} → {t2}"))
-    registro["detalle"].update({"tiempo_inicial": t1, "tiempo_despues": t2})
-    if not (t1 and t2):
-        # El contador no se expone como texto en todas las plataformas: sin él no se puede medir
-        # el avance, pero lo que se valida (que el reproductor aparezca al tocar el ícono) ya pasó.
-        registro["detalle"]["textos_en_pantalla"] = sorted(_textos_visibles(app))[:30]
+
+    if not app.ios:  # los controles se leen por etiqueta de accesibilidad de iOS
+        t1 = _tiempo_reproductor(app)
+        time.sleep(6)
+        t2 = _tiempo_reproductor(app)
+        registro["detalle"].update({"tiempo_inicial": t1, "tiempo_despues": t2})
+        assert not (t1 and t2) or t1 != t2, f"El audio no avanza ({t1} → {t2})"
         return
-    assert t1 != t2, f"El audio no avanza ({t1} → {t2})"
+
+    # 1) Se renderiza completo: pausa, ±10 s, velocidad, contadores.
+    ctl = {k: _ctl_audio(app, k) for k in ("Pausar", "Retroceder 10", "Avanzar 10", "Velocidad actual")}
+    registro["detalle"]["controles"] = {k: bool(v) for k, v in ctl.items()}
+    t1 = _seg_audio(app)
+    registro["detalle"]["contador_visible"] = t1 is not None
+    faltan = [k for k, v in ctl.items() if not v]
+    assert not faltan, f"El reproductor no muestra los controles: {', '.join(faltan)}"
+    assert t1 is not None, "El reproductor no muestra el contador de tiempo"
+
+    # 2) El audio avanza solo.
+    time.sleep(5)
+    t2 = _seg_audio(app)
+    registro["detalle"].update({"tiempo_inicial": t1, "tiempo_despues": t2})
+    registro["evidencias"].append(app.captura("REG18", "3_avanza", f"Audio: {t1} s → {t2} s"))
+    assert t2 is not None and t2 > t1, f"El audio no avanza ({t1} s → {t2} s)"
+
+    # 3) Pausar: el contador se frena y el botón pasa a «Reproducir».
+    _tocar_ctl(app, ctl["Pausar"])
+    time.sleep(2)
+    p1 = _seg_audio(app)
+    time.sleep(4)
+    p2 = _seg_audio(app)
+    cambio_boton = bool(_ctl_audio(app, "Reproducir"))
+    registro["detalle"].update({"pausa_t1": p1, "pausa_t2": p2, "boton_pasa_a_reproducir": cambio_boton})
+    registro["evidencias"].append(app.captura("REG18", "4_pausa", "Audio en pausa"))
+    assert cambio_boton, "Al pausar, el botón no cambia a «Reproducir»"
+    assert p1 == p2, f"Con el audio en pausa el contador sigue avanzando ({p1} s → {p2} s)"
+
+    # 4) Reanudar: vuelve a avanzar.
+    play = _ctl_audio(app, "Reproducir")
+    _tocar_ctl(app, play)
+    time.sleep(1)
+    q1 = _seg_audio(app)
+    time.sleep(4)
+    q2 = _seg_audio(app)
+    registro["detalle"].update({"reanuda_t1": q1, "reanuda_t2": q2})
+    registro["evidencias"].append(app.captura("REG18", "5_reanuda", f"Audio reanudado: {q1} s → {q2} s"))
+    assert q1 is not None and q2 is not None and q2 > q1, f"Al reproducir de nuevo el audio no avanza ({q1} s → {q2} s)"
+
+    # 5) Adelantar 10 s y retroceder 10 s.
+    a0 = _seg_audio(app)
+    _tocar_ctl(app, _ctl_audio(app, "Avanzar 10") or ctl["Avanzar 10"])
+    time.sleep(1.5)
+    a1 = _seg_audio(app)
+    _tocar_ctl(app, _ctl_audio(app, "Retroceder 10") or ctl["Retroceder 10"])
+    time.sleep(1.5)
+    a2 = _seg_audio(app)
+    registro["detalle"].update({"antes_adelantar": a0, "tras_adelantar": a1, "tras_retroceder": a2})
+    registro["evidencias"].append(app.captura("REG18", "6_saltos", f"Saltos: {a0} → {a1} → {a2} s"))
+    assert a0 is not None and a1 is not None and a1 - a0 >= 8, f"«Avanzar 10 segundos» no adelanta ({a0} s → {a1} s)"
+    assert a2 is not None and a1 - a2 >= 5, f"«Retroceder 10 segundos» no retrocede ({a1} s → {a2} s)"
+
+    # 6) Velocidad: al tocarla cambia el valor.
+    v0 = _ctl_audio(app, "Velocidad actual")
+    et0 = v0.get_attribute("label") if v0 else None
+    if v0:
+        _tocar_ctl(app, v0)
+        time.sleep(1.5)
+    v1 = _ctl_audio(app, "Velocidad actual")
+    et1 = v1.get_attribute("label") if v1 else None
+    registro["detalle"].update({"velocidad_antes": et0, "velocidad_despues": et1})
+    registro["evidencias"].append(app.captura("REG18", "7_velocidad", f"Velocidad: {et0} → {et1}"))
+    assert et0 and et1 and et0 != et1, f"El botón de velocidad no cambia el valor ({et0} → {et1})"
 
 
 def test_reg19_seguir_en_google(app, registro):
@@ -788,10 +927,19 @@ def test_reg19_seguir_en_google(app, registro):
     assert _abrir_nota_comun(app, registro), "No se encontró una nota común (todas eran liveblog)"
     seguir = _scrollear_hasta(app, "Seguir", max_scrolls=15)
     assert seguir, "La nota no muestra el botón «Seguir» de Google"
+    if _cerrar_tooltip(app):
+        seguir = _buscar_ci(app, "Seguir") or seguir
     registro["evidencias"].append(app.captura("REG19", "1_nota", "Nota con «Seguir»"))
-    seguir[0].click()
+    antes = _huella(app)
+    if app.ios:
+        r = seguir[0].rect
+        app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] + r["height"] / 2))
+    else:
+        seguir[0].click()
     time.sleep(8)
     salio = not app.en_primer_plano()
+    if app.ios and not salio:  # en iOS puede abrirse una hoja de Safari sobre la app: la pantalla cambia
+        salio = _huella(app) != antes
     google = False
     if salio and not app.ios:  # en Android se puede leer el navegador; en iOS la sesión queda atada a la app
         google = bool(_buscar_ci(app, "google.com"))
@@ -939,11 +1087,13 @@ def test_reg22_liveblog(app, registro):
     if etiqueta:
         # Si la etiqueta quedó pegada abajo (sobre el navbar), se baja la Home hasta dejar la tarjeta a media pantalla.
         for _ in range(4):
+            etiqueta = _buscar_ci(app, "Minuto a minuto") or etiqueta
             if etiqueta[0].rect["y"] < tam["height"] * 0.55:
                 break
             _swipe(app, "down", 0.3)
             time.sleep(1)
             etiqueta = _buscar_ci(app, "Minuto a minuto") or etiqueta
+        etiqueta = _buscar_ci(app, "Minuto a minuto") or etiqueta
         r = etiqueta[0].rect
         app.tocar(tam["width"] // 2, int(min(r["y"] + r["height"] + tam["height"] * 0.06, tam["height"] * 0.8)))
         time.sleep(8)
