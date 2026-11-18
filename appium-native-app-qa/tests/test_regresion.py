@@ -909,17 +909,27 @@ def test_reg18_audionota(app, registro):
     assert a0 is not None and a1 is not None and a1 - a0 >= 8, f"«Avanzar 10 segundos» no adelanta ({a0} s → {a1} s)"
     assert a2 is not None and a1 - a2 >= 5, f"«Retroceder 10 segundos» no retrocede ({a1} s → {a2} s)"
 
-    # 6) Velocidad: al tocarla cambia el valor.
+    # 6) Velocidad: el botón abre un selector (0.5x a 1.5x); se elige 1.5x y el botón lo refleja.
     v0 = _ctl_audio(app, "Velocidad actual")
     et0 = v0.get_attribute("label") if v0 else None
     if v0:
         _tocar_ctl(app, v0)
         time.sleep(1.5)
+    tam = app.d.get_window_size()
+    marca = _buscar_ci(app, "1.5")
+    registro["detalle"].update({"velocidad_antes": et0, "selector_velocidad_visible": bool(marca)})
+    registro["evidencias"].append(app.captura("REG18", "7_selector_velocidad", "Selector de velocidad abierto"))
+    assert marca, "Al tocar la velocidad no se abre el selector (0.5x a 1.5x)"
+    r = marca[0].rect
+    app.tocar(int(r["x"] + r["width"] / 2), int(r["y"] - 25))  # la marca de 1.5 está justo arriba de su número
+    time.sleep(1.5)
+    app.tocar(int(tam["width"] * 0.915), int(r["y"] - 70))  # «X» del selector, a la derecha de la fila superior
+    time.sleep(1.5)
     v1 = _ctl_audio(app, "Velocidad actual")
     et1 = v1.get_attribute("label") if v1 else None
-    registro["detalle"].update({"velocidad_antes": et0, "velocidad_despues": et1})
-    registro["evidencias"].append(app.captura("REG18", "7_velocidad", f"Velocidad: {et0} → {et1}"))
-    assert et0 and et1 and et0 != et1, f"El botón de velocidad no cambia el valor ({et0} → {et1})"
+    registro["detalle"]["velocidad_despues"] = et1
+    registro["evidencias"].append(app.captura("REG18", "8_velocidad", f"Velocidad: {et0} → {et1}"))
+    assert et0 and et1 and et0 != et1, f"La velocidad elegida en el selector no se aplica ({et0} → {et1})"
 
 
 def test_reg19_seguir_en_google(app, registro):
