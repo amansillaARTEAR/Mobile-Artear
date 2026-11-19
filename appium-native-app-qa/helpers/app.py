@@ -230,7 +230,9 @@ class App:
             except WebDriverException:
                 return False
             time.sleep(2)
-            if self.en_inicio():
+            # En iOS en_inicio() no puede confirmarse (no hay actividades ni firma): si el toque a «Inicio» no
+            # falló se da por bueno. Si no, volver_al_inicio llamaba a atras() y tocaba la campanita de la Home.
+            if self.en_inicio() or not getattr(self, "firma_inicio", set()):
                 return True
         return False
 

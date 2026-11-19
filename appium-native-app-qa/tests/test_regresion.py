@@ -279,7 +279,14 @@ def test_reg07_ajustes_notificaciones(app, registro):
     _ir_a_inicio(app)
     assert _tab(app, "Ajustes"), "No se encontró «Ajustes» en el navbar"
     temas = {t: bool(_buscar_scrolleando(app, t, max_scrolls=8)) for t in TEMAS_NOTIFICACIONES}
-    version = _buscar_scrolleando(app, "Versión", max_scrolls=5)
+    version = _buscar_ci(app, "Versión")
+    for _ in range(8):  # la versión está al final de la lista: swipes largos hasta verla
+        if version:
+            break
+        tam = app.d.get_window_size()  # en Ajustes el borde derecho no scrollea: gesto por el centro-izquierda
+        _flick(app, int(tam["width"] * 0.3), int(tam["height"] * 0.8), int(tam["width"] * 0.3), int(tam["height"] * 0.2))
+        time.sleep(1)
+        version = _buscar_ci(app, "Versión")
     registro["detalle"].update({"temas": temas, "version": app.etiqueta(version[0]) if version else None})
     registro["evidencias"].append(app.captura("REG07", "ajustes", "Ajustes: temas y versión"))
     assert all(temas.values()), f"Temas no encontrados: {[t for t, v in temas.items() if not v]}"
@@ -431,6 +438,34 @@ def _esperar_nota(app, max_s=14):
     return False
 
 
+def _abrir_nota_de_seccion(app, seccion, n=0):
+    """Abre la n-ésima nota (de arriba hacia abajo) del listado de una sección. Devuelve True si quedó en una
+    nota común (con botón de compartir y sin «Minuto a minuto»). Sirve para notas que cumplen la regla del audio."""
+    tam = app.d.get_window_size()
+    _ir_a_inicio(app)
+    if not _abrir_seccion(app, seccion):
+        return False
+    for _ in range(n // 3):
+        _swipe(app, "down", 0.4)
+    try:
+        els = app.d.find_elements("-ios predicate string",
+                                  "type == 'XCUIElementTypeStaticText' AND visible == 1 AND label MATCHES '.{40,}'")
+        titulos = [e for e in els if tam["height"] * 0.22 < e.rect["y"] < tam["height"] * 0.85]
+        titulos.sort(key=lambda e: e.rect["y"])
+        if not titulos:
+            return False
+        t = titulos[min(1 + n % 2, len(titulos) - 1)].rect  # la 1ª tarjeta suele ser un liveblog
+    except Exception:
+        return False
+    app.tocar(int(tam["width"] * 0.5), int(t["y"] + t["height"] / 2))
+    _esperar_nota(app)
+    es_nota = any("compart" in e["etiqueta"].lower() or "share" in e["etiqueta"].lower() for e in app.topbar())
+    if es_nota and not app.buscar("Minuto a minuto") and not app.buscar("EN VIVO"):
+        _cerrar_zocalo(app)
+        return True
+    return False  # el próximo intento vuelve a Inicio solo
+
+
 def _abrir_nota_comun(app, registro, intentos=6, desde=0):
     """Abre una nota de la Home que NO sea un liveblog («Minuto a minuto») ni tenga el player de
     vivo. Prueba una nota por intento, scrolleando la Home un poco más cada vez. Devuelve True si
@@ -439,9 +474,9 @@ def _abrir_nota_comun(app, registro, intentos=6, desde=0):
     for n in range(desde, intentos):
         _ir_a_inicio(app)
         _tab(app, "Inicio")
-        for _ in range(n):
+        for _ in range(1 + n // 3):  # siempre 1 swipe: la primera tarjeta suele ser un liveblog
             _swipe(app, "down", 0.4)
-        app.tocar(tam["width"] // 2, int(tam["height"] * 0.55))
+        app.tocar(tam["width"] // 2, int(tam["height"] * (0.40, 0.55, 0.70)[n % 3]))
         _esperar_nota(app)  # cierra la publicidad a pantalla completa y sigue apenas abre la nota
         # Es una nota si el topbar tiene el botón de compartir (un aviso o un player no lo tienen) y
         # no es un liveblog.
@@ -809,8 +844,11 @@ def test_reg18_audionota(app, registro):
     Regla de negocio (TNARC-4011): solo tienen audio las notas de Política, Economía, Sociedad, Policiales y Opinión,
     de menos de una semana y sin el tag TNS. Por eso se prueban varias notas hasta hallar una con el botón."""
     seguir, botones = [], []
-    for n in range(0, 8):
-        if not _abrir_nota_comun(app, registro, intentos=n + 1, desde=n):
+    secciones = ("Política", "Economía", "Sociedad", "Policiales", "Opinión")
+    for n in range(0, 6):
+        seccion = secciones[n % len(secciones)]
+        if not _abrir_nota_de_seccion(app, seccion, n // len(secciones)):
+            registro["detalle"].setdefault("notas_descartadas", []).append(f"{seccion}#{n // len(secciones)}")
             continue
         seguir = _scrollear_hasta(app, "Seguir", max_scrolls=15)
         if seguir and _cerrar_tooltip(app):
